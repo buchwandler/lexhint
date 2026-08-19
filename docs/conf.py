@@ -1,4 +1,4 @@
-"""Sphinx configuration for the spokenform documentation."""
+"""Sphinx configuration for the lexhint documentation."""
 
 from __future__ import annotations
 
@@ -8,7 +8,7 @@ from pathlib import Path
 ROOT = Path(__file__).resolve().parents[1]
 sys.path.insert(0, str(ROOT))
 
-project = "spokenform"
+project = "lexhint"
 author = "Holger Nahrstaedt"
 copyright = "2026, Holger Nahrstaedt"
 
@@ -24,3 +24,4 @@ exclude_patterns = ["_build"]
 html_theme = "sphinx_rtd_theme"
 autodoc_typehints = "description"
 myst_enable_extensions = ["colon_fence", "deflist"]
+suppress_warnings = ["myst.header"]

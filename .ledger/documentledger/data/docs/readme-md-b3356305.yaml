@@ -1,0 +1,343 @@
+schema: documentledger.doc_record.v4
+doc_path: README.md
+linked_sources:
+- lexhint/cli.py
+- lexhint/dictionary.py
+- lexhint/lexicon.py
+- lexhint/models.py
+sections:
+- section_id: md:section:README.md::1-common-word-lexicon
+  doc_path: README.md
+  heading_path:
+  - 1. Common-word lexicon
+  heading_slug: 1-common-word-lexicon
+  line_span:
+  - 89
+  - 135
+  section_hash: f2dc29f057b7bb59ed11ef5feb5c54fc5c1d22a302506bd821674f7e868df713
+  summary: 1. Common-word lexicon
+  text: "# 1. Common-word lexicon\n\nFetch a FrequencyWords top-50k list:\n\n```bash\n\
+    lexhint fetch en\nlexhint fetch de fr es it pt cs\n```\n\nDefault cache:\n\n```text\n\
+    ~/.cache/lexhint/words/<language>.txt.gz\n```\n\nOverride the complete cache root\
+    \ with `LEXHINT_CACHE_DIR`.\n\nPython:\n\n```python\nfrom lexhint import Lexicon\n\
+    \nlex = Lexicon(\"en\")\n\nassert lex.contains(\"chat\")\nprint(lex.rank(\"chat\"\
+    ))\nprint(lex.segment(\"chatgpt\"))\n```\n\nExpected segmentation shape:\n\n```python\n\
+    (\n    Segment(text=\"chat\", known=True, rank=...),\n    Segment(text=\"gpt\"\
+    , known=False, rank=None),\n)\n```\n\nA speech layer can therefore keep `chat`\
+    \ lexical and spell the unknown `gpt` run.\n\nCLI:\n\n```bash\nlexhint word chat\n\
+    lexhint segment chatgpt\n```"
+  links:
+  - source_id: py:class:lexhint/lexicon.py::Lexicon
+    source_path: lexhint/lexicon.py
+    coverage: implementation-note
+    impact: unknown
+    reason: The section documents the Lexicon API.
+    tracked_hashes:
+      body_hash: a7d1afa1b2626859565e28a0ec9e9365b852b1a71ff1186bee56c02d24473678
+  - source_id: py:class:lexhint/models.py::Segment
+    source_path: lexhint/models.py
+    coverage: implementation-note
+    impact: unknown
+    reason: The section documents Segment results.
+    tracked_hashes:
+      body_hash: 4390c0c56aea0debb70b42e3a609687d19be42578c491b5a70ad2e661d3ca9d2
+- section_id: md:section:README.md::2-dictionary-derived-context
+  doc_path: README.md
+  heading_path:
+  - 2. Dictionary-derived context
+  heading_slug: 2-dictionary-derived-context
+  line_span:
+  - 136
+  - 182
+  section_hash: 9befb7097c1e285ce00a65b6251f6356d63306cb223f7956a21815937278e1b2
+  summary: 2. Dictionary-derived context
+  text: '# 2. Dictionary-derived context
+
+
+    Instead of maintaining a file such as `en.json`, build a compact dictionary index
+    from
+
+    Wiktextract/Kaikki JSONL.
+
+
+    The Kaikki raw English-edition extraction contains many languages, so the builder
+    checks
+
+    `lang_code` and can produce indexes for `en`, `de`, `fr`, and other languages
+    from the
+
+    same source when those entries are present.
+
+
+    The common-word lexicon and semantic dictionary are independent resources. Dictionary
+
+    building does not require a FrequencyWords list. To build from a downloaded Kaikki
+    file:
+
+
+    ```bash
+
+    lexhint dictionary build en ~/Downloads/raw-wiktextract-data.jsonl.gz
+
+    ```
+
+
+    The lazy word path avoids the multi-gigabyte download entirely. For complete local
+
+    coverage, use the built-in official Kaikki source directly:
+
+
+    ```bash
+
+    lexhint dictionary build en
+
+    ```
+
+
+    That source is very large. The builder reads it line-by-line and stores compact
+
+    dictionary senses containing glosses and explicit semantic topics. Context scoring
+    uses only
+
+    the explicit topics. Dictionary vocabulary is not restricted to the FrequencyWords
+    common-word
+
+    list; technical semantic cues such as "compiler" can therefore be retained. The
+    resulting
+
+    database defaults to:
+
+
+    ```text
+
+    ~/.cache/lexhint/dictionaries/en.sqlite3
+
+    ```
+
+
+    The schema v4 index stores compact sense rows plus partial-cache coverage metadata.
+
+    Each row contains:
+
+
+    ```text
+
+    word
+
+    display spelling
+
+    part of speech
+
+    glosses
+
+    topics
+
+    ```
+
+
+    It is deliberately not a full Wiktionary mirror. A sense is retained when it has
+    a
+
+    dictionary gloss or an explicit entry-level or sense-level Wiktextract topic.'
+  links:
+  - source_id: py:class:lexhint/dictionary.py::Dictionary
+    source_path: lexhint/dictionary.py
+    coverage: implementation-note
+    impact: unknown
+    reason: The section documents the Dictionary API and context operations.
+    tracked_hashes:
+      body_hash: 58e65f051294770bb2b1617902b07921676162718d8b5bd01cafec2177ce3a80
+- section_id: md:section:README.md::candidate-aware-context-evidence
+  doc_path: README.md
+  heading_path:
+  - 2. Dictionary-derived context
+  - Candidate-aware context evidence
+  heading_slug: candidate-aware-context-evidence
+  line_span:
+  - 201
+  - 256
+  section_hash: 0dde26d28339679c37a62c65ad3dafca09c246f8837c8964338dc39ffb0a9836
+  summary: Candidate-aware context evidence
+  text: "## Candidate-aware context evidence\n\n`spokenform` already knows the interpretation\
+    \ it wants to test. `lexhint` only answers\nwhether nearby dictionary senses support\
+    \ its semantic topic.\n\n```python\nfrom lexhint import Dictionary\n\nlex = Dictionary(\"\
+    en\")\n\ntext = \"The scale is Am.\"\nstart = text.index(\"Am\")\n\nsupport =\
+    \ lex.supports(\n    text,\n    target=(start, start + len(\"Am\")),\n    topic=\"\
+    music\",\n)\n\nassert support is not None\nprint(support.cues)  # includes \"\
+    scale\" when its dictionary sense has topic=music\n```\n\nLikewise for software\
+    \ versions:\n\n```python\ntext = \"The compiler is 8.3.2.\"\nstart = text.index(\"\
+    8.3.2\")\n\nsupport = lex.supports(\n    text,\n    target=(start, start + len(\"\
+    8.3.2\")),\n    topic=\"computing\",\n)\n```\n\nThe target token itself is deliberately\
+    \ excluded from context evidence. A candidate\ncannot validate its own interpretation.\n\
+    \nFor diagnostics, inspect all nearby dictionary topics:\n\n```python\nfor score\
+    \ in lex.topic_scores(text, target=(start, start + len(\"8.3.2\"))):\n    print(score)\n\
+    ```\n\nCLI:\n\n```bash\nlexhint dictionary word en compiler\nlexhint dictionary\
+    \ fetch scale house compiler\nlexhint --offline dictionary word en compiler\n\
+    lexhint context en music \"The scale is Am.\" --target Am\nlexhint --offline context\
+    \ en computing \"The compiler is 8.3.2.\" --target 8.3.2\n```"
+  links:
+  - source_id: py:class:lexhint/dictionary.py::Dictionary
+    source_path: lexhint/dictionary.py
+    coverage: implementation-note
+    impact: unknown
+    reason: Candidate-aware context evidence is implemented by Dictionary.supports.
+    tracked_hashes:
+      body_hash: 58e65f051294770bb2b1617902b07921676162718d8b5bd01cafec2177ce3a80
+- section_id: md:section:README.md::dictionary-api
+  doc_path: README.md
+  heading_path:
+  - 2. Dictionary-derived context
+  - Dictionary API
+  heading_slug: dictionary-api
+  line_span:
+  - 183
+  - 200
+  section_hash: 4ac26a62d58c0cb27a91b9d1d8d0587b71c5ac38880163a96963ab0faa75901d
+  summary: Dictionary API
+  text: '## Dictionary API
+
+
+    ```python
+
+    from lexhint import Dictionary
+
+
+    dictionary = Dictionary("en", fetch_missing=True)
+
+
+    print(dictionary.senses("scale"))  # fetches once, then works offline
+
+    print(dictionary.topics("compiler"))
+
+    ```
+
+
+    The default `Dictionary("en")` is local-only. Use `fetch_missing=True` only when
+    the
+
+    application explicitly permits network access.
+
+
+    Wiktextract provides `topics` per sense when Wiktionary supplies that semantic
+    metadata.
+
+    A word can therefore have several senses with different topics instead of being
+    globally
+
+    assigned to one manually maintained domain.'
+  links:
+  - source_id: py:class:lexhint/dictionary.py::Dictionary
+    source_path: lexhint/dictionary.py
+    coverage: implementation-note
+    impact: unknown
+    reason: The section documents the Dictionary API.
+    tracked_hashes:
+      body_hash: 58e65f051294770bb2b1617902b07921676162718d8b5bd01cafec2177ce3a80
+- section_id: md:section:README.md::quick-start
+  doc_path: README.md
+  heading_path:
+  - lexhint
+  - Quick start
+  heading_slug: quick-start
+  line_span:
+  - 14
+  - 58
+  section_hash: e5c0fd8027eb89d496f061c160b7c28d99c98bc9d3ab3e3a9387848924d61040
+  summary: Quick start
+  text: '## Quick start
+
+
+    Install for development:
+
+
+    ```bash
+
+    python -m pip install -e ".[dev]"
+
+    ```
+
+
+    Prepare the default English word list and try the CLI:
+
+
+    ```bash
+
+    lexhint setup
+
+    lexhint word house
+
+    lexhint segment chatgpt
+
+    ```
+
+
+    English is the CLI default. Use an explicit language when needed:
+
+
+    ```bash
+
+    lexhint setup de
+
+    lexhint word de Haus
+
+    # or: LEXHINT_LANGUAGE=de lexhint word Haus
+
+    ```
+
+
+    Human-readable output is the default; add `--json` to any command for scripts.
+
+    The runtime itself has no third-party Python dependencies.
+
+
+    Dictionary operations fetch only the requested Kaikki word page by default and
+    cache
+
+    compact dictionary senses locally:
+
+
+    ```bash
+
+    lexhint dictionary word compiler
+
+    lexhint dictionary fetch scale house compiler
+
+    ```
+
+
+    Use `--offline` to require cached data. The full Kaikki source remains available
+    for
+
+    maintainers and advanced offline users:
+
+
+    ```bash
+
+    lexhint dictionary build en
+
+    lexhint setup en --dictionary
+
+    ```
+
+
+    The bulk source is large and is streamed rather than downloaded to a temporary
+    copy.'
+  links:
+  - source_id: py:function:lexhint/cli.py::main
+    source_path: lexhint/cli.py
+    coverage: implementation-note
+    impact: unknown
+    reason: Quick-start commands are implemented by the CLI entry point.
+    tracked_hashes:
+      body_hash: 52fcb3cfab37738091207d5165bc9561217ed6d7569f9dc36f3c4afc285dd653
+  - source_id: py:class:lexhint/dictionary.py::Dictionary
+    source_path: lexhint/dictionary.py
+    coverage: implementation-note
+    impact: unknown
+    reason: Quick-start dictionary operations use the Dictionary API.
+    tracked_hashes:
+      body_hash: 58e65f051294770bb2b1617902b07921676162718d8b5bd01cafec2177ce3a80
+last_fresh_scan_version: 2
+last_fresh_hash: 8ec173db69b8251d569209ec3159831671ae7f584076255c524079fd1ca9c96d
+notes: Bootstrap documentation completed after scan version 2.
+version: 5

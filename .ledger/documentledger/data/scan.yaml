@@ -1,0 +1,41 @@
+schema: documentledger.scan.v5
+version: 2
+source_index_file: source-index.json
+source_index_hash: 5161e98de08594e56959d395fa7f68dba803bb0c3babbc8681e5ad073777e254
+source_file_count: 19
+source_unit_count: 206
+doc_file_count: 4
+source_hashes:
+  lexhint/__init__.py: 5c319055739df0a19733d2237705bc8a23565f41f5d8a8575b6aab238caf082d
+  lexhint/__main__.py: 935a1c1166b0c1ea35a82256345000bf2c73ded718d77773bc27a71ecce28f7d
+  lexhint/builder.py: 79d30e439e11330858de47b014e6b9aa945bcc1c77266c8e9834b35f7a0daa0f
+  lexhint/cli.py: 0e93b6b846149139eee9fbf01eafb2c65cda36949ece7dcb54c0fa9a6f46a2ee
+  lexhint/dictionary.py: 8a35b7ca8a276cdb471018cbfdde47c586f36bb55f290754cbbdffcd8ee5b332
+  lexhint/download.py: 35204c20deefe0cbcb64653bab757f558f82766ac534329540cbd493d0f72aae
+  lexhint/kaikki.py: 2c78cef59c51f7e45a7fb3d55d5e534eb3490a92474b6dbf5d40edb18f05c2c9
+  lexhint/lexicon.py: 7fbdde7b21378684727ebae3315043f60e5c6650e5a6febf3ffc38700bafec76
+  lexhint/models.py: 8acd43b975926ae78b36c090cc4ff4753941b2afa9e07085f757c9b2b27347cf
+  lexhint/store.py: 125c684d7a97f7f5cd4f903b5ce3325331ff1f9795fa4c44a52c294382aba893
+  tests/test_builder.py: 2c7e741cec21fcd1a6fcff1b0e06f3eb690ea6351059ade2c94cfc3b8d95cf9e
+  tests/test_cli.py: 08a4170b8586bd2555ca157307cfb2bda8ac849274f472709b300f53e76d9f0a
+  tests/test_cli_lazy.py: 0dd745a9fec8b138d806d34339a54e977e2a44e9caf534b3d11bcaa109be4616
+  tests/test_dictionary.py: c669539af5ae954dc200a08130b953aedde960035b2cb7497e451385a1ee1df4
+  tests/test_download.py: e36c4063f2125794a5d80be7b07d09ec47f0b5566104dcd949585b654041f66e
+  tests/test_kaikki.py: fac73898950afced79162a46ecbc5a67dc4c93e7dab83625976a3570f571941c
+  tests/test_lazy_dictionary.py: 5b0c458fa7cb66c760c11667c1dcd59d0d3c523b092229c7b14a26be799662f5
+  tests/test_lexicon.py: 7705cab884ddefa882b25f80d05260d719b16e9d9e021d63da5b7b49a299a82c
+  tests/test_remote_context.py: 8304678e81ffd7c6a2e66084c2def32fd6b0da578f796db98a4b13015009cac4
+doc_hashes:
+  README.md: 8ec173db69b8251d569209ec3159831671ae7f584076255c524079fd1ca9c96d
+  docs/architecture.md: 7737182418cc6928cda9db99f3adfc5edea0c0dc0eee045da7b42f3a28754ec3
+  docs/changelog.md: b10df241b30d28db31b8c39d845240439680d375a279694c9d9202c58aca1bd8
+  docs/index.md: f2397703c84977f75baa8ba01bbeb01828396807847f62036f58df84a80bfb0d
+changed_sources: []
+deleted_sources: []
+changed_units: []
+added_units: []
+deleted_units: []
+affected_sections: []
+stale_docs: []
+unlinked_changed_sources: []
+unmapped_changed_units: []

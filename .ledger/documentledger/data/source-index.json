@@ -1,0 +1,3320 @@
+{
+  "schema": "documentledger.source_index.v1",
+  "source_units": {
+    "py:class:lexhint/cli.py::_ArgumentParser": {
+      "hashes": {
+        "body_hash": "c92fd1125ecb23116d0ac0d6ec0543c84c4048e05d8dad20a5ccbb39b9b5a071",
+        "content_hash": "f9b4daf3b8c9570811d484586451576966a8e1a44de135da914b7ffd3c510b35",
+        "decorator_hash": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "docstring_hash": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "public_contract_hash": "690fbb1ff48e4ecb65b1dcc217a3c75b9c26ac4cbe9a02a89d7c2b4baab9ef03",
+        "signature_hash": "a70e97bd1bd23871731e08a5ad40f74b1555b826ca435ec29e45c77643166467"
+      },
+      "kind": "class",
+      "line_span": [34, 37],
+      "path": "lexhint/cli.py",
+      "qualname": "_ArgumentParser",
+      "signature": "_ArgumentParser(argparse.ArgumentParser)",
+      "source_id": "py:class:lexhint/cli.py::_ArgumentParser"
+    },
+    "py:class:lexhint/cli.py::_HelpFormatter": {
+      "hashes": {
+        "body_hash": "326bc1692c2b1cf12e2d200cbe6716277ad497cde8d500e2e66d1ec3094c2e83",
+        "content_hash": "f00a8c09536735bbb735a01f96bb3bdf2492550f3c943ab4c87f839565b9f779",
+        "decorator_hash": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "docstring_hash": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "public_contract_hash": "bc6177e811ad771fede6a6ffbb5d7c49acb090480f6565d2aaa68058f23fac13",
+        "signature_hash": "a4b680fce47803d066da9aaf4ae5d6a3c1b47f6c3cf47031a8559279b5f3effc"
+      },
+      "kind": "class",
+      "line_span": [29, 31],
+      "path": "lexhint/cli.py",
+      "qualname": "_HelpFormatter",
+      "signature": "_HelpFormatter(argparse.RawDescriptionHelpFormatter)",
+      "source_id": "py:class:lexhint/cli.py::_HelpFormatter"
+    },
+    "py:class:lexhint/cli.py::_Style": {
+      "hashes": {
+        "body_hash": "a7654971823f16f81c6c261c95401c575e68f901df6497adee9d70e3f33186e3",
+        "content_hash": "004983ab448e1fcdcda9049842f00c27175e6fefabf8dd3d47e8a61c5b698e19",
+        "decorator_hash": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "docstring_hash": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "public_contract_hash": "1f4af71f9aebe395bdcbbd018b473412ea739d83953805fcd29a47cb2c52c5ff",
+        "signature_hash": "ac0e614d17722491b15ec4a2f1c53b7a6ec422ca573d42357af294c63d9e68eb"
+      },
+      "kind": "class",
+      "line_span": [40, 63],
+      "path": "lexhint/cli.py",
+      "qualname": "_Style",
+      "signature": "_Style",
+      "source_id": "py:class:lexhint/cli.py::_Style"
+    },
+    "py:class:lexhint/dictionary.py::Dictionary": {
+      "hashes": {
+        "body_hash": "58e65f051294770bb2b1617902b07921676162718d8b5bd01cafec2177ce3a80",
+        "content_hash": "7478d77d910a3789570bc2ae000acaca9a8a745750cb285bbe24a178f86dd804",
+        "decorator_hash": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "docstring_hash": "050424be3461d3edd029eed1987492aca0f2410cb05e9edc0b6e272220dd5887",
+        "public_contract_hash": "593f5099d1c71b5b109b5a729f828853ba4d6d0c6a95cfbe579ce60c03244c58",
+        "signature_hash": "f12e2c9be9b1c548380f71dc2878225386d7c11f306123cfeb9f9fa9cb9d1edd"
+      },
+      "kind": "class",
+      "line_span": [144, 414],
+      "path": "lexhint/dictionary.py",
+      "qualname": "Dictionary",
+      "signature": "Dictionary",
+      "source_id": "py:class:lexhint/dictionary.py::Dictionary"
+    },
+    "py:class:lexhint/dictionary.py::DictionaryIncompatible": {
+      "hashes": {
+        "body_hash": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "content_hash": "25d105adb42ed1fb887ab7d96a7b01bab9b6587c3b1f10b95498223ac1e7e20c",
+        "decorator_hash": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "docstring_hash": "94cb7b5c443244b51620ba6527a00511fe6fe638d901c8170e010bc8de2a26df",
+        "public_contract_hash": "9d04c4547383a5264f2820220b77377afddfa173083d0d26d9478382282e4232",
+        "signature_hash": "5713b009a6d3b8a7b5370a47e395a53303dc6a340b38da452b064eba09773551"
+      },
+      "kind": "class",
+      "line_span": [40, 41],
+      "path": "lexhint/dictionary.py",
+      "qualname": "DictionaryIncompatible",
+      "signature": "DictionaryIncompatible(RuntimeError)",
+      "source_id": "py:class:lexhint/dictionary.py::DictionaryIncompatible"
+    },
+    "py:class:lexhint/dictionary.py::DictionaryNotInstalled": {
+      "hashes": {
+        "body_hash": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "content_hash": "cb681614199db31beae0797be164ef6e20ec4ef447b2464cb8a9092a9dcb5a53",
+        "decorator_hash": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "docstring_hash": "3b5346c3987ddf7233ea253baf64820dbe2b2063b7f07a51ec8d0d3568aca7c5",
+        "public_contract_hash": "a6a0cb2588183f470ac568e2b37beb92d9b1e735039c6ebae37e6a6fd0163f20",
+        "signature_hash": "d38e97b858e6f236701caabd0870c73a934563ddf2e9d139997ef707dd4aa77e"
+      },
+      "kind": "class",
+      "line_span": [36, 37],
+      "path": "lexhint/dictionary.py",
+      "qualname": "DictionaryNotInstalled",
+      "signature": "DictionaryNotInstalled(FileNotFoundError)",
+      "source_id": "py:class:lexhint/dictionary.py::DictionaryNotInstalled"
+    },
+    "py:class:lexhint/dictionary.py::DictionaryOfflineError": {
+      "hashes": {
+        "body_hash": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "content_hash": "b05224e760e4c71ed970aed4987add543086821a7ecf1cf5e720e15b1390d8e4",
+        "decorator_hash": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "docstring_hash": "9b103bbceba8da94a5fca2232fda8de59c8ad13cedeea667836d2f2b994eaf48",
+        "public_contract_hash": "cedcb8f44f78295037dc9ca2c0b1538bb339ccb8dccfb2be920505abb62eb02d",
+        "signature_hash": "12268a376fb3bf81ac3a33360b256c764efede8b8b61cce9216be84759f6e2c5"
+      },
+      "kind": "class",
+      "line_span": [44, 45],
+      "path": "lexhint/dictionary.py",
+      "qualname": "DictionaryOfflineError",
+      "signature": "DictionaryOfflineError(DictionaryFetchError)",
+      "source_id": "py:class:lexhint/dictionary.py::DictionaryOfflineError"
+    },
+    "py:class:lexhint/download.py::DownloadError": {
+      "hashes": {
+        "body_hash": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "content_hash": "5d61713d9f0fe609f20b0af80d9a9e0fef262dbd6f66e46aa3d8344582f46567",
+        "decorator_hash": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "docstring_hash": "bf99fa46b89fd06cb7582e07353b149ce0945f107a3e3975bde6e94e7af846ac",
+        "public_contract_hash": "dd63ae9f27d4854b596882bcd89a8f45868604bfc50382fdfe4b93fed9a1138a",
+        "signature_hash": "27a5b794bbc384e8e429523521bc01af371b6da6a32cd336ddce0c3d66685ba0"
+      },
+      "kind": "class",
+      "line_span": [17, 18],
+      "path": "lexhint/download.py",
+      "qualname": "DownloadError",
+      "signature": "DownloadError(RuntimeError)",
+      "source_id": "py:class:lexhint/download.py::DownloadError"
+    },
+    "py:class:lexhint/kaikki.py::DictionaryFetchError": {
+      "hashes": {
+        "body_hash": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "content_hash": "28383242c2c45c5247a49387d8d19d688106b79398f24ed2fb41da423e153e24",
+        "decorator_hash": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "docstring_hash": "9a1f1cd35dea0014f003a8bca0d8645e52027238b26ed299f8c37d3e13df13c2",
+        "public_contract_hash": "35e409b08412af4b7271ba4ed8abda02c3b0feaf86a0bd208b7c81502d831c88",
+        "signature_hash": "306f4c8579d1cae5af79eb15c21014c3ad1b8e7d377bc58bfaa94f627229b27c"
+      },
+      "kind": "class",
+      "line_span": [16, 17],
+      "path": "lexhint/kaikki.py",
+      "qualname": "DictionaryFetchError",
+      "signature": "DictionaryFetchError(RuntimeError)",
+      "source_id": "py:class:lexhint/kaikki.py::DictionaryFetchError"
+    },
+    "py:class:lexhint/kaikki.py::DictionaryWordNotFound": {
+      "hashes": {
+        "body_hash": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "content_hash": "da6c9e5d1ceb4128fd8068ddb4c33224ab395b05b9bf71bc513eb46c3bc04049",
+        "decorator_hash": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "docstring_hash": "59996f576ae58d98dfe7ebf2db05d212bb1a64921add2bc213d99eeed838915b",
+        "public_contract_hash": "347b6c711c1508e3773d314371b19781d55dbd429d8cb5ef3e7307eace92a836",
+        "signature_hash": "95c2df6e940391d281e7741ddb9694e6af6a4628726c67cb900e131c9c806e4f"
+      },
+      "kind": "class",
+      "line_span": [20, 21],
+      "path": "lexhint/kaikki.py",
+      "qualname": "DictionaryWordNotFound",
+      "signature": "DictionaryWordNotFound(DictionaryFetchError)",
+      "source_id": "py:class:lexhint/kaikki.py::DictionaryWordNotFound"
+    },
+    "py:class:lexhint/lexicon.py::Lexicon": {
+      "hashes": {
+        "body_hash": "a7d1afa1b2626859565e28a0ec9e9365b852b1a71ff1186bee56c02d24473678",
+        "content_hash": "bf4bd33b226cb4614984fc386748da559615b68bff2d91a888fd53c1e64d2a80",
+        "decorator_hash": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "docstring_hash": "b679aec4ebdc4f1da439167ebc57e51c75ab808a00088ec16e3bb13290ac0fa6",
+        "public_contract_hash": "f7efca428071c5e04b216974d8d5081b95180f10b21cc12651b2dcc5b0221f86",
+        "signature_hash": "bb54291202ed4e94ced7cb6e026e7a8e685202ca3c533a9289a4866b4e4d9bf0"
+      },
+      "kind": "class",
+      "line_span": [31, 177],
+      "path": "lexhint/lexicon.py",
+      "qualname": "Lexicon",
+      "signature": "Lexicon",
+      "source_id": "py:class:lexhint/lexicon.py::Lexicon"
+    },
+    "py:class:lexhint/lexicon.py::LexiconNotInstalled": {
+      "hashes": {
+        "body_hash": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "content_hash": "bec8fe269c46788dff07edc303fecfcbe45c7ab2e1f51feb7c8de07812d19a0c",
+        "decorator_hash": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "docstring_hash": "228de8c3a0282468f4b6ea21f9603079f9001434f9e8206b5fd72619b720044e",
+        "public_contract_hash": "22f8cf89c472eadd4ccd8281d307e66b22dbe7a29fef5461af3e56928201dcfc",
+        "signature_hash": "0a2d0a30bbc2ae6de01e9136998ef64b7b7801569845f4cc63461549254eabd5"
+      },
+      "kind": "class",
+      "line_span": [17, 18],
+      "path": "lexhint/lexicon.py",
+      "qualname": "LexiconNotInstalled",
+      "signature": "LexiconNotInstalled(FileNotFoundError)",
+      "source_id": "py:class:lexhint/lexicon.py::LexiconNotInstalled"
+    },
+    "py:class:lexhint/models.py::ContextSupport": {
+      "hashes": {
+        "body_hash": "6d6c6809a0aa22f9fc1c336543dfc9ea60a02a17065a5232cab23953bd61955e",
+        "content_hash": "f70ada5e03c9e81b6fb88f3a1ef5aacee82120077f0bbf60a9cc265e26c25619",
+        "decorator_hash": "021f24ae76c533a6b83d7304adec630f10c95ebb240b241c56aa4d28aa590738",
+        "docstring_hash": "23c4c6bcdcd67649e8c4a9d0ecfb06be4cc5ef595a548d181847b8b3500ddb96",
+        "public_contract_hash": "489fbac932df6937a566ab1d5ac907c2ab4bc2321f4f44cbfbecf9eafbc65c8d",
+        "signature_hash": "ed80e89ab9da75f4dfb461ac9a2a2f4f408c22a1ffb1f4626698ff5f9fc36674"
+      },
+      "kind": "class",
+      "line_span": [35, 40],
+      "path": "lexhint/models.py",
+      "qualname": "ContextSupport",
+      "signature": "ContextSupport",
+      "source_id": "py:class:lexhint/models.py::ContextSupport"
+    },
+    "py:class:lexhint/models.py::DictionaryBuildStats": {
+      "hashes": {
+        "body_hash": "8d632bcdf78984e9eb3dbd79cad695fc4c2f0de7d2d6cf7d8c1bb9949bafcdb3",
+        "content_hash": "f029d032b275d24731d637c1ea32910ae14ca0f933c95e7c5f1b7d7d19326a99",
+        "decorator_hash": "021f24ae76c533a6b83d7304adec630f10c95ebb240b241c56aa4d28aa590738",
+        "docstring_hash": "c5e194867cf3bc9e531017abde56b87695ee1343f21ff92d06ae7e9c64c58ddc",
+        "public_contract_hash": "d8248c437a4b88321fb3b870c53d849174585180d2388237d396c4dc1c2c5f95",
+        "signature_hash": "692f30c9559472fa0f552e5a3c4d5327159673ca21c86f098eb23d26fe374f82"
+      },
+      "kind": "class",
+      "line_span": [44, 50],
+      "path": "lexhint/models.py",
+      "qualname": "DictionaryBuildStats",
+      "signature": "DictionaryBuildStats",
+      "source_id": "py:class:lexhint/models.py::DictionaryBuildStats"
+    },
+    "py:class:lexhint/models.py::DictionaryFetchResult": {
+      "hashes": {
+        "body_hash": "46bbc67c90c193d1bbb8641e82395634f6adf13ce9b1572ba854f2814a58d657",
+        "content_hash": "43d7ee22a32639f3859880411bb8e77ce06658bd66c766d4e2a5ddbcec79b563",
+        "decorator_hash": "021f24ae76c533a6b83d7304adec630f10c95ebb240b241c56aa4d28aa590738",
+        "docstring_hash": "b9a422c1a80807762064fb9b42910d65d3941757d152f36a01f045f85782e34e",
+        "public_contract_hash": "d893753f707f6305be7e01b6e18e05003db54af8985c709c24df51e11a2914a5",
+        "signature_hash": "4d93dfec9bbacea842eb160085c86afb4adbe59b202c5c234e42f9648d0b328a"
+      },
+      "kind": "class",
+      "line_span": [54, 61],
+      "path": "lexhint/models.py",
+      "qualname": "DictionaryFetchResult",
+      "signature": "DictionaryFetchResult",
+      "source_id": "py:class:lexhint/models.py::DictionaryFetchResult"
+    },
+    "py:class:lexhint/models.py::Segment": {
+      "hashes": {
+        "body_hash": "4390c0c56aea0debb70b42e3a609687d19be42578c491b5a70ad2e661d3ca9d2",
+        "content_hash": "8a4f3eabafc2a9d372199bce04ac853300a7522bff452636f145cbc3ee9184b0",
+        "decorator_hash": "021f24ae76c533a6b83d7304adec630f10c95ebb240b241c56aa4d28aa590738",
+        "docstring_hash": "b0267e3aa6ad9aa79bb0cc56f69e9314dc83eaa27ec76d6c1b602571bc5c8eb0",
+        "public_contract_hash": "5012624b41e56a8f4358580926c2389f21cfbfa2fbc919fe97c4f858868aa78c",
+        "signature_hash": "29ee089ccecadf9d4eaccb22512a3eece8cb15230412bda3b5d648c92abe154e"
+      },
+      "kind": "class",
+      "line_span": [7, 12],
+      "path": "lexhint/models.py",
+      "qualname": "Segment",
+      "signature": "Segment",
+      "source_id": "py:class:lexhint/models.py::Segment"
+    },
+    "py:class:lexhint/models.py::Sense": {
+      "hashes": {
+        "body_hash": "47bb06b4fe4db5d62770756ca7d172b81544d60d1e5b47798fdbad800708c872",
+        "content_hash": "06213b434df536b65c7f7f92fb5ba74d576c092b425384d1f3207948e2d6a255",
+        "decorator_hash": "021f24ae76c533a6b83d7304adec630f10c95ebb240b241c56aa4d28aa590738",
+        "docstring_hash": "a8218e27d78dd9e13df733cf86d08d005e21ce23f4426e6097ef31ed4c9d1d0a",
+        "public_contract_hash": "9590358d08cd92f3fa472d8803e80bc4e0897c575f5bb151b2c491d4c4c7aeab",
+        "signature_hash": "04ce8d65f2b009969733ddbba9aec182a4e1981feef244760d74131570c51c6b"
+      },
+      "kind": "class",
+      "line_span": [16, 22],
+      "path": "lexhint/models.py",
+      "qualname": "Sense",
+      "signature": "Sense",
+      "source_id": "py:class:lexhint/models.py::Sense"
+    },
+    "py:class:lexhint/models.py::TopicScore": {
+      "hashes": {
+        "body_hash": "6d6c6809a0aa22f9fc1c336543dfc9ea60a02a17065a5232cab23953bd61955e",
+        "content_hash": "9224da75df318608bfc1f2e27fc3a68fad6c0d85db8c86dbcc34fba505e49266",
+        "decorator_hash": "021f24ae76c533a6b83d7304adec630f10c95ebb240b241c56aa4d28aa590738",
+        "docstring_hash": "ece47f3b72217a66c80a01d37d438c07abe6bf75a785a2a21a152ad95e868660",
+        "public_contract_hash": "413d38db71e5e8493e96de8c184d036d27cf32f44e9d691d023f904d1d2311b9",
+        "signature_hash": "d5c1073b48bc7112622b33e927b542784a9d92bc96ca2e92ac5c84ace233bcf4"
+      },
+      "kind": "class",
+      "line_span": [26, 31],
+      "path": "lexhint/models.py",
+      "qualname": "TopicScore",
+      "signature": "TopicScore",
+      "source_id": "py:class:lexhint/models.py::TopicScore"
+    },
+    "py:class:lexhint/store.py::SemanticSenseRow": {
+      "hashes": {
+        "body_hash": "36801430371ea9cd5985d17a3e621429eff494b633c77c312a920171bc28ded9",
+        "content_hash": "25746f1dbb608726919539507913e889bec26bda827627af741fd2c6dbd7b112",
+        "decorator_hash": "021f24ae76c533a6b83d7304adec630f10c95ebb240b241c56aa4d28aa590738",
+        "docstring_hash": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "public_contract_hash": "d3e764bef195f20b9e28de744fc9bd0228413ea8b306f228ad12c5345f18174d",
+        "signature_hash": "d285ef592f3346b095c8dd4fe04139fe9d5699b8cbbb140e5471ff69e54e57dc"
+      },
+      "kind": "class",
+      "line_span": [17, 22],
+      "path": "lexhint/store.py",
+      "qualname": "SemanticSenseRow",
+      "signature": "SemanticSenseRow",
+      "source_id": "py:class:lexhint/store.py::SemanticSenseRow"
+    },
+    "py:class:tests/test_cli.py::FakeLexicon": {
+      "hashes": {
+        "body_hash": "f2ef94d59b13b833937cc930a9dd0a03be056fb79ecf7cca2cf1a18637f686db",
+        "content_hash": "b8cce3a32f06874d636de31295296f4d7355018ce2beefaebc1177b17f8a6b0b",
+        "decorator_hash": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "docstring_hash": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "public_contract_hash": "77eaa9ddca29471bcdb341209538b744a0daebbb8210b10e1aad9802cb347220",
+        "signature_hash": "c319e44cbc81df23c867e8d45809fba3fe607f1664115a8cbb5fc6c9d852a15a"
+      },
+      "kind": "class",
+      "line_span": [16, 25],
+      "path": "tests/test_cli.py",
+      "qualname": "FakeLexicon",
+      "signature": "FakeLexicon",
+      "source_id": "py:class:tests/test_cli.py::FakeLexicon"
+    },
+    "py:file:lexhint/__init__.py": {
+      "hashes": {
+        "body_hash": "5c319055739df0a19733d2237705bc8a23565f41f5d8a8575b6aab238caf082d",
+        "content_hash": "5c319055739df0a19733d2237705bc8a23565f41f5d8a8575b6aab238caf082d",
+        "decorator_hash": "5c319055739df0a19733d2237705bc8a23565f41f5d8a8575b6aab238caf082d",
+        "docstring_hash": "5c319055739df0a19733d2237705bc8a23565f41f5d8a8575b6aab238caf082d",
+        "file_hash": "5c319055739df0a19733d2237705bc8a23565f41f5d8a8575b6aab238caf082d",
+        "public_contract_hash": "5c319055739df0a19733d2237705bc8a23565f41f5d8a8575b6aab238caf082d",
+        "signature_hash": "5c319055739df0a19733d2237705bc8a23565f41f5d8a8575b6aab238caf082d"
+      },
+      "kind": "file",
+      "line_span": [1, 59],
+      "path": "lexhint/__init__.py",
+      "qualname": "lexhint/__init__.py",
+      "signature": "lexhint/__init__.py",
+      "source_id": "py:file:lexhint/__init__.py"
+    },
+    "py:file:lexhint/__main__.py": {
+      "hashes": {
+        "body_hash": "935a1c1166b0c1ea35a82256345000bf2c73ded718d77773bc27a71ecce28f7d",
+        "content_hash": "935a1c1166b0c1ea35a82256345000bf2c73ded718d77773bc27a71ecce28f7d",
+        "decorator_hash": "935a1c1166b0c1ea35a82256345000bf2c73ded718d77773bc27a71ecce28f7d",
+        "docstring_hash": "935a1c1166b0c1ea35a82256345000bf2c73ded718d77773bc27a71ecce28f7d",
+        "file_hash": "935a1c1166b0c1ea35a82256345000bf2c73ded718d77773bc27a71ecce28f7d",
+        "public_contract_hash": "935a1c1166b0c1ea35a82256345000bf2c73ded718d77773bc27a71ecce28f7d",
+        "signature_hash": "935a1c1166b0c1ea35a82256345000bf2c73ded718d77773bc27a71ecce28f7d"
+      },
+      "kind": "file",
+      "line_span": [1, 3],
+      "path": "lexhint/__main__.py",
+      "qualname": "lexhint/__main__.py",
+      "signature": "lexhint/__main__.py",
+      "source_id": "py:file:lexhint/__main__.py"
+    },
+    "py:file:lexhint/builder.py": {
+      "hashes": {
+        "body_hash": "79d30e439e11330858de47b014e6b9aa945bcc1c77266c8e9834b35f7a0daa0f",
+        "content_hash": "79d30e439e11330858de47b014e6b9aa945bcc1c77266c8e9834b35f7a0daa0f",
+        "decorator_hash": "79d30e439e11330858de47b014e6b9aa945bcc1c77266c8e9834b35f7a0daa0f",
+        "docstring_hash": "79d30e439e11330858de47b014e6b9aa945bcc1c77266c8e9834b35f7a0daa0f",
+        "file_hash": "79d30e439e11330858de47b014e6b9aa945bcc1c77266c8e9834b35f7a0daa0f",
+        "public_contract_hash": "79d30e439e11330858de47b014e6b9aa945bcc1c77266c8e9834b35f7a0daa0f",
+        "signature_hash": "79d30e439e11330858de47b014e6b9aa945bcc1c77266c8e9834b35f7a0daa0f"
+      },
+      "kind": "file",
+      "line_span": [1, 158],
+      "path": "lexhint/builder.py",
+      "qualname": "lexhint/builder.py",
+      "signature": "lexhint/builder.py",
+      "source_id": "py:file:lexhint/builder.py"
+    },
+    "py:file:lexhint/cli.py": {
+      "hashes": {
+        "body_hash": "0e93b6b846149139eee9fbf01eafb2c65cda36949ece7dcb54c0fa9a6f46a2ee",
+        "content_hash": "0e93b6b846149139eee9fbf01eafb2c65cda36949ece7dcb54c0fa9a6f46a2ee",
+        "decorator_hash": "0e93b6b846149139eee9fbf01eafb2c65cda36949ece7dcb54c0fa9a6f46a2ee",
+        "docstring_hash": "0e93b6b846149139eee9fbf01eafb2c65cda36949ece7dcb54c0fa9a6f46a2ee",
+        "file_hash": "0e93b6b846149139eee9fbf01eafb2c65cda36949ece7dcb54c0fa9a6f46a2ee",
+        "public_contract_hash": "0e93b6b846149139eee9fbf01eafb2c65cda36949ece7dcb54c0fa9a6f46a2ee",
+        "signature_hash": "0e93b6b846149139eee9fbf01eafb2c65cda36949ece7dcb54c0fa9a6f46a2ee"
+      },
+      "kind": "file",
+      "line_span": [1, 576],
+      "path": "lexhint/cli.py",
+      "qualname": "lexhint/cli.py",
+      "signature": "lexhint/cli.py",
+      "source_id": "py:file:lexhint/cli.py"
+    },
+    "py:file:lexhint/dictionary.py": {
+      "hashes": {
+        "body_hash": "8a35b7ca8a276cdb471018cbfdde47c586f36bb55f290754cbbdffcd8ee5b332",
+        "content_hash": "8a35b7ca8a276cdb471018cbfdde47c586f36bb55f290754cbbdffcd8ee5b332",
+        "decorator_hash": "8a35b7ca8a276cdb471018cbfdde47c586f36bb55f290754cbbdffcd8ee5b332",
+        "docstring_hash": "8a35b7ca8a276cdb471018cbfdde47c586f36bb55f290754cbbdffcd8ee5b332",
+        "file_hash": "8a35b7ca8a276cdb471018cbfdde47c586f36bb55f290754cbbdffcd8ee5b332",
+        "public_contract_hash": "8a35b7ca8a276cdb471018cbfdde47c586f36bb55f290754cbbdffcd8ee5b332",
+        "signature_hash": "8a35b7ca8a276cdb471018cbfdde47c586f36bb55f290754cbbdffcd8ee5b332"
+      },
+      "kind": "file",
+      "line_span": [1, 425],
+      "path": "lexhint/dictionary.py",
+      "qualname": "lexhint/dictionary.py",
+      "signature": "lexhint/dictionary.py",
+      "source_id": "py:file:lexhint/dictionary.py"
+    },
+    "py:file:lexhint/download.py": {
+      "hashes": {
+        "body_hash": "35204c20deefe0cbcb64653bab757f558f82766ac534329540cbd493d0f72aae",
+        "content_hash": "35204c20deefe0cbcb64653bab757f558f82766ac534329540cbd493d0f72aae",
+        "decorator_hash": "35204c20deefe0cbcb64653bab757f558f82766ac534329540cbd493d0f72aae",
+        "docstring_hash": "35204c20deefe0cbcb64653bab757f558f82766ac534329540cbd493d0f72aae",
+        "file_hash": "35204c20deefe0cbcb64653bab757f558f82766ac534329540cbd493d0f72aae",
+        "public_contract_hash": "35204c20deefe0cbcb64653bab757f558f82766ac534329540cbd493d0f72aae",
+        "signature_hash": "35204c20deefe0cbcb64653bab757f558f82766ac534329540cbd493d0f72aae"
+      },
+      "kind": "file",
+      "line_span": [1, 102],
+      "path": "lexhint/download.py",
+      "qualname": "lexhint/download.py",
+      "signature": "lexhint/download.py",
+      "source_id": "py:file:lexhint/download.py"
+    },
+    "py:file:lexhint/kaikki.py": {
+      "hashes": {
+        "body_hash": "2c78cef59c51f7e45a7fb3d55d5e534eb3490a92474b6dbf5d40edb18f05c2c9",
+        "content_hash": "2c78cef59c51f7e45a7fb3d55d5e534eb3490a92474b6dbf5d40edb18f05c2c9",
+        "decorator_hash": "2c78cef59c51f7e45a7fb3d55d5e534eb3490a92474b6dbf5d40edb18f05c2c9",
+        "docstring_hash": "2c78cef59c51f7e45a7fb3d55d5e534eb3490a92474b6dbf5d40edb18f05c2c9",
+        "file_hash": "2c78cef59c51f7e45a7fb3d55d5e534eb3490a92474b6dbf5d40edb18f05c2c9",
+        "public_contract_hash": "2c78cef59c51f7e45a7fb3d55d5e534eb3490a92474b6dbf5d40edb18f05c2c9",
+        "signature_hash": "2c78cef59c51f7e45a7fb3d55d5e534eb3490a92474b6dbf5d40edb18f05c2c9"
+      },
+      "kind": "file",
+      "line_span": [1, 71],
+      "path": "lexhint/kaikki.py",
+      "qualname": "lexhint/kaikki.py",
+      "signature": "lexhint/kaikki.py",
+      "source_id": "py:file:lexhint/kaikki.py"
+    },
+    "py:file:lexhint/lexicon.py": {
+      "hashes": {
+        "body_hash": "7fbdde7b21378684727ebae3315043f60e5c6650e5a6febf3ffc38700bafec76",
+        "content_hash": "7fbdde7b21378684727ebae3315043f60e5c6650e5a6febf3ffc38700bafec76",
+        "decorator_hash": "7fbdde7b21378684727ebae3315043f60e5c6650e5a6febf3ffc38700bafec76",
+        "docstring_hash": "7fbdde7b21378684727ebae3315043f60e5c6650e5a6febf3ffc38700bafec76",
+        "file_hash": "7fbdde7b21378684727ebae3315043f60e5c6650e5a6febf3ffc38700bafec76",
+        "public_contract_hash": "7fbdde7b21378684727ebae3315043f60e5c6650e5a6febf3ffc38700bafec76",
+        "signature_hash": "7fbdde7b21378684727ebae3315043f60e5c6650e5a6febf3ffc38700bafec76"
+      },
+      "kind": "file",
+      "line_span": [1, 177],
+      "path": "lexhint/lexicon.py",
+      "qualname": "lexhint/lexicon.py",
+      "signature": "lexhint/lexicon.py",
+      "source_id": "py:file:lexhint/lexicon.py"
+    },
+    "py:file:lexhint/models.py": {
+      "hashes": {
+        "body_hash": "8acd43b975926ae78b36c090cc4ff4753941b2afa9e07085f757c9b2b27347cf",
+        "content_hash": "8acd43b975926ae78b36c090cc4ff4753941b2afa9e07085f757c9b2b27347cf",
+        "decorator_hash": "8acd43b975926ae78b36c090cc4ff4753941b2afa9e07085f757c9b2b27347cf",
+        "docstring_hash": "8acd43b975926ae78b36c090cc4ff4753941b2afa9e07085f757c9b2b27347cf",
+        "file_hash": "8acd43b975926ae78b36c090cc4ff4753941b2afa9e07085f757c9b2b27347cf",
+        "public_contract_hash": "8acd43b975926ae78b36c090cc4ff4753941b2afa9e07085f757c9b2b27347cf",
+        "signature_hash": "8acd43b975926ae78b36c090cc4ff4753941b2afa9e07085f757c9b2b27347cf"
+      },
+      "kind": "file",
+      "line_span": [1, 61],
+      "path": "lexhint/models.py",
+      "qualname": "lexhint/models.py",
+      "signature": "lexhint/models.py",
+      "source_id": "py:file:lexhint/models.py"
+    },
+    "py:file:lexhint/store.py": {
+      "hashes": {
+        "body_hash": "125c684d7a97f7f5cd4f903b5ce3325331ff1f9795fa4c44a52c294382aba893",
+        "content_hash": "125c684d7a97f7f5cd4f903b5ce3325331ff1f9795fa4c44a52c294382aba893",
+        "decorator_hash": "125c684d7a97f7f5cd4f903b5ce3325331ff1f9795fa4c44a52c294382aba893",
+        "docstring_hash": "125c684d7a97f7f5cd4f903b5ce3325331ff1f9795fa4c44a52c294382aba893",
+        "file_hash": "125c684d7a97f7f5cd4f903b5ce3325331ff1f9795fa4c44a52c294382aba893",
+        "public_contract_hash": "125c684d7a97f7f5cd4f903b5ce3325331ff1f9795fa4c44a52c294382aba893",
+        "signature_hash": "125c684d7a97f7f5cd4f903b5ce3325331ff1f9795fa4c44a52c294382aba893"
+      },
+      "kind": "file",
+      "line_span": [1, 242],
+      "path": "lexhint/store.py",
+      "qualname": "lexhint/store.py",
+      "signature": "lexhint/store.py",
+      "source_id": "py:file:lexhint/store.py"
+    },
+    "py:file:tests/test_builder.py": {
+      "hashes": {
+        "body_hash": "2c7e741cec21fcd1a6fcff1b0e06f3eb690ea6351059ade2c94cfc3b8d95cf9e",
+        "content_hash": "2c7e741cec21fcd1a6fcff1b0e06f3eb690ea6351059ade2c94cfc3b8d95cf9e",
+        "decorator_hash": "2c7e741cec21fcd1a6fcff1b0e06f3eb690ea6351059ade2c94cfc3b8d95cf9e",
+        "docstring_hash": "2c7e741cec21fcd1a6fcff1b0e06f3eb690ea6351059ade2c94cfc3b8d95cf9e",
+        "file_hash": "2c7e741cec21fcd1a6fcff1b0e06f3eb690ea6351059ade2c94cfc3b8d95cf9e",
+        "public_contract_hash": "2c7e741cec21fcd1a6fcff1b0e06f3eb690ea6351059ade2c94cfc3b8d95cf9e",
+        "signature_hash": "2c7e741cec21fcd1a6fcff1b0e06f3eb690ea6351059ade2c94cfc3b8d95cf9e"
+      },
+      "kind": "file",
+      "line_span": [1, 60],
+      "path": "tests/test_builder.py",
+      "qualname": "tests/test_builder.py",
+      "signature": "tests/test_builder.py",
+      "source_id": "py:file:tests/test_builder.py"
+    },
+    "py:file:tests/test_cli.py": {
+      "hashes": {
+        "body_hash": "08a4170b8586bd2555ca157307cfb2bda8ac849274f472709b300f53e76d9f0a",
+        "content_hash": "08a4170b8586bd2555ca157307cfb2bda8ac849274f472709b300f53e76d9f0a",
+        "decorator_hash": "08a4170b8586bd2555ca157307cfb2bda8ac849274f472709b300f53e76d9f0a",
+        "docstring_hash": "08a4170b8586bd2555ca157307cfb2bda8ac849274f472709b300f53e76d9f0a",
+        "file_hash": "08a4170b8586bd2555ca157307cfb2bda8ac849274f472709b300f53e76d9f0a",
+        "public_contract_hash": "08a4170b8586bd2555ca157307cfb2bda8ac849274f472709b300f53e76d9f0a",
+        "signature_hash": "08a4170b8586bd2555ca157307cfb2bda8ac849274f472709b300f53e76d9f0a"
+      },
+      "kind": "file",
+      "line_span": [1, 107],
+      "path": "tests/test_cli.py",
+      "qualname": "tests/test_cli.py",
+      "signature": "tests/test_cli.py",
+      "source_id": "py:file:tests/test_cli.py"
+    },
+    "py:file:tests/test_cli_lazy.py": {
+      "hashes": {
+        "body_hash": "0dd745a9fec8b138d806d34339a54e977e2a44e9caf534b3d11bcaa109be4616",
+        "content_hash": "0dd745a9fec8b138d806d34339a54e977e2a44e9caf534b3d11bcaa109be4616",
+        "decorator_hash": "0dd745a9fec8b138d806d34339a54e977e2a44e9caf534b3d11bcaa109be4616",
+        "docstring_hash": "0dd745a9fec8b138d806d34339a54e977e2a44e9caf534b3d11bcaa109be4616",
+        "file_hash": "0dd745a9fec8b138d806d34339a54e977e2a44e9caf534b3d11bcaa109be4616",
+        "public_contract_hash": "0dd745a9fec8b138d806d34339a54e977e2a44e9caf534b3d11bcaa109be4616",
+        "signature_hash": "0dd745a9fec8b138d806d34339a54e977e2a44e9caf534b3d11bcaa109be4616"
+      },
+      "kind": "file",
+      "line_span": [1, 131],
+      "path": "tests/test_cli_lazy.py",
+      "qualname": "tests/test_cli_lazy.py",
+      "signature": "tests/test_cli_lazy.py",
+      "source_id": "py:file:tests/test_cli_lazy.py"
+    },
+    "py:file:tests/test_dictionary.py": {
+      "hashes": {
+        "body_hash": "c669539af5ae954dc200a08130b953aedde960035b2cb7497e451385a1ee1df4",
+        "content_hash": "c669539af5ae954dc200a08130b953aedde960035b2cb7497e451385a1ee1df4",
+        "decorator_hash": "c669539af5ae954dc200a08130b953aedde960035b2cb7497e451385a1ee1df4",
+        "docstring_hash": "c669539af5ae954dc200a08130b953aedde960035b2cb7497e451385a1ee1df4",
+        "file_hash": "c669539af5ae954dc200a08130b953aedde960035b2cb7497e451385a1ee1df4",
+        "public_contract_hash": "c669539af5ae954dc200a08130b953aedde960035b2cb7497e451385a1ee1df4",
+        "signature_hash": "c669539af5ae954dc200a08130b953aedde960035b2cb7497e451385a1ee1df4"
+      },
+      "kind": "file",
+      "line_span": [1, 153],
+      "path": "tests/test_dictionary.py",
+      "qualname": "tests/test_dictionary.py",
+      "signature": "tests/test_dictionary.py",
+      "source_id": "py:file:tests/test_dictionary.py"
+    },
+    "py:file:tests/test_download.py": {
+      "hashes": {
+        "body_hash": "e36c4063f2125794a5d80be7b07d09ec47f0b5566104dcd949585b654041f66e",
+        "content_hash": "e36c4063f2125794a5d80be7b07d09ec47f0b5566104dcd949585b654041f66e",
+        "decorator_hash": "e36c4063f2125794a5d80be7b07d09ec47f0b5566104dcd949585b654041f66e",
+        "docstring_hash": "e36c4063f2125794a5d80be7b07d09ec47f0b5566104dcd949585b654041f66e",
+        "file_hash": "e36c4063f2125794a5d80be7b07d09ec47f0b5566104dcd949585b654041f66e",
+        "public_contract_hash": "e36c4063f2125794a5d80be7b07d09ec47f0b5566104dcd949585b654041f66e",
+        "signature_hash": "e36c4063f2125794a5d80be7b07d09ec47f0b5566104dcd949585b654041f66e"
+      },
+      "kind": "file",
+      "line_span": [1, 11],
+      "path": "tests/test_download.py",
+      "qualname": "tests/test_download.py",
+      "signature": "tests/test_download.py",
+      "source_id": "py:file:tests/test_download.py"
+    },
+    "py:file:tests/test_kaikki.py": {
+      "hashes": {
+        "body_hash": "fac73898950afced79162a46ecbc5a67dc4c93e7dab83625976a3570f571941c",
+        "content_hash": "fac73898950afced79162a46ecbc5a67dc4c93e7dab83625976a3570f571941c",
+        "decorator_hash": "fac73898950afced79162a46ecbc5a67dc4c93e7dab83625976a3570f571941c",
+        "docstring_hash": "fac73898950afced79162a46ecbc5a67dc4c93e7dab83625976a3570f571941c",
+        "file_hash": "fac73898950afced79162a46ecbc5a67dc4c93e7dab83625976a3570f571941c",
+        "public_contract_hash": "fac73898950afced79162a46ecbc5a67dc4c93e7dab83625976a3570f571941c",
+        "signature_hash": "fac73898950afced79162a46ecbc5a67dc4c93e7dab83625976a3570f571941c"
+      },
+      "kind": "file",
+      "line_span": [1, 58],
+      "path": "tests/test_kaikki.py",
+      "qualname": "tests/test_kaikki.py",
+      "signature": "tests/test_kaikki.py",
+      "source_id": "py:file:tests/test_kaikki.py"
+    },
+    "py:file:tests/test_lazy_dictionary.py": {
+      "hashes": {
+        "body_hash": "5b0c458fa7cb66c760c11667c1dcd59d0d3c523b092229c7b14a26be799662f5",
+        "content_hash": "5b0c458fa7cb66c760c11667c1dcd59d0d3c523b092229c7b14a26be799662f5",
+        "decorator_hash": "5b0c458fa7cb66c760c11667c1dcd59d0d3c523b092229c7b14a26be799662f5",
+        "docstring_hash": "5b0c458fa7cb66c760c11667c1dcd59d0d3c523b092229c7b14a26be799662f5",
+        "file_hash": "5b0c458fa7cb66c760c11667c1dcd59d0d3c523b092229c7b14a26be799662f5",
+        "public_contract_hash": "5b0c458fa7cb66c760c11667c1dcd59d0d3c523b092229c7b14a26be799662f5",
+        "signature_hash": "5b0c458fa7cb66c760c11667c1dcd59d0d3c523b092229c7b14a26be799662f5"
+      },
+      "kind": "file",
+      "line_span": [1, 177],
+      "path": "tests/test_lazy_dictionary.py",
+      "qualname": "tests/test_lazy_dictionary.py",
+      "signature": "tests/test_lazy_dictionary.py",
+      "source_id": "py:file:tests/test_lazy_dictionary.py"
+    },
+    "py:file:tests/test_lexicon.py": {
+      "hashes": {
+        "body_hash": "7705cab884ddefa882b25f80d05260d719b16e9d9e021d63da5b7b49a299a82c",
+        "content_hash": "7705cab884ddefa882b25f80d05260d719b16e9d9e021d63da5b7b49a299a82c",
+        "decorator_hash": "7705cab884ddefa882b25f80d05260d719b16e9d9e021d63da5b7b49a299a82c",
+        "docstring_hash": "7705cab884ddefa882b25f80d05260d719b16e9d9e021d63da5b7b49a299a82c",
+        "file_hash": "7705cab884ddefa882b25f80d05260d719b16e9d9e021d63da5b7b49a299a82c",
+        "public_contract_hash": "7705cab884ddefa882b25f80d05260d719b16e9d9e021d63da5b7b49a299a82c",
+        "signature_hash": "7705cab884ddefa882b25f80d05260d719b16e9d9e021d63da5b7b49a299a82c"
+      },
+      "kind": "file",
+      "line_span": [1, 33],
+      "path": "tests/test_lexicon.py",
+      "qualname": "tests/test_lexicon.py",
+      "signature": "tests/test_lexicon.py",
+      "source_id": "py:file:tests/test_lexicon.py"
+    },
+    "py:file:tests/test_remote_context.py": {
+      "hashes": {
+        "body_hash": "8304678e81ffd7c6a2e66084c2def32fd6b0da578f796db98a4b13015009cac4",
+        "content_hash": "8304678e81ffd7c6a2e66084c2def32fd6b0da578f796db98a4b13015009cac4",
+        "decorator_hash": "8304678e81ffd7c6a2e66084c2def32fd6b0da578f796db98a4b13015009cac4",
+        "docstring_hash": "8304678e81ffd7c6a2e66084c2def32fd6b0da578f796db98a4b13015009cac4",
+        "file_hash": "8304678e81ffd7c6a2e66084c2def32fd6b0da578f796db98a4b13015009cac4",
+        "public_contract_hash": "8304678e81ffd7c6a2e66084c2def32fd6b0da578f796db98a4b13015009cac4",
+        "signature_hash": "8304678e81ffd7c6a2e66084c2def32fd6b0da578f796db98a4b13015009cac4"
+      },
+      "kind": "file",
+      "line_span": [1, 73],
+      "path": "tests/test_remote_context.py",
+      "qualname": "tests/test_remote_context.py",
+      "signature": "tests/test_remote_context.py",
+      "source_id": "py:file:tests/test_remote_context.py"
+    },
+    "py:function:lexhint/builder.py::_binary_source": {
+      "hashes": {
+        "body_hash": "80ae0b0d02dc89a4e2e42fd17b6f60ac5b938541758a5452b74c4bd2eb901a29",
+        "content_hash": "434f5d5cfb7cd1f86fc5d36b4d50b69cd8c2c90be626b9cb9d64e9fb374a20d8",
+        "decorator_hash": "c893f89e52ad4726b639e88e6c5c2eaf0acf999a66e2b1e3a12128dd8783d82b",
+        "docstring_hash": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "public_contract_hash": "65f40a89064fbae7b2a671db1aa085d4bb2c0ed184ccb23423d8b4c80466e7e1",
+        "signature_hash": "9301ea0565b948ed71390ec43da112b3abf19c582481d7717341c9f7a131f07a"
+      },
+      "kind": "function",
+      "line_span": [30, 42],
+      "path": "lexhint/builder.py",
+      "qualname": "_binary_source",
+      "signature": "_binary_source(source: str | Path, *, timeout: float) -> Iterator[BinaryIO]",
+      "source_id": "py:function:lexhint/builder.py::_binary_source"
+    },
+    "py:function:lexhint/builder.py::_text_source": {
+      "hashes": {
+        "body_hash": "4c90ae000ff7cf75acbec99f52b37452d95c19071f97c81b08101d5467d02df7",
+        "content_hash": "d6b5522f7cac92e1bbaa73b19bf30ce38de1cb812d042e9a0e00c94a4350dc76",
+        "decorator_hash": "c893f89e52ad4726b639e88e6c5c2eaf0acf999a66e2b1e3a12128dd8783d82b",
+        "docstring_hash": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "public_contract_hash": "26dce1506f38d748f7c593c2a1c43f68956e200e6fb78b86fbed65e60114ddef",
+        "signature_hash": "d3f89fbabf7c101add2670850962af7809e818f82b9f08592373535bee9d44f3"
+      },
+      "kind": "function",
+      "line_span": [46, 57],
+      "path": "lexhint/builder.py",
+      "qualname": "_text_source",
+      "signature": "_text_source(source: str | Path, *, timeout: float=60.0) -> Iterator[TextIO]",
+      "source_id": "py:function:lexhint/builder.py::_text_source"
+    },
+    "py:function:lexhint/builder.py::build_dictionary": {
+      "hashes": {
+        "body_hash": "b34e0962ed98aba6a5fecf7474e1a1b70452eb4437c88891e76684f95429a57a",
+        "content_hash": "23fa53af4255e9592f070b0471646b43db4d33f8102c66c049a05b5d24970cb0",
+        "decorator_hash": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "docstring_hash": "7bd374c2f13fd6528f15542814107f6d8c9c6683268ba85fdbcfa2ee812d4758",
+        "public_contract_hash": "0320afa9739206c9eca6e0a11d04890c97710ab343648d650747325470719136",
+        "signature_hash": "2616e8fdafe12dfe5bc38f427a7d8311243eb0b356ab4ad30f2ae350442a21c8"
+      },
+      "kind": "function",
+      "line_span": [68, 158],
+      "path": "lexhint/builder.py",
+      "qualname": "build_dictionary",
+      "signature": "build_dictionary(language: str, source: str | Path, *, output: str | Path | None=None, timeout: float=60.0, progress: Callable[[DictionaryBuildStats], None] | None=None) -> tuple[Path, DictionaryBuildStats]",
+      "source_id": "py:function:lexhint/builder.py::build_dictionary"
+    },
+    "py:function:lexhint/builder.py::iter_wiktextract_entries": {
+      "hashes": {
+        "body_hash": "3cbcfa07b1e4a6cc00d09a267f69b9a9f9a3140d8a2473d255f98567593d4327",
+        "content_hash": "71473a1de8560d919a228a1821f149601ad08c50e250afae47912fdb53928662",
+        "decorator_hash": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "docstring_hash": "9177dacb63cb59383562183ffb7c3216112ccd98adda8c5afd25c5643c05378c",
+        "public_contract_hash": "363569df28e6507f57dd40af2937e0b52df4926ecdb85dc7427f9e90dd008a37",
+        "signature_hash": "1ae4d6df02b852536629e3b79f3e861f68cafe46435598321a5656d8b5731b71"
+      },
+      "kind": "function",
+      "line_span": [60, 65],
+      "path": "lexhint/builder.py",
+      "qualname": "iter_wiktextract_entries",
+      "signature": "iter_wiktextract_entries(source: str | Path, *, timeout: float=60.0) -> Iterator[dict[str, object]]",
+      "source_id": "py:function:lexhint/builder.py::iter_wiktextract_entries"
+    },
+    "py:function:lexhint/cli.py::_build": {
+      "hashes": {
+        "body_hash": "5e6d48e3fc0a5d7438a2eab43a1c52d0da85f9c4f17663bfa6575ee9510a4243",
+        "content_hash": "103a506a96917219ad3e7e4b2052d5233cfe8f1797624d6a7161a3767bf66aca",
+        "decorator_hash": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "docstring_hash": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "public_contract_hash": "f155563261d55b4b572d4cb22651b932af496ee3e5139732c6dbeb216b00ea89",
+        "signature_hash": "9404f85d3df96f54f36fc93a340b593531daae85a4c8fb87c78cc1fcef49c396"
+      },
+      "kind": "function",
+      "line_span": [372, 380],
+      "path": "lexhint/cli.py",
+      "qualname": "_build",
+      "signature": "_build(language: str, source: str, *, output: str | None, show_progress: bool) -> tuple[Path, DictionaryBuildStats]",
+      "source_id": "py:function:lexhint/cli.py::_build"
+    },
+    "py:function:lexhint/cli.py::_context_values": {
+      "hashes": {
+        "body_hash": "7783c068d4040be18a7fc9e9c1fa9711a92e56f32024fb056b07a66493437fa9",
+        "content_hash": "7bc8e7ef5dab084986f66bb37b58bbd0021c302c85d54ef8843a3f5532d3adfe",
+        "decorator_hash": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "docstring_hash": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "public_contract_hash": "a18afe6c146b2dd8ffadb1a69b1f7f312bf82b539dea2f363e75025768ac687b",
+        "signature_hash": "5326392bcf0271e2aea3ec1eed23abf2ff9b8828fa3e9dd1fafbc48973038753"
+      },
+      "kind": "function",
+      "line_span": [119, 130],
+      "path": "lexhint/cli.py",
+      "qualname": "_context_values",
+      "signature": "_context_values(values: Sequence[str], *, explicit_language: str | None) -> tuple[str, str, str]",
+      "source_id": "py:function:lexhint/cli.py::_context_values"
+    },
+    "py:function:lexhint/cli.py::_default_language": {
+      "hashes": {
+        "body_hash": "6ed654df5c06c9109511891100050777d581f3fedbf9ca6f0bcaddb3853c7a05",
+        "content_hash": "6e1201319c2c10dbffe304ec7c910752d1f3c0a2b221bc89ccdc6968100d767e",
+        "decorator_hash": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "docstring_hash": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "public_contract_hash": "b5cbbd7284a742dd869af3d13913df9246cfc2dbb242ee841bdc364444ed0943",
+        "signature_hash": "9d601b646ab813c6782adee12a704161c89832519d4a7185e38c0c8e032da42c"
+      },
+      "kind": "function",
+      "line_span": [66, 70],
+      "path": "lexhint/cli.py",
+      "qualname": "_default_language",
+      "signature": "_default_language() -> str",
+      "source_id": "py:function:lexhint/cli.py::_default_language"
+    },
+    "py:function:lexhint/cli.py::_extract_output_flags": {
+      "hashes": {
+        "body_hash": "cc97564193cc3ee7559b8c691e0d6a13a53342cda7782a68871245d762ad4e55",
+        "content_hash": "8dc2de0a6c00af7778949e0fdc61c9f60bf3df2cf5c25e8d73a6b1bb47e8ed88",
+        "decorator_hash": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "docstring_hash": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "public_contract_hash": "3349222a4c81cc18f9686e76aa39e8de4dbcc6213466962dea083c4dfd60b711",
+        "signature_hash": "2f1886a38100f72adb05e7a565e7774269afda2b04307d4457fc6970c5cd130a"
+      },
+      "kind": "function",
+      "line_span": [274, 288],
+      "path": "lexhint/cli.py",
+      "qualname": "_extract_output_flags",
+      "signature": "_extract_output_flags(argv: Sequence[str]) -> tuple[list[str], bool, bool, bool]",
+      "source_id": "py:function:lexhint/cli.py::_extract_output_flags"
+    },
+    "py:function:lexhint/cli.py::_human_build": {
+      "hashes": {
+        "body_hash": "468636e270c41c381a99afe3f30a82fd558d480f49f107b182f3e00969a7c0b8",
+        "content_hash": "0c79c72cf78e79bdb241e9d0a7235f31308dbd97278184cb2fb137de979ac7de",
+        "decorator_hash": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "docstring_hash": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "public_contract_hash": "4ec99744585474a11f5c8974314f058158f8feea81b800beb51e9fd32ff85db0",
+        "signature_hash": "4d6c2b936728e1767e953bc7c02fcb3fe4511000f4dbaeefa3679ab9fd5b63fc"
+      },
+      "kind": "function",
+      "line_span": [328, 334],
+      "path": "lexhint/cli.py",
+      "qualname": "_human_build",
+      "signature": "_human_build(path: Path, stats: DictionaryBuildStats, style: _Style) -> None",
+      "source_id": "py:function:lexhint/cli.py::_human_build"
+    },
+    "py:function:lexhint/cli.py::_human_context": {
+      "hashes": {
+        "body_hash": "dd8b78753aa52e0f4e72fc116d197d7332068bdb4ed4f3c01ea05a44981cc4cc",
+        "content_hash": "060444287b68b43a3432cd1b88f70b4b82cb06f0950d423b8fce3d924364bd8d",
+        "decorator_hash": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "docstring_hash": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "public_contract_hash": "27a21d15da479b7752ed7857206ff1d64c065004cd620f047542d3c0431cb022",
+        "signature_hash": "d90a8c66af1e1090b62f0c6e5134704d5f8844e4fc22c0a2e69bac740be9b6a3"
+      },
+      "kind": "function",
+      "line_span": [351, 358],
+      "path": "lexhint/cli.py",
+      "qualname": "_human_context",
+      "signature": "_human_context(topic: str, support: ContextSupport | None, style: _Style) -> None",
+      "source_id": "py:function:lexhint/cli.py::_human_context"
+    },
+    "py:function:lexhint/cli.py::_human_dictionary_fetch": {
+      "hashes": {
+        "body_hash": "1b1bfa3e90746e359e913e4ab1ce588d2f1caca3cd5171b65402efeaf2a4e2e7",
+        "content_hash": "f59bee82b8d4c633858bebe7dbf79893436d06dc7ba5ae82ef2411a1f183eff6",
+        "decorator_hash": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "docstring_hash": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "public_contract_hash": "68c7c72a61d4391e73f8e7fd1fc28b589b1951d11b5de7ef82e54ccf22cbdd90",
+        "signature_hash": "e04fdbeeef9feda84ceca1123448b0a906149f461ebc9050c3db9e3b777af855"
+      },
+      "kind": "function",
+      "line_span": [299, 304],
+      "path": "lexhint/cli.py",
+      "qualname": "_human_dictionary_fetch",
+      "signature": "_human_dictionary_fetch(result: DictionaryFetchResult, style: _Style) -> None",
+      "source_id": "py:function:lexhint/cli.py::_human_dictionary_fetch"
+    },
+    "py:function:lexhint/cli.py::_human_fetch": {
+      "hashes": {
+        "body_hash": "aec0f29753ddb67dedddec096fe222b1b3fef9a77de1acc9f2c06e4dafb873ca",
+        "content_hash": "8064f4bacc02d8cef8ee4ca6f25bd33b374b4efa7c28c6faa5c03556e6086b64",
+        "decorator_hash": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "docstring_hash": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "public_contract_hash": "9cb9b48a71bb7472cf2e7220d309cdd6f91657ab87e1f412fcc3f84f51da682b",
+        "signature_hash": "9f99c645fa3879edddd54ce461794041c334edcec14618bdefe32ccd030dc026"
+      },
+      "kind": "function",
+      "line_span": [295, 296],
+      "path": "lexhint/cli.py",
+      "qualname": "_human_fetch",
+      "signature": "_human_fetch(language: str, path: Path, style: _Style) -> None",
+      "source_id": "py:function:lexhint/cli.py::_human_fetch"
+    },
+    "py:function:lexhint/cli.py::_human_segments": {
+      "hashes": {
+        "body_hash": "b177e72202b6ba52cb4e73dd901b162d9b01205cab520c0a306b3a9dc212d2c6",
+        "content_hash": "1b3450ec71dc904da23acb9bba79d17260c0281b7e5c941d8fd2eeddcf0242d0",
+        "decorator_hash": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "docstring_hash": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "public_contract_hash": "43ea9d5589fbecdcdbd80f9898889ff689179ecb36e535f5f6e694e2192dce8f",
+        "signature_hash": "67babbc9abe54630937e387251316c674b3d8ce7a561dd22ac25c7787edbc277"
+      },
+      "kind": "function",
+      "line_span": [314, 325],
+      "path": "lexhint/cli.py",
+      "qualname": "_human_segments",
+      "signature": "_human_segments(text: str, items: Sequence[Segment], style: _Style) -> None",
+      "source_id": "py:function:lexhint/cli.py::_human_segments"
+    },
+    "py:function:lexhint/cli.py::_human_senses": {
+      "hashes": {
+        "body_hash": "354ca7fff3c48d4ea1252b7f9762d4f8f6bee0957e8dd26a158bb39dfe502d3d",
+        "content_hash": "108b30c27a687f3c20dd26714ca70598274e6f10e5361475a7b2224f374c6191",
+        "decorator_hash": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "docstring_hash": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "public_contract_hash": "a8393d45b510b5d1a00693de6eeb43ed2050c9a4e59b85bd3ee1e927b453b3d2",
+        "signature_hash": "025f82153a695583c2fbb9e0587fa9174579f9d391dd9e1917f70e992944996d"
+      },
+      "kind": "function",
+      "line_span": [337, 348],
+      "path": "lexhint/cli.py",
+      "qualname": "_human_senses",
+      "signature": "_human_senses(word: str, senses: Sequence[Sense], style: _Style) -> None",
+      "source_id": "py:function:lexhint/cli.py::_human_senses"
+    },
+    "py:function:lexhint/cli.py::_human_word": {
+      "hashes": {
+        "body_hash": "4fa6ae3dc7f41a469906cdb5cd148215d42c895bfc8047ddce36a2e5e6500eae",
+        "content_hash": "9b786cd6b8ee221c93a51d0f019c64041d21dd963f57e1b2b399b68f769dbe3b",
+        "decorator_hash": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "docstring_hash": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "public_contract_hash": "0c04d3f9500ccb41fc5064d745bcb0a8e841a055096545d1240085191022fac5",
+        "signature_hash": "8835eb6f6391a9d8000938878f4e7d9b620ab165eb8bd8d8798954cbfcda013a"
+      },
+      "kind": "function",
+      "line_span": [307, 311],
+      "path": "lexhint/cli.py",
+      "qualname": "_human_word",
+      "signature": "_human_word(word: str, rank: int | None, style: _Style) -> None",
+      "source_id": "py:function:lexhint/cli.py::_human_word"
+    },
+    "py:function:lexhint/cli.py::_json": {
+      "hashes": {
+        "body_hash": "77d449a10b5ba6dd7339d7bd2f8130d9e15b84a24b5e0b0e6fa8900530ececc8",
+        "content_hash": "807477560eeb97fe0818714df9d66d5ea0de2967257481ce98bcc4e141102efc",
+        "decorator_hash": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "docstring_hash": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "public_contract_hash": "b2e4ab2e216080a8f3b0379501fbad0dd7ddefa4806bbf346c9b5a92499a4d18",
+        "signature_hash": "61e3548bd86cc70ccd5d1abdd5e7163b8c545dcc20a1eaabb2cdd8b8f4a0443f"
+      },
+      "kind": "function",
+      "line_span": [291, 292],
+      "path": "lexhint/cli.py",
+      "qualname": "_json",
+      "signature": "_json(payload: object) -> None",
+      "source_id": "py:function:lexhint/cli.py::_json"
+    },
+    "py:function:lexhint/cli.py::_language_and_value": {
+      "hashes": {
+        "body_hash": "54001575c1a720e96cfe2d689cf6c72d979f92cb0202498a36777c57b72c7a99",
+        "content_hash": "5d13cbb47f29956251b3b5bd9d4dfa59b2d2c56c7923dcf083021e75bcd6b8e7",
+        "decorator_hash": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "docstring_hash": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "public_contract_hash": "cf1859cf916b719fd4d63572cfd92a1421f9aaeea56cefa179942d0b2a9510c2",
+        "signature_hash": "8f180fb2f966730384b9fbb25096efe3c805fdc5e27127e03df87526b3388a75"
+      },
+      "kind": "function",
+      "line_span": [90, 104],
+      "path": "lexhint/cli.py",
+      "qualname": "_language_and_value",
+      "signature": "_language_and_value(values: Sequence[str], *, explicit_language: str | None, label: str) -> tuple[str, str]",
+      "source_id": "py:function:lexhint/cli.py::_language_and_value"
+    },
+    "py:function:lexhint/cli.py::_language_and_words": {
+      "hashes": {
+        "body_hash": "47f40cc9134bc1dd92570bb360bf6e9fe21b1c7ec3edf941c905e0fc45120003",
+        "content_hash": "943959ed1426bd3507a7652b09a0c0c2dfaea18b42deb11393ed8f7dd2567d5b",
+        "decorator_hash": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "docstring_hash": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "public_contract_hash": "1ed4fb35146f9c09ab7cd854e70b8cbc4ff2fe55ca335ca81e18fc160014b135",
+        "signature_hash": "823ac5c29840dc3d387b6f122d85d2f274b057b51ed1a03cf772ca7e48215ec7"
+      },
+      "kind": "function",
+      "line_span": [107, 116],
+      "path": "lexhint/cli.py",
+      "qualname": "_language_and_words",
+      "signature": "_language_and_words(values: Sequence[str], *, explicit_language: str | None) -> tuple[str, tuple[str, ...]]",
+      "source_id": "py:function:lexhint/cli.py::_language_and_words"
+    },
+    "py:function:lexhint/cli.py::_parser": {
+      "hashes": {
+        "body_hash": "625065344a6e94b636d02fd62d3a60daf14dc5639e9b784b0ecc34b07b6b994c",
+        "content_hash": "a3d9fc7aa0bbbad329a0bc88830a9388da51dcf62017950ddd42943c10835443",
+        "decorator_hash": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "docstring_hash": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "public_contract_hash": "1fdc4af006e29a72e85f1f65125dd744afae88054c139d27986c430c1d82c11b",
+        "signature_hash": "6ea0992378e03ce2bc20d7f2f48512f08af6a683443aac29b9d921337ac25596"
+      },
+      "kind": "function",
+      "line_span": [133, 271],
+      "path": "lexhint/cli.py",
+      "qualname": "_parser",
+      "signature": "_parser() -> argparse.ArgumentParser",
+      "source_id": "py:function:lexhint/cli.py::_parser"
+    },
+    "py:function:lexhint/cli.py::_progress": {
+      "hashes": {
+        "body_hash": "75ff51ebcfabb8914f92ea011c4f24999b944aecc5aeb791df7fbb0f2b351a06",
+        "content_hash": "0be56c872fb27a9a82173b77bc6e72a814d318b28e1dafbd5a8fac8599845d94",
+        "decorator_hash": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "docstring_hash": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "public_contract_hash": "2e482f66539af8c23c54b80621578d9b59ff306dd458e8bee6e1c7ce4aab1c03",
+        "signature_hash": "b2aad6e316b1859b2dabe05ff9701c70130dd646889d34c46ac1c9614f92fc01"
+      },
+      "kind": "function",
+      "line_span": [361, 369],
+      "path": "lexhint/cli.py",
+      "qualname": "_progress",
+      "signature": "_progress(stats: DictionaryBuildStats) -> None",
+      "source_id": "py:function:lexhint/cli.py::_progress"
+    },
+    "py:function:lexhint/cli.py::_run": {
+      "hashes": {
+        "body_hash": "03c6c0b70f58e67d2ea273fc87f9857e5ff6e21bf624ba19f9ea079d6ac1a215",
+        "content_hash": "55d8bbc99bf420df776e0d785cef0ef0a5402d539515937bacad5369fbff1035",
+        "decorator_hash": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "docstring_hash": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "public_contract_hash": "b3f21c8c42f2cd29702a65f27a0cbf930b57d3966366fab5137c2b4989e8aa48",
+        "signature_hash": "e234539e45e12744ca597acb9d09c66594aab8ce165d7479c2f2eb95d5c68020"
+      },
+      "kind": "function",
+      "line_span": [383, 525],
+      "path": "lexhint/cli.py",
+      "qualname": "_run",
+      "signature": "_run(args: argparse.Namespace, *, json_output: bool, style: _Style, offline: bool) -> int",
+      "source_id": "py:function:lexhint/cli.py::_run"
+    },
+    "py:function:lexhint/cli.py::_span": {
+      "hashes": {
+        "body_hash": "c57f9819c0a74b6e26c9b16fc7148aba873d5a16c33d7a127053e24e45822eff",
+        "content_hash": "24fda53058003c708199e3ea2d4a3995ecb9fa071826f1438702dc3ce0f5553f",
+        "decorator_hash": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "docstring_hash": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "public_contract_hash": "3cc73eabd70cc35d1d5b321a1b01951265c684952757585bd8ca7fcc23d37535",
+        "signature_hash": "660d3844e03834619b751ce7bc78b30fbb7f7edb747f40ae3d356c39562e5100"
+      },
+      "kind": "function",
+      "line_span": [73, 79],
+      "path": "lexhint/cli.py",
+      "qualname": "_span",
+      "signature": "_span(text: str, target: str | None) -> tuple[int, int]",
+      "source_id": "py:function:lexhint/cli.py::_span"
+    },
+    "py:function:lexhint/cli.py::_validate_language": {
+      "hashes": {
+        "body_hash": "29508ab7d90515b2b5c0f3e274167d7277a905d767eb253aa8b7b3c0b018a1ce",
+        "content_hash": "630d384329f7ea600594600a5c71b0e7d92d36737252620c3adab47f5e6758bb",
+        "decorator_hash": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "docstring_hash": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "public_contract_hash": "3a1cbec5c7fa58a381072831d64c653efa3c700c08d39490b734906f8bbd35fe",
+        "signature_hash": "15be80203960555c61cd5dca8815d8e179e53e40816d2a0b81b452906df90305"
+      },
+      "kind": "function",
+      "line_span": [82, 87],
+      "path": "lexhint/cli.py",
+      "qualname": "_validate_language",
+      "signature": "_validate_language(language: str) -> str",
+      "source_id": "py:function:lexhint/cli.py::_validate_language"
+    },
+    "py:function:lexhint/cli.py::main": {
+      "hashes": {
+        "body_hash": "52fcb3cfab37738091207d5165bc9561217ed6d7569f9dc36f3c4afc285dd653",
+        "content_hash": "d16420528d15b570917ad40e868782958f38ea6a110aa39f6b0ab1b92220444d",
+        "decorator_hash": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "docstring_hash": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "public_contract_hash": "9681af0c55b72bc6451e20a73f2813202d1e81c25b308affd39bf6badf084175",
+        "signature_hash": "34f9c10fd05df34ae6b5fce26e0a51f153aee469f013a268af80e99cca31d14a"
+      },
+      "kind": "function",
+      "line_span": [528, 576],
+      "path": "lexhint/cli.py",
+      "qualname": "main",
+      "signature": "main(argv: Sequence[str] | None=None) -> int",
+      "source_id": "py:function:lexhint/cli.py::main"
+    },
+    "py:function:lexhint/dictionary.py::_display_normalize": {
+      "hashes": {
+        "body_hash": "3568df087dc56664cf14418468df407bc3d852c0261014f47102eed2258fc8fc",
+        "content_hash": "11b232d0859d031cfc00e29b11c0f83acc12973148fa397a8dce4b207d9557ec",
+        "decorator_hash": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "docstring_hash": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "public_contract_hash": "a2ab3ce8ad693674d81b5f7bd759749eb0b1290b5a2d7a7eca6f761e24818f69",
+        "signature_hash": "e15b6be2c2e5533084b4ec07b7b087d50c63ddc2b8b374554c719ee2ee1cb8c7"
+      },
+      "kind": "function",
+      "line_span": [52, 53],
+      "path": "lexhint/dictionary.py",
+      "qualname": "_display_normalize",
+      "signature": "_display_normalize(value: str) -> str",
+      "source_id": "py:function:lexhint/dictionary.py::_display_normalize"
+    },
+    "py:function:lexhint/dictionary.py::_loads_tuple": {
+      "hashes": {
+        "body_hash": "3f8ba08f5aabe477020f6db213e01cf4f7fc4b42b1f49bd8f4ec96ccfdfdd7ef",
+        "content_hash": "5f6d6df6d25a1a796389ef8af5313f085878823d1c9e048e945231b05207c379",
+        "decorator_hash": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "docstring_hash": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "public_contract_hash": "5c202d4121f406a169c411f1ea3d16ba52773207fea91e1cb21d044f3738c96e",
+        "signature_hash": "236640c0a139bbc4139407813e764780fb3ed314d54843a3906b92952eb22719"
+      },
+      "kind": "function",
+      "line_span": [56, 58],
+      "path": "lexhint/dictionary.py",
+      "qualname": "_loads_tuple",
+      "signature": "_loads_tuple(value: str) -> tuple[str, ...]",
+      "source_id": "py:function:lexhint/dictionary.py::_loads_tuple"
+    },
+    "py:function:lexhint/dictionary.py::_normalize": {
+      "hashes": {
+        "body_hash": "2eac1839cad995ecde86059b98ed8d5ee7d2e96ef9e15f52e34a99cbb5abe618",
+        "content_hash": "2883e2c282aa336d36ac59c48128ce3f544a36ed678ba117e0a8c52a1df0d65c",
+        "decorator_hash": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "docstring_hash": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "public_contract_hash": "1e330750f5fbc9085fa260c6e8d9961951a9468d9a22d8e8e9da41f584098fec",
+        "signature_hash": "a1fb9a4ed6fa56802c62d7b42b6e7df41e1b5de202b14a566885a49d29ce605f"
+      },
+      "kind": "function",
+      "line_span": [48, 49],
+      "path": "lexhint/dictionary.py",
+      "qualname": "_normalize",
+      "signature": "_normalize(value: str) -> str",
+      "source_id": "py:function:lexhint/dictionary.py::_normalize"
+    },
+    "py:function:lexhint/dictionary.py::_runtime_metadata": {
+      "hashes": {
+        "body_hash": "782bf6fbb81b41c44cf2b7d654cbae952ec440fd3771ab5cfb2ebb02420d5a4d",
+        "content_hash": "a732e9ac5fa3b0fcf139e469f4a8f159de2616428ce2cafeb26fb2ed7be30a11",
+        "decorator_hash": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "docstring_hash": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "public_contract_hash": "7d974b878c29969e23c4e9434f4b6798b962ccc823eb42f20f42578d79df2021",
+        "signature_hash": "be1397f2b7d581e8cd24500c64b4adc33faa01aae4d0eca438cff2a2d8965dff"
+      },
+      "kind": "function",
+      "line_span": [61, 74],
+      "path": "lexhint/dictionary.py",
+      "qualname": "_runtime_metadata",
+      "signature": "_runtime_metadata(path: Path) -> dict[str, str]",
+      "source_id": "py:function:lexhint/dictionary.py::_runtime_metadata"
+    },
+    "py:function:lexhint/dictionary.py::fetch_dictionary_word": {
+      "hashes": {
+        "body_hash": "24f18ff4fbed405792db456f54d7765765a1e04fbc4b93a72498e316fbe9ec41",
+        "content_hash": "c09dfa0b8f39ac89dbce75c552e6057ab8e932cab3d711fc18749af4db0c97b7",
+        "decorator_hash": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "docstring_hash": "8a3954af594bd981a5991218bc7ddb59f03b48a98ae44b6a7be1dcfb122de27c",
+        "public_contract_hash": "90fa6a070272b9289035de48ebfda83cafe296647fd4ca255369d9f2e08afc37",
+        "signature_hash": "72e9a6f32c347f8c377c874c984a9923e86cb45519d41ed4521bc595ff94ad25"
+      },
+      "kind": "function",
+      "line_span": [77, 141],
+      "path": "lexhint/dictionary.py",
+      "qualname": "fetch_dictionary_word",
+      "signature": "fetch_dictionary_word(language: str, word: str, *, path: str | Path | None=None, refresh: bool=False, offline: bool=False, timeout: float=30.0) -> DictionaryFetchResult",
+      "source_id": "py:function:lexhint/dictionary.py::fetch_dictionary_word"
+    },
+    "py:function:lexhint/download.py::_normalize_frequency_source": {
+      "hashes": {
+        "body_hash": "50eea77dc2fc8d7ddd88e96407d3c99c12169eaf32928cc813f75520ccaac15b",
+        "content_hash": "58e5d3485b9eed1c48e99ff493b1d48f3fcdccc8c598b7171742ef17749719c2",
+        "decorator_hash": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "docstring_hash": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "public_contract_hash": "42a0539133d04bf062f2ec49a06656ba76fd49bed69102079560ea6573f25479",
+        "signature_hash": "feef12de5c68fb528e69ea08ebe6b80937e2df4e0c1737a184c2a8a04e9c6778"
+      },
+      "kind": "function",
+      "line_span": [49, 70],
+      "path": "lexhint/download.py",
+      "qualname": "_normalize_frequency_source",
+      "signature": "_normalize_frequency_source(data: bytes) -> list[str]",
+      "source_id": "py:function:lexhint/download.py::_normalize_frequency_source"
+    },
+    "py:function:lexhint/download.py::cache_dir": {
+      "hashes": {
+        "body_hash": "d52950dda1efe68365796ec933fbe3ab7c70a30fb5f6f7195efa9c6e3e938f6a",
+        "content_hash": "19e2606d35f9954d726e7812c0733050f1a1855e7a13f62e8de057473a86f26c",
+        "decorator_hash": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "docstring_hash": "e68a04ff656b20a329a0f8c55d74def6d60ef3112036022400d79e362bff3ef5",
+        "public_contract_hash": "69a130af4a4460a7003a1fb03785118a3b8aa1d7900556d2f958d69f1f0dfa2f",
+        "signature_hash": "620005e13fd49c991ad214e325cd14fe4a72032a6d418d2cf03ea6774e8d44d7"
+      },
+      "kind": "function",
+      "line_span": [21, 29],
+      "path": "lexhint/download.py",
+      "qualname": "cache_dir",
+      "signature": "cache_dir() -> Path",
+      "source_id": "py:function:lexhint/download.py::cache_dir"
+    },
+    "py:function:lexhint/download.py::cached_dictionary_path": {
+      "hashes": {
+        "body_hash": "c61a47012fb7407ecaf12a0534e0b7c04774e73a84c351071016072064f2849d",
+        "content_hash": "e093e0e74e608a8cae455210349642baa333d5741e33c861501aeac571b83632",
+        "decorator_hash": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "docstring_hash": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "public_contract_hash": "e6f2598f31b55883c6574d85293dd08d7812172e138458480995fda10f9aa2ad",
+        "signature_hash": "385df2492e477dae8ec875f0c170f997bc3c18c559a21b7c5cc4ba402cce4853"
+      },
+      "kind": "function",
+      "line_span": [37, 39],
+      "path": "lexhint/download.py",
+      "qualname": "cached_dictionary_path",
+      "signature": "cached_dictionary_path(language: str) -> Path",
+      "source_id": "py:function:lexhint/download.py::cached_dictionary_path"
+    },
+    "py:function:lexhint/download.py::cached_wordlist_path": {
+      "hashes": {
+        "body_hash": "f18d26152c19b8d69f18cd5da39f6a8779bb128668f1496474d7f2a88bc65f03",
+        "content_hash": "c01a60f768d587e9a6991e1b8d8fdb9d3e96db6fd300cd412bda5468014ffc5a",
+        "decorator_hash": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "docstring_hash": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "public_contract_hash": "f8ae7c259ea23644b983b7167e9af96747c621126559b3c800ad1a1fb7877946",
+        "signature_hash": "976f4673ff5c096b526a20a5f4101c4ce0b7b032c2aac8f88295bb93b1a3b3eb"
+      },
+      "kind": "function",
+      "line_span": [32, 34],
+      "path": "lexhint/download.py",
+      "qualname": "cached_wordlist_path",
+      "signature": "cached_wordlist_path(language: str) -> Path",
+      "source_id": "py:function:lexhint/download.py::cached_wordlist_path"
+    },
+    "py:function:lexhint/download.py::fetch_wordlist": {
+      "hashes": {
+        "body_hash": "a0405a75a2fecd0ba35539f53aab5dd6240bb00b6e19bf833b1fca1b08418489",
+        "content_hash": "50d766dfce053eada1d88429a31e9cca7ce763869bc34062efbcff893a90a788",
+        "decorator_hash": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "docstring_hash": "18b79043eceb1aab34a9fdb537ed42ecfe73193586c8543f5132e8ea13a89754",
+        "public_contract_hash": "af31836d3e5500af1737f7740462a1442c3c139f6c52caaf97abbef65029fe9f",
+        "signature_hash": "671256b31fbca2b9293d13df757a943ae1f81df5a9282e30701a2fb60acb4e7c"
+      },
+      "kind": "function",
+      "line_span": [73, 102],
+      "path": "lexhint/download.py",
+      "qualname": "fetch_wordlist",
+      "signature": "fetch_wordlist(language: str, *, force: bool=False, timeout: float=30.0) -> Path",
+      "source_id": "py:function:lexhint/download.py::fetch_wordlist"
+    },
+    "py:function:lexhint/download.py::wordlist_source_url": {
+      "hashes": {
+        "body_hash": "63683118f772d21b66577c759bb9588fa4847dc11c1c4153c05471361ed43bd7",
+        "content_hash": "4d3f2acdb671732c3b45c4932898645f9df8d5f0228671dc79f76660fb23e8e3",
+        "decorator_hash": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "docstring_hash": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "public_contract_hash": "a4cd8ae0bd6c464b0a2cf9569767d20b0b0d1fe3e09bd5fe1afa60e11a46cbc9",
+        "signature_hash": "f436b8b64927357baec97341cdbd7aa35ca3806a6bc4d7e8d0c93aa78a031197"
+      },
+      "kind": "function",
+      "line_span": [42, 46],
+      "path": "lexhint/download.py",
+      "qualname": "wordlist_source_url",
+      "signature": "wordlist_source_url(language: str) -> str",
+      "source_id": "py:function:lexhint/download.py::wordlist_source_url"
+    },
+    "py:function:lexhint/kaikki.py::fetch_word_entries": {
+      "hashes": {
+        "body_hash": "136b34743af94109d0df95c86e410fb3a7dc04dd32a348301330c9f37268c5c7",
+        "content_hash": "1720064cc56efbbd22c6fc20f99d1fb5ed11c2db84faee142be64771ac8b6a76",
+        "decorator_hash": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "docstring_hash": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "public_contract_hash": "bf145c402bf7edf5827f41e4cab9cc8294a6a764278abe32afd4eb6eda3a2278",
+        "signature_hash": "fa8ec1eec8c914773d020076c986da19243872111bddbd7b0e2e0ec08d26f4f8"
+      },
+      "kind": "function",
+      "line_span": [59, 60],
+      "path": "lexhint/kaikki.py",
+      "qualname": "fetch_word_entries",
+      "signature": "fetch_word_entries(word: str, *, timeout: float=30.0) -> tuple[dict[str, object], ...]",
+      "source_id": "py:function:lexhint/kaikki.py::fetch_word_entries"
+    },
+    "py:function:lexhint/kaikki.py::iter_word_entries": {
+      "hashes": {
+        "body_hash": "8a7b262f9b6ed812ba4886c9eaa6fa5ed1d117a82d82bb286861b9d275960b53",
+        "content_hash": "9900a02ea3163d60e80524e9c98262ec9514c8c92f456020936280b3b7274056",
+        "decorator_hash": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "docstring_hash": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "public_contract_hash": "65387cece6ae10faec6c464a32e4071959bba80d7b28ae0884ee90a36e686411",
+        "signature_hash": "92f8f34e25789e8c6fcc448d16d4b71efbc701387347d81cc159594037bb20be"
+      },
+      "kind": "function",
+      "line_span": [36, 56],
+      "path": "lexhint/kaikki.py",
+      "qualname": "iter_word_entries",
+      "signature": "iter_word_entries(word: str, *, timeout: float=30.0) -> Iterator[dict[str, object]]",
+      "source_id": "py:function:lexhint/kaikki.py::iter_word_entries"
+    },
+    "py:function:lexhint/kaikki.py::kaikki_word_url": {
+      "hashes": {
+        "body_hash": "d84babe438e158f841ca9662d3f3bad3241a2fab84b398f7ef1bb840a52a7b4c",
+        "content_hash": "a02d3bf5309fc2bbf25aa9e18abb498095e35849e1d4bf3ec5748bc837214849",
+        "decorator_hash": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "docstring_hash": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "public_contract_hash": "db5befdd598a8270a96d41e15db748b27691a114c64b91fdf4d4f455a2c9493e",
+        "signature_hash": "7a386b3982fb9a69eb9994834c324ad4501400be57e9024bb5a93b163a910a06"
+      },
+      "kind": "function",
+      "line_span": [24, 33],
+      "path": "lexhint/kaikki.py",
+      "qualname": "kaikki_word_url",
+      "signature": "kaikki_word_url(word: str) -> str",
+      "source_id": "py:function:lexhint/kaikki.py::kaikki_word_url"
+    },
+    "py:function:lexhint/lexicon.py::_load_path": {
+      "hashes": {
+        "body_hash": "dad846b62b9c1c91ac977b861735cd7a7e791a460fe8b31fc44b519ecac3284e",
+        "content_hash": "273e189bdbf5235f360c546cb712db704ffc4a2a4456ded64933c5973be21316",
+        "decorator_hash": "4e43287306396ae06be4be29223183b802efa5529adb948a4ef7a8d6795f035c",
+        "docstring_hash": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "public_contract_hash": "b128813462954dd6f94b943dfa8402c0fb72bd431dd350d9f178e5c6b2868916",
+        "signature_hash": "7bafd5e7b151e3451cb2b84adc8e48a7c1650b00289ab77a0c6c524ab23e3447"
+      },
+      "kind": "function",
+      "line_span": [26, 28],
+      "path": "lexhint/lexicon.py",
+      "qualname": "_load_path",
+      "signature": "_load_path(path: str) -> tuple[str, ...]",
+      "source_id": "py:function:lexhint/lexicon.py::_load_path"
+    },
+    "py:function:lexhint/lexicon.py::normalize_word": {
+      "hashes": {
+        "body_hash": "ccd8b46bf1c1177e29fca6e6c7ecac3fa1c3d86286f2946bb5ae6c6ed2d49ddb",
+        "content_hash": "44bfdebfbd6dd1be4844ef35581409cd88628f84ee744f516a481b55d1001e61",
+        "decorator_hash": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "docstring_hash": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "public_contract_hash": "c817ddef41a957efc6b9046185101d1cc8b2f27b1954827d19a53debc2d0be9c",
+        "signature_hash": "a42837766febc136d2bcd9143028edc13072e8a34aec3846bc950bf34b1e5fec"
+      },
+      "kind": "function",
+      "line_span": [21, 22],
+      "path": "lexhint/lexicon.py",
+      "qualname": "normalize_word",
+      "signature": "normalize_word(value: str) -> str",
+      "source_id": "py:function:lexhint/lexicon.py::normalize_word"
+    },
+    "py:function:lexhint/store.py::create_schema": {
+      "hashes": {
+        "body_hash": "261ea42b7f62572b265127977c0b107db11b2a270ed69d3ce4c827f6cbb046ee",
+        "content_hash": "bcca319c00790eede867ca706fa878aa5c642e24f0dc5ee0e7bb017a2c101d3c",
+        "decorator_hash": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "docstring_hash": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "public_contract_hash": "ba4b19d37b6395d5c946b67dbb86210b70a838b53c768d55adaf78d05da67104",
+        "signature_hash": "a9e490b73023e2756400e8c2e990dad89f42e654cfcd9b61faa8d7e83fe1c783"
+      },
+      "kind": "function",
+      "line_span": [72, 99],
+      "path": "lexhint/store.py",
+      "qualname": "create_schema",
+      "signature": "create_schema(connection: sqlite3.Connection) -> None",
+      "source_id": "py:function:lexhint/store.py::create_schema"
+    },
+    "py:function:lexhint/store.py::dictionary_coverage": {
+      "hashes": {
+        "body_hash": "b2d579eeebfed8991bea1896ff2518a81b1861c8d3da361d5b05351d095cbade",
+        "content_hash": "e49fb162c180a0b42c29580c469b7ed52b3931e610a57f85960708b409f3e518",
+        "decorator_hash": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "docstring_hash": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "public_contract_hash": "ef915707cec7fcc83f292440d6ec5e3047bb29530631f4a2762f9c5acfb486f0",
+        "signature_hash": "5a43acd76bb93a648d26172adfd4421acf6c84abc157396a3620f9e63cf05219"
+      },
+      "kind": "function",
+      "line_span": [201, 204],
+      "path": "lexhint/store.py",
+      "qualname": "dictionary_coverage",
+      "signature": "dictionary_coverage(path: str | Path) -> str",
+      "source_id": "py:function:lexhint/store.py::dictionary_coverage"
+    },
+    "py:function:lexhint/store.py::initialize_partial": {
+      "hashes": {
+        "body_hash": "eae20c9f97ae73c8da61072ed1033c4b0b7d631a90dd7b13f733ad6f50e19aa4",
+        "content_hash": "c6f637827821870421e5a6a2d261ee3047d2cebd75ca757f6c621b1cbd1c9716",
+        "decorator_hash": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "docstring_hash": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "public_contract_hash": "83f32d62b8aeee4a9bde630227f82a368dd88cd84d3ce47af88779e48f49d2c3",
+        "signature_hash": "0214add34f7d2541466a6d3d53f1cddfb02de4a604ef58e6f6439d32ca43178c"
+      },
+      "kind": "function",
+      "line_span": [121, 141],
+      "path": "lexhint/store.py",
+      "qualname": "initialize_partial",
+      "signature": "initialize_partial(path: str | Path, language: str) -> Path",
+      "source_id": "py:function:lexhint/store.py::initialize_partial"
+    },
+    "py:function:lexhint/store.py::iter_jsonl_entries": {
+      "hashes": {
+        "body_hash": "c613e041c62af48c94a1630fa3f2fff1d9baae0e3d5ba5dd1d6d6c8a2e69565f",
+        "content_hash": "08aee0005ec2b91a0821d88b54838145590b6ee2b8ec064d3d6cd679a1ff4310",
+        "decorator_hash": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "docstring_hash": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "public_contract_hash": "63c55f4b0329dc18d45d9fa7c252d6e1b500f378034371acc488ed43ee4e9aef",
+        "signature_hash": "e6a172f4042ef3a4f7ea00a4e6f053db545841c48037c659c9a75bd7041bcc71"
+      },
+      "kind": "function",
+      "line_span": [232, 242],
+      "path": "lexhint/store.py",
+      "qualname": "iter_jsonl_entries",
+      "signature": "iter_jsonl_entries(lines: Iterable[str]) -> Iterator[dict[str, object]]",
+      "source_id": "py:function:lexhint/store.py::iter_jsonl_entries"
+    },
+    "py:function:lexhint/store.py::json_tuple": {
+      "hashes": {
+        "body_hash": "7303dbbaa2ebdbc073ce34220164843f9d5eb68f09cd4dbb814aec1c5251a7f8",
+        "content_hash": "d2fe874253c101c547fcb1b0297def666268767ed0c6c4c720fa44375fb84b34",
+        "decorator_hash": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "docstring_hash": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "public_contract_hash": "387432ded19466603b4d0f953ff97fad8b95029ab82db77df553440d5ce71f60",
+        "signature_hash": "1912a6cb8389596c9d63580596e5e94c80bfbbb5bc6efccc8263cad9970fae7c"
+      },
+      "kind": "function",
+      "line_span": [68, 69],
+      "path": "lexhint/store.py",
+      "qualname": "json_tuple",
+      "signature": "json_tuple(values: tuple[str, ...]) -> str",
+      "source_id": "py:function:lexhint/store.py::json_tuple"
+    },
+    "py:function:lexhint/store.py::lookup_sense_count": {
+      "hashes": {
+        "body_hash": "639fb9f59c84213e4310a9f6b0b4bbd31958c34f5b7d93b2b7410bdff07e5fe3",
+        "content_hash": "e7391471501d514cfcc1ac7292d9369be40bd5019bfea583852d78eaf615544c",
+        "decorator_hash": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "docstring_hash": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "public_contract_hash": "23a682198e392bba15f08112dc201cd491a9941c7b3378f1f9b5da5e4c28e561",
+        "signature_hash": "2ff7d8a05a7a2e56739afa397b61640793620d129e68a5a433c127b0e5e3bbf9"
+      },
+      "kind": "function",
+      "line_span": [207, 213],
+      "path": "lexhint/store.py",
+      "qualname": "lookup_sense_count",
+      "signature": "lookup_sense_count(path: str | Path, query: str) -> int",
+      "source_id": "py:function:lexhint/store.py::lookup_sense_count"
+    },
+    "py:function:lexhint/store.py::lookup_status": {
+      "hashes": {
+        "body_hash": "fe0cee40176ef9249e43e6acd147404b41f121403c1404579faaf93d010ce4e0",
+        "content_hash": "60a2acae18a80c98b07adf96bc312833904e9df17506e9c9226d37c89d7be342",
+        "decorator_hash": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "docstring_hash": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "public_contract_hash": "a21f2842ccf2d27abb09f3fd20b774ef5a7c325966d28abb5018c7ad0965cd8d",
+        "signature_hash": "8ee934d3abab410cf3db809aa89d76a1844183fcd4c1f75a79bfed7fa5741ed7"
+      },
+      "kind": "function",
+      "line_span": [144, 150],
+      "path": "lexhint/store.py",
+      "qualname": "lookup_status",
+      "signature": "lookup_status(path: str | Path, query: str) -> str | None",
+      "source_id": "py:function:lexhint/store.py::lookup_status"
+    },
+    "py:function:lexhint/store.py::metadata": {
+      "hashes": {
+        "body_hash": "54b5bdb7cc9c34b318c0829a13487e54e96e293e708bb5010f8c8bcf4e30d33b",
+        "content_hash": "ffad516ac4d810a38604dbe414968e4af9ba3bebababd117a2dda784c5c81a22",
+        "decorator_hash": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "docstring_hash": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "public_contract_hash": "e868c3dd234113a1d01da763f7a22043a01cb8f00f19f30538ed5d8dd5bbdd3e",
+        "signature_hash": "9d56b755a42f84060c5f4e688c57a7dfdd04afeb5d944c1c27e6a5db096c116e"
+      },
+      "kind": "function",
+      "line_span": [102, 108],
+      "path": "lexhint/store.py",
+      "qualname": "metadata",
+      "signature": "metadata(connection: sqlite3.Connection) -> dict[str, str]",
+      "source_id": "py:function:lexhint/store.py::metadata"
+    },
+    "py:function:lexhint/store.py::migrate_partial_v3_to_v4": {
+      "hashes": {
+        "body_hash": "88c047865288c96b6dca42fe3bca6d9f603fd1056fddc12ed55fd009a3bca3d8",
+        "content_hash": "c44230572b1a81a180fd2d29b2c6fa8a35c8dc509e370dc93b039dfec5943fea",
+        "decorator_hash": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "docstring_hash": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "public_contract_hash": "366bae8099704bb1b377acdd0dd6c2cd9dec6e8620847438fc0f4ce5b1f7cdac",
+        "signature_hash": "e1f642269eec5109f795b817587b2869a8bc874bdec0661f81634ac012add551"
+      },
+      "kind": "function",
+      "line_span": [216, 229],
+      "path": "lexhint/store.py",
+      "qualname": "migrate_partial_v3_to_v4",
+      "signature": "migrate_partial_v3_to_v4(path: str | Path) -> bool",
+      "source_id": "py:function:lexhint/store.py::migrate_partial_v3_to_v4"
+    },
+    "py:function:lexhint/store.py::normalize_display_word": {
+      "hashes": {
+        "body_hash": "f7e166e6b508155d10318ce3a7dc503a5305b0e71be07cb51f822755e3816c07",
+        "content_hash": "b2c54207418d9623ea7139fca3aae9db3a651fcbb261f3bd9b59a681c32b68c1",
+        "decorator_hash": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "docstring_hash": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "public_contract_hash": "54ac786eaac485a1f3827eb177c3fafcc1b70ac4dd6cd13fc40f2ab67e8efa31",
+        "signature_hash": "4d477a755be24df83d1a57c36e364ff2250d01fb61af4e15dffb089e457beae2"
+      },
+      "kind": "function",
+      "line_span": [29, 30],
+      "path": "lexhint/store.py",
+      "qualname": "normalize_display_word",
+      "signature": "normalize_display_word(value: str) -> str",
+      "source_id": "py:function:lexhint/store.py::normalize_display_word"
+    },
+    "py:function:lexhint/store.py::normalize_word": {
+      "hashes": {
+        "body_hash": "ccd8b46bf1c1177e29fca6e6c7ecac3fa1c3d86286f2946bb5ae6c6ed2d49ddb",
+        "content_hash": "44bfdebfbd6dd1be4844ef35581409cd88628f84ee744f516a481b55d1001e61",
+        "decorator_hash": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "docstring_hash": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "public_contract_hash": "c817ddef41a957efc6b9046185101d1cc8b2f27b1954827d19a53debc2d0be9c",
+        "signature_hash": "a42837766febc136d2bcd9143028edc13072e8a34aec3846bc950bf34b1e5fec"
+      },
+      "kind": "function",
+      "line_span": [25, 26],
+      "path": "lexhint/store.py",
+      "qualname": "normalize_word",
+      "signature": "normalize_word(value: str) -> str",
+      "source_id": "py:function:lexhint/store.py::normalize_word"
+    },
+    "py:function:lexhint/store.py::replace_word_rows": {
+      "hashes": {
+        "body_hash": "3f88c2470de3c1abd065ff481df28a409adccb5d0a0d30612f67653fc33cfaf5",
+        "content_hash": "6be7ecbc19661e3d177d3da8a5a1d643f3f84d500bbe9e0ce31bd13ebd4d57b1",
+        "decorator_hash": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "docstring_hash": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "public_contract_hash": "132d63f8ae1ef7c17c58bd93bd7f34dd69e81fa96159f3561727776b3c65c690",
+        "signature_hash": "8853959a07d63c37c3f02accb8e8385a221d03650350af620e02710a271745c2"
+      },
+      "kind": "function",
+      "line_span": [153, 198],
+      "path": "lexhint/store.py",
+      "qualname": "replace_word_rows",
+      "signature": "replace_word_rows(path: str | Path, *, language: str, query: str, source_url: str, entries: Iterable[Mapping[str, object]], status: str='complete') -> int",
+      "source_id": "py:function:lexhint/store.py::replace_word_rows"
+    },
+    "py:function:lexhint/store.py::semantic_rows": {
+      "hashes": {
+        "body_hash": "03201166e84cd897e91ce05aab3a66e6c81dcc6f95839c4527e95f3e2b95b6d6",
+        "content_hash": "80a830680eba8950b19deb5584cfcdf6946f2a842d94057b3b0ef31966460f87",
+        "decorator_hash": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "docstring_hash": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "public_contract_hash": "178a7f3a7362499e16c1fd532632cb803cac5278afb2ba16d096e2560f909535",
+        "signature_hash": "d9d3706b6d69d3753bb8cb68298c6b52d0e6fc97f661624de93aa20e0d87e856"
+      },
+      "kind": "function",
+      "line_span": [43, 65],
+      "path": "lexhint/store.py",
+      "qualname": "semantic_rows",
+      "signature": "semantic_rows(entry: Mapping[str, object], *, language: str) -> Iterator[SemanticSenseRow]",
+      "source_id": "py:function:lexhint/store.py::semantic_rows"
+    },
+    "py:function:lexhint/store.py::set_metadata": {
+      "hashes": {
+        "body_hash": "6889ebe62bf3a0d8948fcf772b6d3a0e7d54f3b374b855dab82f52d7983407e3",
+        "content_hash": "dc82b42f9b44fc68ae373fa9d6e120fc43767c278ac00b9530191ade2cef658f",
+        "decorator_hash": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "docstring_hash": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "public_contract_hash": "1b3eec352112734349d4dd9838dd58afeb51034f8cbe903294b011d44b21a394",
+        "signature_hash": "48a4342b4a94f21fd7fd6d967a1b9f7d74ee2795277120bb2af9a23f0d65eb61"
+      },
+      "kind": "function",
+      "line_span": [111, 114],
+      "path": "lexhint/store.py",
+      "qualname": "set_metadata",
+      "signature": "set_metadata(connection: sqlite3.Connection, values: Mapping[str, str]) -> None",
+      "source_id": "py:function:lexhint/store.py::set_metadata"
+    },
+    "py:function:lexhint/store.py::strings": {
+      "hashes": {
+        "body_hash": "4528b238f6f91f5ac3998492e2626fd09c9ad47012e746c4a4defb5898d140ff",
+        "content_hash": "cbd7da7af21ead540a9eb57db1725e48025740647d145732886a5d1485a32bcd",
+        "decorator_hash": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "docstring_hash": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "public_contract_hash": "d89078b19e14228cd98db22599a5ba25591bd4d9c5c59ea7a0f1933dfa7f87f3",
+        "signature_hash": "f1d816e99acd7e634c929f82fb38c848f27e4f3d3c564c9df00d0becdef41897"
+      },
+      "kind": "function",
+      "line_span": [33, 40],
+      "path": "lexhint/store.py",
+      "qualname": "strings",
+      "signature": "strings(value: object) -> tuple[str, ...]",
+      "source_id": "py:function:lexhint/store.py::strings"
+    },
+    "py:function:lexhint/store.py::utc_now": {
+      "hashes": {
+        "body_hash": "04d97f7b2f56105a8dee137484e2a607e200f29f786ca622301e010f18cb21c8",
+        "content_hash": "9ec6602003b139aa2cc16ae3960a1abfbe8eddacf8db47d47fc617e2fda2e069",
+        "decorator_hash": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "docstring_hash": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "public_contract_hash": "2643de3378c850bb4c779ee48f95b99cb0da3f181fc0c4b7e3d7917d2624b516",
+        "signature_hash": "ba39ac28db6e581f68b73226ca61098814443c9abcd3d9c3fe7bc39df762c320"
+      },
+      "kind": "function",
+      "line_span": [117, 118],
+      "path": "lexhint/store.py",
+      "qualname": "utc_now",
+      "signature": "utc_now() -> str",
+      "source_id": "py:function:lexhint/store.py::utc_now"
+    },
+    "py:function:tests/test_builder.py::test_build_dictionary_reports_progress": {
+      "hashes": {
+        "body_hash": "070528569ce6bbfb2228e11f4bd963c64153a3ef9c4cfa121959431ab3efa019",
+        "content_hash": "b03a743dc00a3e7749e8d5a8a28d4338bde2fd2785b6a2f31369446328a89440",
+        "decorator_hash": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "docstring_hash": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "public_contract_hash": "6a9004a4dd8512cdf465c7581894ebf519b884f52fd3471170c0d8c245c64c83",
+        "signature_hash": "b57a7f59686599de3b11be1a2119d1b66c175aee548a47dec97382d4965fb066"
+      },
+      "kind": "function",
+      "line_span": [20, 38],
+      "path": "tests/test_builder.py",
+      "qualname": "test_build_dictionary_reports_progress",
+      "signature": "test_build_dictionary_reports_progress(tmp_path: Path) -> None",
+      "source_id": "py:function:tests/test_builder.py::test_build_dictionary_reports_progress"
+    },
+    "py:function:tests/test_builder.py::test_fixture_build_is_independent_of_wordlist": {
+      "hashes": {
+        "body_hash": "30f96ba4c7062d06ab530cd2f83205c51a60e1b8d35d26fce739217cdff72493",
+        "content_hash": "5d8323b85808c79c5797469a5e6d9305a7b5e53b32447003d68290995d712948",
+        "decorator_hash": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "docstring_hash": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "public_contract_hash": "6ace0b7bf4e21639532a9705605a089cf3675289f78262d82eec8a77c15334ee",
+        "signature_hash": "b6920775d411e62ce9a26bb01c50bdda755512d1d94adde0c4dade826f03bbf0"
+      },
+      "kind": "function",
+      "line_span": [41, 60],
+      "path": "tests/test_builder.py",
+      "qualname": "test_fixture_build_is_independent_of_wordlist",
+      "signature": "test_fixture_build_is_independent_of_wordlist(tmp_path: Path, monkeypatch) -> None",
+      "source_id": "py:function:tests/test_builder.py::test_fixture_build_is_independent_of_wordlist"
+    },
+    "py:function:tests/test_builder.py::test_iter_wiktextract_entries_reads_gzip": {
+      "hashes": {
+        "body_hash": "258421d9dd506621410da3d02d5b22886c042dcf375985828df3df4c146c239c",
+        "content_hash": "df82345bcb48c7c912f09981fe91d19fcefbcd23e6d65c3fd7cc55992e8c823f",
+        "decorator_hash": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "docstring_hash": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "public_contract_hash": "f845698a17ef927a8c6043627caa32fbf8ff7e95e7798f8fb89cc29565eab385",
+        "signature_hash": "4bd07c8c01437f4648e3912a6fcb130422abc37208022666c5643a9148684223"
+      },
+      "kind": "function",
+      "line_span": [12, 17],
+      "path": "tests/test_builder.py",
+      "qualname": "test_iter_wiktextract_entries_reads_gzip",
+      "signature": "test_iter_wiktextract_entries_reads_gzip(tmp_path: Path) -> None",
+      "source_id": "py:function:tests/test_builder.py::test_iter_wiktextract_entries_reads_gzip"
+    },
+    "py:function:tests/test_cli.py::test_dictionary_build_source_defaults_to_kaikki": {
+      "hashes": {
+        "body_hash": "a6cca7c629d4fd32a34b45d64f2cbe7e9c5d55844e8cc1e885394b09d54b7f9c",
+        "content_hash": "b3d8776a47b73124c507939d092b3e2479edbd42b5e89975c42364bb7daf4452",
+        "decorator_hash": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "docstring_hash": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "public_contract_hash": "4fc6b5a9c6214052ee129f07835d304777b63dac9cb2041dd85f085802c77469",
+        "signature_hash": "29756efd7e8baea05495974e082ca2a86e00fa98285ebc673288ce7f765b884b"
+      },
+      "kind": "function",
+      "line_span": [58, 62],
+      "path": "tests/test_cli.py",
+      "qualname": "test_dictionary_build_source_defaults_to_kaikki",
+      "signature": "test_dictionary_build_source_defaults_to_kaikki() -> None",
+      "source_id": "py:function:tests/test_cli.py::test_dictionary_build_source_defaults_to_kaikki"
+    },
+    "py:function:tests/test_cli.py::test_dictionary_json_uses_schema_v2_shape": {
+      "hashes": {
+        "body_hash": "b5461edc10adba55bd7201420500993c5e21dac9cd30f9048606e05c84375a8b",
+        "content_hash": "63e071a68d3d53c2f1fd6faa259a1ef1c707dd24ffe12c8ad8666d6c80aee2b8",
+        "decorator_hash": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "docstring_hash": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "public_contract_hash": "9ad1973f9f4366f6a0c2be1c921c33d4911d4d42fcc5b8d8ac54f44b5eb067e5",
+        "signature_hash": "ace21635031c3c9a85b7fb798df0204e2226d28d5bcb2bdc590afa4ba2fe044b"
+      },
+      "kind": "function",
+      "line_span": [65, 74],
+      "path": "tests/test_cli.py",
+      "qualname": "test_dictionary_json_uses_schema_v2_shape",
+      "signature": "test_dictionary_json_uses_schema_v2_shape(tmp_path: Path, capsys: pytest.CaptureFixture[str]) -> None",
+      "source_id": "py:function:tests/test_cli.py::test_dictionary_json_uses_schema_v2_shape"
+    },
+    "py:function:tests/test_cli.py::test_invalid_environment_language_is_runtime_error": {
+      "hashes": {
+        "body_hash": "c8d6d7e3ea06004245f558328fdb9b6469a2029650413b2eaf43104d88e5c42e",
+        "content_hash": "f436fca06cb46029c44927474aac17bcd10a311a3d4bcf10f36f51c07500ec00",
+        "decorator_hash": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "docstring_hash": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "public_contract_hash": "ee8a6904a01b227520b3e9e92ff356313c7053be3fa013ae32164a879b18df78",
+        "signature_hash": "228894073f5a3a584c92cea87dcc579bdadfada498da66590a26c560d7a2a621"
+      },
+      "kind": "function",
+      "line_span": [87, 92],
+      "path": "tests/test_cli.py",
+      "qualname": "test_invalid_environment_language_is_runtime_error",
+      "signature": "test_invalid_environment_language_is_runtime_error(monkeypatch: pytest.MonkeyPatch, capsys: pytest.CaptureFixture[str]) -> None",
+      "source_id": "py:function:tests/test_cli.py::test_invalid_environment_language_is_runtime_error"
+    },
+    "py:function:tests/test_cli.py::test_legacy_word_language_still_works": {
+      "hashes": {
+        "body_hash": "fd1921803ba9ebc45cd43b366f36c83f6d30ed60874ac2e6125c6b46faa940e1",
+        "content_hash": "560fd95d6678bfe54baeb6c07c4bd5eccafd1f7a9273ec6d52e0c2a29219a5ab",
+        "decorator_hash": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "docstring_hash": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "public_contract_hash": "c61483b713097f5e1adf97586bb37f10904cf2111ad786f4634c7a9146b29bdb",
+        "signature_hash": "cabd33f2ef0d7b822c79ba37d3e1e13f250dc4ad149e57a9909aee0b2c8e1425"
+      },
+      "kind": "function",
+      "line_span": [36, 43],
+      "path": "tests/test_cli.py",
+      "qualname": "test_legacy_word_language_still_works",
+      "signature": "test_legacy_word_language_still_works(monkeypatch: pytest.MonkeyPatch, capsys: pytest.CaptureFixture[str]) -> None",
+      "source_id": "py:function:tests/test_cli.py::test_legacy_word_language_still_works"
+    },
+    "py:function:tests/test_cli.py::test_missing_wordlist_is_runtime_error": {
+      "hashes": {
+        "body_hash": "088bbcd3d228de3e43733865d0e7aab0fed2198cf6cd6738d7b6438214efdf23",
+        "content_hash": "8496fc1d6e0667c17c574cf96eab5e0754ed1f5a6e03a1382eaec51923b6067f",
+        "decorator_hash": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "docstring_hash": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "public_contract_hash": "f7103b114e38cad00d5ce592d380a09e3ef96fe571d1a655bc3c2bdd1f9d237f",
+        "signature_hash": "0b70f681c35ab8a5ca62d5c8f9e6f147707ae7c1d2499dae1a881372dde73678"
+      },
+      "kind": "function",
+      "line_span": [77, 84],
+      "path": "tests/test_cli.py",
+      "qualname": "test_missing_wordlist_is_runtime_error",
+      "signature": "test_missing_wordlist_is_runtime_error(tmp_path: Path, monkeypatch: pytest.MonkeyPatch, capsys: pytest.CaptureFixture[str]) -> None",
+      "source_id": "py:function:tests/test_cli.py::test_missing_wordlist_is_runtime_error"
+    },
+    "py:function:tests/test_cli.py::test_schema_incompatibility_has_rebuild_hint": {
+      "hashes": {
+        "body_hash": "5c116127faf2f25772ec8660ddc187ba1b9fb7a05cf7711808c77dc21911046b",
+        "content_hash": "805aa99f1a461e77b4b2171a92f5766a5e3a226bffe88530b2a7488f8cabb74f",
+        "decorator_hash": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "docstring_hash": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "public_contract_hash": "2a961dba340263e8810547eda44c80b51cbea8fea57c200bee3894f433c003ad",
+        "signature_hash": "ffb5a5e21d952acaa1d95513bd06bdc8cdaeb27e5d471fee8c38d14691c1412b"
+      },
+      "kind": "function",
+      "line_span": [95, 107],
+      "path": "tests/test_cli.py",
+      "qualname": "test_schema_incompatibility_has_rebuild_hint",
+      "signature": "test_schema_incompatibility_has_rebuild_hint(tmp_path: Path, capsys: pytest.CaptureFixture[str]) -> None",
+      "source_id": "py:function:tests/test_cli.py::test_schema_incompatibility_has_rebuild_hint"
+    },
+    "py:function:tests/test_cli.py::test_segment_human_output": {
+      "hashes": {
+        "body_hash": "cc923152e7d9b1cc686185792ab9f1a26944f7c35134ec6b4bf28f1816ef6f90",
+        "content_hash": "1ad66d2169751a00ff7505430af86e931646c94f32563bfe44dcb4a6279f0918",
+        "decorator_hash": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "docstring_hash": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "public_contract_hash": "394560354fe3ebe6cd0867087fd6505f68d097f4ac497e67af37ce3ff71448d1",
+        "signature_hash": "727072562ffdda0a19b7502eee103d168324427d30bb87b608344686558afbbc"
+      },
+      "kind": "function",
+      "line_span": [46, 55],
+      "path": "tests/test_cli.py",
+      "qualname": "test_segment_human_output",
+      "signature": "test_segment_human_output(monkeypatch: pytest.MonkeyPatch, capsys: pytest.CaptureFixture[str]) -> None",
+      "source_id": "py:function:tests/test_cli.py::test_segment_human_output"
+    },
+    "py:function:tests/test_cli.py::test_word_uses_default_english": {
+      "hashes": {
+        "body_hash": "9861590dfaed93fa73ed37bcf1a194bb60f4240c585748338613520b16fe918b",
+        "content_hash": "b9701905fd9d166167989da01ab77acd07178672d47b5cafb4cdecf7724b33c5",
+        "decorator_hash": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "docstring_hash": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "public_contract_hash": "096d0bf8578441aac45acf09a2189252fc4f4c813ccf7371c554a4a578a943fb",
+        "signature_hash": "0c8c5b968bffb941fd81fcc943c1fd3cd8a39eda429e219b37a7a8ddfb3dc0fa"
+      },
+      "kind": "function",
+      "line_span": [28, 33],
+      "path": "tests/test_cli.py",
+      "qualname": "test_word_uses_default_english",
+      "signature": "test_word_uses_default_english(monkeypatch: pytest.MonkeyPatch, capsys: pytest.CaptureFixture[str]) -> None",
+      "source_id": "py:function:tests/test_cli.py::test_word_uses_default_english"
+    },
+    "py:function:tests/test_cli_lazy.py::entry": {
+      "hashes": {
+        "body_hash": "504a9953dc3ce63a5966373d4dac028ecbf197e07e371a4ab39f4dfdac0a05a7",
+        "content_hash": "adfa3d343499991c5bd57c742e6ec5b6a9fd669ded88d4fe37f8384a791363a0",
+        "decorator_hash": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "docstring_hash": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "public_contract_hash": "de602ac8b05a1db98cbcbe1ef24985dc51b81718535ccf81988e10c153343840",
+        "signature_hash": "92ed5f2887fdee2655857bdf983379dc436da0d602a5c3fbb498bf0ee52bb034"
+      },
+      "kind": "function",
+      "line_span": [12, 18],
+      "path": "tests/test_cli_lazy.py",
+      "qualname": "entry",
+      "signature": "entry(word: str, topic: str) -> dict[str, object]",
+      "source_id": "py:function:tests/test_cli_lazy.py::entry"
+    },
+    "py:function:tests/test_cli_lazy.py::test_dictionary_fetch_and_offline_word_replay": {
+      "hashes": {
+        "body_hash": "a41990e3624979fa6d04b06663292c7ee6baf56294431c103dfda63b06410401",
+        "content_hash": "7bf664972bbc948efb138ba2d1b371a1774512670ab9830b9bd67e0cf194c89e",
+        "decorator_hash": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "docstring_hash": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "public_contract_hash": "3aca5173d799e4bca27a58c8fb5b8242471496f8ea871c181418fc8f4b1cb03f",
+        "signature_hash": "53c56131f8623e95216b3626981601990ceffb5dac3476ac623ede0d6af1553a"
+      },
+      "kind": "function",
+      "line_span": [21, 37],
+      "path": "tests/test_cli_lazy.py",
+      "qualname": "test_dictionary_fetch_and_offline_word_replay",
+      "signature": "test_dictionary_fetch_and_offline_word_replay(tmp_path: Path, monkeypatch: pytest.MonkeyPatch, capsys: pytest.CaptureFixture[str]) -> None",
+      "source_id": "py:function:tests/test_cli_lazy.py::test_dictionary_fetch_and_offline_word_replay"
+    },
+    "py:function:tests/test_cli_lazy.py::test_dictionary_fetch_json_output": {
+      "hashes": {
+        "body_hash": "7682c298a122b5bbc9e9dcfbdc7916b9f83f1b3886858a272d9f858b058a00a6",
+        "content_hash": "cca9bbe109a726d33db764b6f2a4c69e9a385699ad3b1b1a8fd29bdc5cdcf811",
+        "decorator_hash": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "docstring_hash": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "public_contract_hash": "2d5d03c4921d4c8ff71a43c927e13e5f7ed4e01b88a6dc443b05d04267244a88",
+        "signature_hash": "cedac7e22387bf929e841c87071d5ead4658a37f5f435b530b9ae59e46d70518"
+      },
+      "kind": "function",
+      "line_span": [40, 53],
+      "path": "tests/test_cli_lazy.py",
+      "qualname": "test_dictionary_fetch_json_output",
+      "signature": "test_dictionary_fetch_json_output(tmp_path: Path, monkeypatch: pytest.MonkeyPatch, capsys: pytest.CaptureFixture[str]) -> None",
+      "source_id": "py:function:tests/test_cli_lazy.py::test_dictionary_fetch_json_output"
+    },
+    "py:function:tests/test_cli_lazy.py::test_dictionary_word_json_keeps_empty_topics": {
+      "hashes": {
+        "body_hash": "43d6afee87767c416766c8fc1cf8279f6876051ce96089b3275f5fa56f577ba5",
+        "content_hash": "f58ceb4a591a9f9cdb9588c89f67c68a86e546d2cfa9082c163605df10f688fc",
+        "decorator_hash": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "docstring_hash": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "public_contract_hash": "0894a8be411a8e7b5cba7d03a66c0d3f0ce19c7640f522f6160c49dcac6856f6",
+        "signature_hash": "7976e762fadacca45085547a20f5ad1d1309cf83444cc42cad8f00f75c26219f"
+      },
+      "kind": "function",
+      "line_span": [103, 131],
+      "path": "tests/test_cli_lazy.py",
+      "qualname": "test_dictionary_word_json_keeps_empty_topics",
+      "signature": "test_dictionary_word_json_keeps_empty_topics(tmp_path: Path, monkeypatch: pytest.MonkeyPatch, capsys: pytest.CaptureFixture[str]) -> None",
+      "source_id": "py:function:tests/test_cli_lazy.py::test_dictionary_word_json_keeps_empty_topics"
+    },
+    "py:function:tests/test_cli_lazy.py::test_dictionary_word_shows_gloss_only_and_topic_senses": {
+      "hashes": {
+        "body_hash": "1ce61226db793ba5ba02ddf4b85b0e72d6b812aaca34673edebffce3279c0437",
+        "content_hash": "16914bf48cc6b370af930dc12db340d80e81f6905738f96418ab5c5c71584011",
+        "decorator_hash": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "docstring_hash": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "public_contract_hash": "9c33ae87d1f1b34f769c0ffc74238f01bac896be9757bd9a798be28391646515",
+        "signature_hash": "c6fe9f33ee53ae9949e84ff241c09112c46d721dfb41f5ac67b2692eed13f5f8"
+      },
+      "kind": "function",
+      "line_span": [66, 100],
+      "path": "tests/test_cli_lazy.py",
+      "qualname": "test_dictionary_word_shows_gloss_only_and_topic_senses",
+      "signature": "test_dictionary_word_shows_gloss_only_and_topic_senses(tmp_path: Path, monkeypatch: pytest.MonkeyPatch, capsys: pytest.CaptureFixture[str]) -> None",
+      "source_id": "py:function:tests/test_cli_lazy.py::test_dictionary_word_shows_gloss_only_and_topic_senses"
+    },
+    "py:function:tests/test_cli_lazy.py::test_offline_missing_dictionary_word_fails_clearly": {
+      "hashes": {
+        "body_hash": "3fd4fff16a7cab03247882c836cfba1132e4fab4e9902731e36908d7bfefaa0b",
+        "content_hash": "02b3531119b3507c6d6924d45868e263e67f671f7b32fee60976f3ee5bca4255",
+        "decorator_hash": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "docstring_hash": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "public_contract_hash": "79c0752307d60405d911c7109ecf3942600fead4bd7c408192f6e4d84b5002ff",
+        "signature_hash": "571b54a56b4f06e64e51590c724a47277c9a7bc8962317cb63cfd451b7a877ff"
+      },
+      "kind": "function",
+      "line_span": [56, 63],
+      "path": "tests/test_cli_lazy.py",
+      "qualname": "test_offline_missing_dictionary_word_fails_clearly",
+      "signature": "test_offline_missing_dictionary_word_fails_clearly(tmp_path: Path, capsys: pytest.CaptureFixture[str]) -> None",
+      "source_id": "py:function:tests/test_cli_lazy.py::test_offline_missing_dictionary_word_fails_clearly"
+    },
+    "py:function:tests/test_dictionary.py::build": {
+      "hashes": {
+        "body_hash": "e062950714453512adf149446cd86fc65aecaee3b4e33c4b027340f24a2828f1",
+        "content_hash": "4be0fe86929fa703600fdb08fd990a35ffbcc28256160c1a77b0a23d0ff34026",
+        "decorator_hash": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "docstring_hash": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "public_contract_hash": "dfc0b8af621856f8686658a099103c24c92510b456f7d18300529a57e379138b",
+        "signature_hash": "bd4978c9a0d843c21359d21d457acb43a8f13078c16dcdf1c9b666c3630f0058"
+      },
+      "kind": "function",
+      "line_span": [18, 24],
+      "path": "tests/test_dictionary.py",
+      "qualname": "build",
+      "signature": "build(tmp_path: Path) -> Dictionary",
+      "source_id": "py:function:tests/test_dictionary.py::build"
+    },
+    "py:function:tests/test_dictionary.py::love_entries": {
+      "hashes": {
+        "body_hash": "9a5f1f0cc9800825ac01d16cb94b0b718f7d856f6696a72809ec0d38218e67bd",
+        "content_hash": "e7647901a83428f755f3932f4ce93060449e80353bf488c1e09e2e545df40693",
+        "decorator_hash": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "docstring_hash": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "public_contract_hash": "aca4a8c44b6bc3a5e0507d580e987adf240ef32c385b39947cb8b6a0186df167",
+        "signature_hash": "5aa906756deaa501a3d621574c2fe099dc22cecbee6e67961419ffca44a08e9d"
+      },
+      "kind": "function",
+      "line_span": [46, 67],
+      "path": "tests/test_dictionary.py",
+      "qualname": "love_entries",
+      "signature": "love_entries() -> tuple[dict[str, object], ...]",
+      "source_id": "py:function:tests/test_dictionary.py::love_entries"
+    },
+    "py:function:tests/test_dictionary.py::span": {
+      "hashes": {
+        "body_hash": "8dd9849b32eac4cba8ccc4f607b2e6f818b5ecb03c92b58acc363aa5f5f23d22",
+        "content_hash": "218d2e78d02018eb192a5ef13942ff435870d479431b74c3207ba9a700efbc62",
+        "decorator_hash": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "docstring_hash": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "public_contract_hash": "f91627aea537f382a3e9939aae2e5371d6e486739be4fdd807e75173bbba56ab",
+        "signature_hash": "ec477d0f0e936cd2069705eb7faa27c0ef84304daabee2afb58f78bbb46ef7f8"
+      },
+      "kind": "function",
+      "line_span": [13, 15],
+      "path": "tests/test_dictionary.py",
+      "qualname": "span",
+      "signature": "span(text: str, target: str) -> tuple[int, int]",
+      "source_id": "py:function:tests/test_dictionary.py::span"
+    },
+    "py:function:tests/test_dictionary.py::test_candidate_does_not_validate_itself": {
+      "hashes": {
+        "body_hash": "771d75f34c9f44c4789a171bfbf5be28f50e439e6586b13dd7c5e27703595a44",
+        "content_hash": "047d8681fd4c9e2a6fdd60a516cf35ed49de45a7b52150912e7319ae71cf9ab0",
+        "decorator_hash": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "docstring_hash": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "public_contract_hash": "305b73d6db3c76bc25ce608fcf6232bc015fa3a3e27cfadca5cef65916dcf1c6",
+        "signature_hash": "a2b247e924dc02fd6502acd99ee8f570f5511c6d79fe0f4c670b4ca49157074a"
+      },
+      "kind": "function",
+      "line_span": [122, 125],
+      "path": "tests/test_dictionary.py",
+      "qualname": "test_candidate_does_not_validate_itself",
+      "signature": "test_candidate_does_not_validate_itself(tmp_path: Path) -> None",
+      "source_id": "py:function:tests/test_dictionary.py::test_candidate_does_not_validate_itself"
+    },
+    "py:function:tests/test_dictionary.py::test_case_preference_is_consistent": {
+      "hashes": {
+        "body_hash": "c3111a46fb77ee821f0225e4621202a0581e700a4e486585193f7db9ee2d3aa0",
+        "content_hash": "24f8b43ed2d834667c01fd0119922b8b22da65f6fbc28fa09a9af9efac75213f",
+        "decorator_hash": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "docstring_hash": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "public_contract_hash": "bef7de0d9f130b86da9e621b7a46c06f9d687465a2aad50f4a3394b444fabca5",
+        "signature_hash": "93f1dc695ed72e20f0a7a7df0ed0b0e13bb3411d946b13259f2ef7b218a17b8f"
+      },
+      "kind": "function",
+      "line_span": [85, 93],
+      "path": "tests/test_dictionary.py",
+      "qualname": "test_case_preference_is_consistent",
+      "signature": "test_case_preference_is_consistent(tmp_path: Path) -> None",
+      "source_id": "py:function:tests/test_dictionary.py::test_case_preference_is_consistent"
+    },
+    "py:function:tests/test_dictionary.py::test_context_does_not_leak_proper_name_topics": {
+      "hashes": {
+        "body_hash": "93a9ff0f907c3709bac7f0515634fd85673b89072864cb2361553dc6183eb825",
+        "content_hash": "f3d4e82767847d76f538b8c48332a00ea9ed1c6cafe34cd3ece00f384274c652",
+        "decorator_hash": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "docstring_hash": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "public_contract_hash": "378809f81a1a3bd8204fcd09b094befc747bff8a0493aa2d88005f9578ec405b",
+        "signature_hash": "c645446ebd3813fba21452019267f0eeb14fe6283a159717cb10593510d77d42"
+      },
+      "kind": "function",
+      "line_span": [113, 119],
+      "path": "tests/test_dictionary.py",
+      "qualname": "test_context_does_not_leak_proper_name_topics",
+      "signature": "test_context_does_not_leak_proper_name_topics(tmp_path: Path) -> None",
+      "source_id": "py:function:tests/test_dictionary.py::test_context_does_not_leak_proper_name_topics"
+    },
+    "py:function:tests/test_dictionary.py::test_dictionary_parses_semantic_senses_and_topics": {
+      "hashes": {
+        "body_hash": "3739d2603bc67bb4bb6b6ffc45c17d8075a12efbe048c55597a42d49ae02b041",
+        "content_hash": "ea234594721c570b42d5ff4289990fbb2a8488d27fc138ebd81d8a8a23538e0c",
+        "decorator_hash": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "docstring_hash": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "public_contract_hash": "4422dfa2b1d4a1e68782bb29cb541fac43ccc001f3f098641b136ca7374edd63",
+        "signature_hash": "a911c480f5a7812162aedbe6f4b290b5885b1728978724155519ee96247285bc"
+      },
+      "kind": "function",
+      "line_span": [27, 36],
+      "path": "tests/test_dictionary.py",
+      "qualname": "test_dictionary_parses_semantic_senses_and_topics",
+      "signature": "test_dictionary_parses_semantic_senses_and_topics(tmp_path: Path) -> None",
+      "source_id": "py:function:tests/test_dictionary.py::test_dictionary_parses_semantic_senses_and_topics"
+    },
+    "py:function:tests/test_dictionary.py::test_gloss_bearing_senses_and_duplicates_are_stored": {
+      "hashes": {
+        "body_hash": "64508e300c6167f1dba6bee9a2b7bda41bf72b6321924eb641f05df587ea7afc",
+        "content_hash": "3af3f828bd15d9a83de6f9f7f8113b457dcbeee6364f4ff2b5b963c09c067101",
+        "decorator_hash": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "docstring_hash": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "public_contract_hash": "a2b648916f2ec4c83839674043abf2e6680e3632637e20073a37308f527ab3ab",
+        "signature_hash": "9284d95a2cb4bdce1c5a45dce5bb700efc3172c9336b6163f7337518c375487e"
+      },
+      "kind": "function",
+      "line_span": [39, 43],
+      "path": "tests/test_dictionary.py",
+      "qualname": "test_gloss_bearing_senses_and_duplicates_are_stored",
+      "signature": "test_gloss_bearing_senses_and_duplicates_are_stored(tmp_path: Path) -> None",
+      "source_id": "py:function:tests/test_dictionary.py::test_gloss_bearing_senses_and_duplicates_are_stored"
+    },
+    "py:function:tests/test_dictionary.py::test_love_entries_keep_gloss_only_senses_and_topics": {
+      "hashes": {
+        "body_hash": "4403fdb8fe2e9e3e8d948c1440f25f178003a38bd0a1d95202ab509f5665a82f",
+        "content_hash": "df50b44c06e1fa5cadec097a338e0da1c41e6189ecd3067c84ccc937c645cf35",
+        "decorator_hash": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "docstring_hash": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "public_contract_hash": "87b142af81b7d62f72c1c9130b93b34e94a5ac3c80f5736ea8b867461a75f55c",
+        "signature_hash": "8d35c604e7bf5ae0016d1af7817bd3686a9c232439886824b3234732ffc23ec0"
+      },
+      "kind": "function",
+      "line_span": [70, 75],
+      "path": "tests/test_dictionary.py",
+      "qualname": "test_love_entries_keep_gloss_only_senses_and_topics",
+      "signature": "test_love_entries_keep_gloss_only_senses_and_topics() -> None",
+      "source_id": "py:function:tests/test_dictionary.py::test_love_entries_keep_gloss_only_senses_and_topics"
+    },
+    "py:function:tests/test_dictionary.py::test_music_context_is_dictionary_derived": {
+      "hashes": {
+        "body_hash": "a2afb7bd8adaad6da17ecbc5383bef85a6eaa29c446f343ca05512bed2d4efb5",
+        "content_hash": "34bfaa5df11e140dbb4101d3e7d8c458337532c44c35c5a177663c20a4918308",
+        "decorator_hash": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "docstring_hash": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "public_contract_hash": "ba9fcf210f8089aa45d4c1287389e39174592668ee9b15f9d48ca3e1a9bf3cb0",
+        "signature_hash": "f8b0c77462c0e04633851624ec8d600c68d3eb7ea5fd22286baf59bafdcd7994"
+      },
+      "kind": "function",
+      "line_span": [96, 102],
+      "path": "tests/test_dictionary.py",
+      "qualname": "test_music_context_is_dictionary_derived",
+      "signature": "test_music_context_is_dictionary_derived(tmp_path: Path) -> None",
+      "source_id": "py:function:tests/test_dictionary.py::test_music_context_is_dictionary_derived"
+    },
+    "py:function:tests/test_dictionary.py::test_schema_columns_are_compact": {
+      "hashes": {
+        "body_hash": "49e98b3513bd09e43eeb8d0de1a0b0672cc3d10eebfcdcd318c1994b1b18269c",
+        "content_hash": "4899554aa3a65bdb4eee409782ca1c55ba976b22a4b17bd61a99a0d60b649fcb",
+        "decorator_hash": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "docstring_hash": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "public_contract_hash": "da6df115eb700af4ad192820a051b2fe28a4d23137c76753ff65b08813a784b4",
+        "signature_hash": "255110b3f4f166a00f997a804c450b35ab4e16516a89fe7b70543ec0d900f118"
+      },
+      "kind": "function",
+      "line_span": [78, 82],
+      "path": "tests/test_dictionary.py",
+      "qualname": "test_schema_columns_are_compact",
+      "signature": "test_schema_columns_are_compact(tmp_path: Path) -> None",
+      "source_id": "py:function:tests/test_dictionary.py::test_schema_columns_are_compact"
+    },
+    "py:function:tests/test_dictionary.py::test_schema_incompatibility_is_controlled": {
+      "hashes": {
+        "body_hash": "4c0ae3237f068269f456100075248c554e9e839c4dfd007918a8ab2f0c9e0e49",
+        "content_hash": "f484fc428b89ede2f96c03a41b272bee84baf23e274befbe9dc3926077cd7ecf",
+        "decorator_hash": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "docstring_hash": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "public_contract_hash": "1b983c80ef33a337ec4a6f3e340e3d4d162a9759549617f4a38b10feb4f7b715",
+        "signature_hash": "fa0d9cd85e1e928eb6846b3ac56a52648375ccc2c7583331782a66ca448b32ea"
+      },
+      "kind": "function",
+      "line_span": [134, 142],
+      "path": "tests/test_dictionary.py",
+      "qualname": "test_schema_incompatibility_is_controlled",
+      "signature": "test_schema_incompatibility_is_controlled(tmp_path: Path) -> None",
+      "source_id": "py:function:tests/test_dictionary.py::test_schema_incompatibility_is_controlled"
+    },
+    "py:function:tests/test_dictionary.py::test_software_context_is_dictionary_derived": {
+      "hashes": {
+        "body_hash": "f38ad91d122289ea5f2ed3402a17e0aa570bd3a8b796ee101d7ce8731bcd1475",
+        "content_hash": "0cdedcd78838c4799266eb9ca36a9f884ec411fec08e3efb5f899f7143bd90e2",
+        "decorator_hash": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "docstring_hash": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "public_contract_hash": "fccb174c37301e03ef26ab12fec4cd2dde56947fc07b523abaab6487b9fc7aa9",
+        "signature_hash": "b2854d1d58b8ada9b9019e4208c9a1a9166ccbe247eb7177d40dd91247c4a9cf"
+      },
+      "kind": "function",
+      "line_span": [105, 110],
+      "path": "tests/test_dictionary.py",
+      "qualname": "test_software_context_is_dictionary_derived",
+      "signature": "test_software_context_is_dictionary_derived(tmp_path: Path) -> None",
+      "source_id": "py:function:tests/test_dictionary.py::test_software_context_is_dictionary_derived"
+    },
+    "py:function:tests/test_dictionary.py::test_unrelated_context_fails_closed": {
+      "hashes": {
+        "body_hash": "ae8ab9e07eae5be0902b361d2d485c56d2afb2a69fad1cfeb8728d32506b7d6a",
+        "content_hash": "b61d802960f9db62361371c2a1339ec755675647fb0e2fe4513daac6bd4f4d99",
+        "decorator_hash": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "docstring_hash": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "public_contract_hash": "8be268f2048d7e33c85196d96a9a7e52437f19f1d8a5f63e8825ce6a5e80bb74",
+        "signature_hash": "1a15f69027e32a1a4038ebb1a1d2f87be357659f6ac462b28de50cbfab0084b6"
+      },
+      "kind": "function",
+      "line_span": [128, 131],
+      "path": "tests/test_dictionary.py",
+      "qualname": "test_unrelated_context_fails_closed",
+      "signature": "test_unrelated_context_fails_closed(tmp_path: Path) -> None",
+      "source_id": "py:function:tests/test_dictionary.py::test_unrelated_context_fails_closed"
+    },
+    "py:function:tests/test_dictionary.py::test_wrong_language_is_incompatible": {
+      "hashes": {
+        "body_hash": "207ad613d18cd633abb4d64188c9c49ea72f553d6eba36bc67a3ead2b2d98e40",
+        "content_hash": "143d2d65a3a9fb8eba8f3f54247488a7070ef327d5a7e0a90e946f8b42f57e0c",
+        "decorator_hash": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "docstring_hash": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "public_contract_hash": "bf72148fdbd65e7d9f25c4e7dc7ca919e481403f0c13d027166ba5ae81c583a5",
+        "signature_hash": "87bd9572a1a8d8a4377746839ba507fafae82406b547e7074935cfd4113dbb46"
+      },
+      "kind": "function",
+      "line_span": [145, 153],
+      "path": "tests/test_dictionary.py",
+      "qualname": "test_wrong_language_is_incompatible",
+      "signature": "test_wrong_language_is_incompatible(tmp_path: Path) -> None",
+      "source_id": "py:function:tests/test_dictionary.py::test_wrong_language_is_incompatible"
+    },
+    "py:function:tests/test_download.py::test_cache_paths_can_be_overridden": {
+      "hashes": {
+        "body_hash": "d2ca7bbafb6382370f4e270c834d0c6b30faf02a13ea80d238520e1fd329004a",
+        "content_hash": "ea54b8121e2772c22e0475b4a4e4244116ca8414611f69f305d9e2096424e124",
+        "decorator_hash": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "docstring_hash": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "public_contract_hash": "19615ddd8305aa63ae440fbef9a1c89dff7e4586350accd99574fbde1564f4b3",
+        "signature_hash": "a521e3c1f8651a46080173c590c98dafe23a8da8ee2a3909341690ba43a747eb"
+      },
+      "kind": "function",
+      "line_span": [4, 7],
+      "path": "tests/test_download.py",
+      "qualname": "test_cache_paths_can_be_overridden",
+      "signature": "test_cache_paths_can_be_overridden(monkeypatch, tmp_path) -> None",
+      "source_id": "py:function:tests/test_download.py::test_cache_paths_can_be_overridden"
+    },
+    "py:function:tests/test_download.py::test_kaikki_url_is_explicit": {
+      "hashes": {
+        "body_hash": "2225c5cf0f9f48bc69509ea08f18bf56fc7ac837a6ab62485e01402f0afebe6b",
+        "content_hash": "25dedaff622bf855b96225fc23a2655e9063f1080127ade14b24c811fbc3eebc",
+        "decorator_hash": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "docstring_hash": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "public_contract_hash": "33d6faef7877c91664ff0fe79ab1d54f6223a71bcaaa1cb7e398f5bbff7c6168",
+        "signature_hash": "3b149a8a0c2153a7efd2a3cedce0796d3ab3f495689767f59b3dddfb5473cdf1"
+      },
+      "kind": "function",
+      "line_span": [10, 11],
+      "path": "tests/test_download.py",
+      "qualname": "test_kaikki_url_is_explicit",
+      "signature": "test_kaikki_url_is_explicit() -> None",
+      "source_id": "py:function:tests/test_download.py::test_kaikki_url_is_explicit"
+    },
+    "py:function:tests/test_kaikki.py::response": {
+      "hashes": {
+        "body_hash": "5024f7a97bcf9c8409455ee0a86749358e79119a05bde4252de14e69d9f68a54",
+        "content_hash": "ab36f93f9f9168f5ff117a6d930826e0a733a41f6ab31b513df52ffbd48334ba",
+        "decorator_hash": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "docstring_hash": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "public_contract_hash": "05cbe8f5ee790ae9a0435bdb7391f24d02472352dd56b1769696bd0cc4f3fa06",
+        "signature_hash": "c06961af2e14879485b8cb57dad00298c24394a579ef88ead440ac2e12f61f60"
+      },
+      "kind": "function",
+      "line_span": [11, 12],
+      "path": "tests/test_kaikki.py",
+      "qualname": "response",
+      "signature": "response(payload: str) -> io.BytesIO",
+      "source_id": "py:function:tests/test_kaikki.py::response"
+    },
+    "py:function:tests/test_kaikki.py::test_kaikki_word_url_preserves_case_and_encodes_path": {
+      "hashes": {
+        "body_hash": "2f7a7487a72929ba7f68c3e67c130977dfc6f5345702f73dc9d02a442423fac1",
+        "content_hash": "0c5917e65155014b7f546c30cc5b5fe8ddeaf6b1fa035a193d45cf834339a811",
+        "decorator_hash": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "docstring_hash": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "public_contract_hash": "9800311882569aa8fa47e350460ba5d4b0a658ac29438513b949aec795da330f",
+        "signature_hash": "4d363419d013c78238dad89f7974e057e9e3c037a34919acaed3c0b11f83ab13"
+      },
+      "kind": "function",
+      "line_span": [15, 19],
+      "path": "tests/test_kaikki.py",
+      "qualname": "test_kaikki_word_url_preserves_case_and_encodes_path",
+      "signature": "test_kaikki_word_url_preserves_case_and_encodes_path() -> None",
+      "source_id": "py:function:tests/test_kaikki.py::test_kaikki_word_url_preserves_case_and_encodes_path"
+    },
+    "py:function:tests/test_kaikki.py::test_word_entries_classifies_not_found": {
+      "hashes": {
+        "body_hash": "7fe7ffe495d956ea755442153d393435d65c7f438d641445987d1444113e44d6",
+        "content_hash": "9bd8468d686961e94a5ec68d5e9a0506663c3862c1d424697a558618eb8c644b",
+        "decorator_hash": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "docstring_hash": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "public_contract_hash": "8c57725f683c28e3b5dbf2a763d0331d26fa607a0cb1e0b56430932cf164a18b",
+        "signature_hash": "6f4829c36993c0c677e1090137685a949a5b20a8542ba8a4de9eb077186d2590"
+      },
+      "kind": "function",
+      "line_span": [37, 43],
+      "path": "tests/test_kaikki.py",
+      "qualname": "test_word_entries_classifies_not_found",
+      "signature": "test_word_entries_classifies_not_found(monkeypatch: pytest.MonkeyPatch) -> None",
+      "source_id": "py:function:tests/test_kaikki.py::test_word_entries_classifies_not_found"
+    },
+    "py:function:tests/test_kaikki.py::test_word_entries_classifies_transient_error": {
+      "hashes": {
+        "body_hash": "a8e63b404468e855773d6208ebf27840f87b58c937954d3cedbf37c35c5d871b",
+        "content_hash": "94c2305ea44259af11ca6da003c14ee4ba0717c206a688c4dfd8616b231499a6",
+        "decorator_hash": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "docstring_hash": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "public_contract_hash": "981e9dcbe2ef4a576c2bd395931194a7d1e54116c784f57f1dbbff35d81af563",
+        "signature_hash": "5c8cfb3283a145ea12c80dd478212d3b971b0cc9d8f346f027d7b319e915079a"
+      },
+      "kind": "function",
+      "line_span": [46, 52],
+      "path": "tests/test_kaikki.py",
+      "qualname": "test_word_entries_classifies_transient_error",
+      "signature": "test_word_entries_classifies_transient_error(monkeypatch: pytest.MonkeyPatch) -> None",
+      "source_id": "py:function:tests/test_kaikki.py::test_word_entries_classifies_transient_error"
+    },
+    "py:function:tests/test_kaikki.py::test_word_entries_rejects_invalid_jsonl": {
+      "hashes": {
+        "body_hash": "7b668c0a7c43dc022b4024a098f7ae1e9a7484f27e008a68e9ba0bcb35a75b43",
+        "content_hash": "916d062d7f07ba35b68eca757bb96c02cf23cc5bceacab35b387dcbfe2600059",
+        "decorator_hash": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "docstring_hash": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "public_contract_hash": "f3d9b2f7635b8f1b95a5f162d2be857e379502022c73f5e9cc39feaa6c9a681b",
+        "signature_hash": "4617e9ee9faeda8d6a427846cd2513157a49017afcc14ef9b0cf8c69bb2e41e5"
+      },
+      "kind": "function",
+      "line_span": [55, 58],
+      "path": "tests/test_kaikki.py",
+      "qualname": "test_word_entries_rejects_invalid_jsonl",
+      "signature": "test_word_entries_rejects_invalid_jsonl(monkeypatch: pytest.MonkeyPatch) -> None",
+      "source_id": "py:function:tests/test_kaikki.py::test_word_entries_rejects_invalid_jsonl"
+    },
+    "py:function:tests/test_kaikki.py::test_word_entries_stream_matching_jsonl": {
+      "hashes": {
+        "body_hash": "038327c6588cc7a775f2b211f3cacd97b46b0c04e7376ea74c864de7acb5d8ab",
+        "content_hash": "67e594a43e770fc84bf944c48d66eeeff907a2789309b5d3ba356816aa3f2886",
+        "decorator_hash": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "docstring_hash": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "public_contract_hash": "c26c9256f0e3d2f5b28cf921ed7aa8e28491397e857b5b67b58b4a7f29aae96f",
+        "signature_hash": "63914211ba175c17a76107f35d557ce126caa5a476febda9e1a7d9d82deb7c4f"
+      },
+      "kind": "function",
+      "line_span": [22, 34],
+      "path": "tests/test_kaikki.py",
+      "qualname": "test_word_entries_stream_matching_jsonl",
+      "signature": "test_word_entries_stream_matching_jsonl(monkeypatch: pytest.MonkeyPatch) -> None",
+      "source_id": "py:function:tests/test_kaikki.py::test_word_entries_stream_matching_jsonl"
+    },
+    "py:function:tests/test_lazy_dictionary.py::entry": {
+      "hashes": {
+        "body_hash": "02eab670a53ef509d5426ce339a6dd3ae543afd11a284890610ae581784319a8",
+        "content_hash": "8f78bfbe9acb9470b70a677ecdeda9b3db2f6f315fe50f3cbc0b091bf7c8ac3b",
+        "decorator_hash": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "docstring_hash": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "public_contract_hash": "2e8db3956c9f66947106102cfe476bd6152c4e0b9bacd3413acfa57ded3804cd",
+        "signature_hash": "3879e97ab0975cb3657273e4a4ca8e10251b68e7c581ea1f23bb6ad4cb4b336b"
+      },
+      "kind": "function",
+      "line_span": [23, 27],
+      "path": "tests/test_lazy_dictionary.py",
+      "qualname": "entry",
+      "signature": "entry(word: str, topic: str | None, *, lang_code: str='en') -> dict[str, object]",
+      "source_id": "py:function:tests/test_lazy_dictionary.py::entry"
+    },
+    "py:function:tests/test_lazy_dictionary.py::test_empty_and_not_found_lookups_are_cached": {
+      "hashes": {
+        "body_hash": "2f347e18179655e248a0f90fd50c2fbeea0545bb6088bb616da6a3196062c43f",
+        "content_hash": "5198d44e435651f51970b396076195e883b1b54bf0899b3f8a81b3d7675d4ad2",
+        "decorator_hash": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "docstring_hash": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "public_contract_hash": "fc12ee0f59e890a78f38029c048113d962e3c279f78ddeb82ed6f4bba06949f8",
+        "signature_hash": "603405a22c8d6cb589919ff2b8748f75cd669cc8d47623fc273aafad4a77d605"
+      },
+      "kind": "function",
+      "line_span": [55, 76],
+      "path": "tests/test_lazy_dictionary.py",
+      "qualname": "test_empty_and_not_found_lookups_are_cached",
+      "signature": "test_empty_and_not_found_lookups_are_cached(tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> None",
+      "source_id": "py:function:tests/test_lazy_dictionary.py::test_empty_and_not_found_lookups_are_cached"
+    },
+    "py:function:tests/test_lazy_dictionary.py::test_full_coverage_is_authoritative": {
+      "hashes": {
+        "body_hash": "fc525d6f35ff02e64a234a23683bbaa6cc56ab74eb300adf902a1b89cde938a1",
+        "content_hash": "92ad910894a452ba81a98aca820ea67a3c6468a3e3f8e91c05adcf43764da8e8",
+        "decorator_hash": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "docstring_hash": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "public_contract_hash": "a2d9fbb7fcf8e057b907ac5765f4817be181adf40d8f9ad8215ae863eeb1b834",
+        "signature_hash": "555a41cc474ec5ce5ab174eee53da38e351629263e25228a9ac023187eacd1d8"
+      },
+      "kind": "function",
+      "line_span": [99, 107],
+      "path": "tests/test_lazy_dictionary.py",
+      "qualname": "test_full_coverage_is_authoritative",
+      "signature": "test_full_coverage_is_authoritative(tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> None",
+      "source_id": "py:function:tests/test_lazy_dictionary.py::test_full_coverage_is_authoritative"
+    },
+    "py:function:tests/test_lazy_dictionary.py::test_incremental_fetch_accumulates_and_hits_cache": {
+      "hashes": {
+        "body_hash": "69b6f951746e9093f22d186a8bb8c7828273f57495dc80f78c6a21b3c8e6ce8f",
+        "content_hash": "9c36f9182e1b94d2ed2f6392249f0c92f3f4f5b2c8068f185d809ed025fb0ffd",
+        "decorator_hash": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "docstring_hash": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "public_contract_hash": "025c1ab7cd1050b6158a3aa4f9bf1c3dbcc0a35d272e6629af55649f13338644",
+        "signature_hash": "6c86a946c2256191a76a6ebcc08daae1c2f04ea2a32e4be0dadcf75db55c0760"
+      },
+      "kind": "function",
+      "line_span": [30, 52],
+      "path": "tests/test_lazy_dictionary.py",
+      "qualname": "test_incremental_fetch_accumulates_and_hits_cache",
+      "signature": "test_incremental_fetch_accumulates_and_hits_cache(tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> None",
+      "source_id": "py:function:tests/test_lazy_dictionary.py::test_incremental_fetch_accumulates_and_hits_cache"
+    },
+    "py:function:tests/test_lazy_dictionary.py::test_lazy_fetch_keeps_all_love_senses": {
+      "hashes": {
+        "body_hash": "c5b5831ba5d593c40376739d0d9fe3ec409d5fb78a4a50c3ba39a975e95471a4",
+        "content_hash": "fd039d817b203c3c460144363840ee9a61c3b42df7c0396c34cd39e918959f42",
+        "decorator_hash": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "docstring_hash": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "public_contract_hash": "95ef0fc01144f8ffd70844f0a336b8c78abd38dd636fcfb18f1592cb7ceecc06",
+        "signature_hash": "11bc10ef0a26adedc0fa84924770135b0924c572fbc8c711621136aac6b0daa1"
+      },
+      "kind": "function",
+      "line_span": [110, 136],
+      "path": "tests/test_lazy_dictionary.py",
+      "qualname": "test_lazy_fetch_keeps_all_love_senses",
+      "signature": "test_lazy_fetch_keeps_all_love_senses(tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> None",
+      "source_id": "py:function:tests/test_lazy_dictionary.py::test_lazy_fetch_keeps_all_love_senses"
+    },
+    "py:function:tests/test_lazy_dictionary.py::test_refresh_replaces_exact_case_page": {
+      "hashes": {
+        "body_hash": "485cdb842729940499aa4c76a0db72a1a7b8b51a9c7ab4db3b64fa0b1ccb93ae",
+        "content_hash": "026741e7dbf919ea30483e8a23a4de6c35f5239ddb7ab2bdb37c0c00d415aee6",
+        "decorator_hash": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "docstring_hash": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "public_contract_hash": "d88eddbfe2d9870a713afe9dda43e8ca313c5249d3259f4313ea089c0a8bd8fa",
+        "signature_hash": "c160a968edfbfe6cd6569aec1535781a21cf5f5272e383dda30bf69e765f30bc"
+      },
+      "kind": "function",
+      "line_span": [79, 96],
+      "path": "tests/test_lazy_dictionary.py",
+      "qualname": "test_refresh_replaces_exact_case_page",
+      "signature": "test_refresh_replaces_exact_case_page(tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> None",
+      "source_id": "py:function:tests/test_lazy_dictionary.py::test_refresh_replaces_exact_case_page"
+    },
+    "py:function:tests/test_lazy_dictionary.py::test_schema_v3_full_cache_requires_rebuild": {
+      "hashes": {
+        "body_hash": "b5b91c5cee27db6758060dfc5dd5d811ec3a9780bf39be865ca3d8e11914070d",
+        "content_hash": "14d5fd8ef0a19bc2012905d270b7e6cad0cd4456188c9af57a8eadc4d8dbf14c",
+        "decorator_hash": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "docstring_hash": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "public_contract_hash": "15955197ed06881322f464e7406f622f943be7289251051e535133284d23a5a0",
+        "signature_hash": "2875a5fb0e1a04f1fd7d125888386797eb8a72150cacc44d4cde8a81145bb0e4"
+      },
+      "kind": "function",
+      "line_span": [166, 177],
+      "path": "tests/test_lazy_dictionary.py",
+      "qualname": "test_schema_v3_full_cache_requires_rebuild",
+      "signature": "test_schema_v3_full_cache_requires_rebuild(tmp_path: Path) -> None",
+      "source_id": "py:function:tests/test_lazy_dictionary.py::test_schema_v3_full_cache_requires_rebuild"
+    },
+    "py:function:tests/test_lazy_dictionary.py::test_schema_v3_partial_cache_is_invalidated": {
+      "hashes": {
+        "body_hash": "7f7dc4a023651a2a711789456deaeeb5630b12e231178f9e5e04c9203df9edd7",
+        "content_hash": "36039b8ef5aaaf2c36dc60db56606871f97c72f6159aa599af23a5378a3e8885",
+        "decorator_hash": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "docstring_hash": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "public_contract_hash": "2a5238d1a3640aafb6b4cbc6c49f4d00d50af8a666acac81cec8eeeb1c2e22e5",
+        "signature_hash": "9c86aec40f22828854959b6551c984921ca627064fa4932226ed4964974f0503"
+      },
+      "kind": "function",
+      "line_span": [139, 163],
+      "path": "tests/test_lazy_dictionary.py",
+      "qualname": "test_schema_v3_partial_cache_is_invalidated",
+      "signature": "test_schema_v3_partial_cache_is_invalidated(tmp_path: Path) -> None",
+      "source_id": "py:function:tests/test_lazy_dictionary.py::test_schema_v3_partial_cache_is_invalidated"
+    },
+    "py:function:tests/test_lexicon.py::test_membership_and_rank": {
+      "hashes": {
+        "body_hash": "3c4b5a2fbb0dcf69404dbd750065832940ac5983e3efbdb3862651820543918f",
+        "content_hash": "f4a4d1eb9a4ba6667fce132a042233d744807d85eb3d9cd163506b8eeb97a7e6",
+        "decorator_hash": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "docstring_hash": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "public_contract_hash": "a830bd81910c62bb5ae8f57b31601f851d3d5b0a87ce89e0e6cacc5876708fda",
+        "signature_hash": "44f8b17dde8efff0b42fa6b1cce058cd4de2fbb3d88ed8d6bf4c7f6ad8ead935"
+      },
+      "kind": "function",
+      "line_span": [4, 9],
+      "path": "tests/test_lexicon.py",
+      "qualname": "test_membership_and_rank",
+      "signature": "test_membership_and_rank() -> None",
+      "source_id": "py:function:tests/test_lexicon.py::test_membership_and_rank"
+    },
+    "py:function:tests/test_lexicon.py::test_segment_ignores_obscure_two_letter_match_inside_initialism": {
+      "hashes": {
+        "body_hash": "663ac94e43d4c779c3196cb8a5b878e82d7ceeab4e06943d97bd3e420df87dd4",
+        "content_hash": "960db10a93c81dc58872d8008ee501df0a94376f1e0a49c1ba15f4a4fb3594c2",
+        "decorator_hash": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "docstring_hash": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "public_contract_hash": "c409f14d9600c26a6bceac446f3f110e20db63dd2c8e087d6fea3d68000f73d9",
+        "signature_hash": "e422e2526b4571cd9c18b05087398f44364cb6c254686215953fd83662205c18"
+      },
+      "kind": "function",
+      "line_span": [27, 33],
+      "path": "tests/test_lexicon.py",
+      "qualname": "test_segment_ignores_obscure_two_letter_match_inside_initialism",
+      "signature": "test_segment_ignores_obscure_two_letter_match_inside_initialism() -> None",
+      "source_id": "py:function:tests/test_lexicon.py::test_segment_ignores_obscure_two_letter_match_inside_initialism"
+    },
+    "py:function:tests/test_lexicon.py::test_segment_keeps_unknown_initialism_together": {
+      "hashes": {
+        "body_hash": "59631e1f644a0bac2f434a6d988aa9661d11286cd6250bf4722e4612a0481111",
+        "content_hash": "e1fb50250888b4355dd10929737966bac8a310f4a16b634b0b0985ed5c601999",
+        "decorator_hash": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "docstring_hash": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "public_contract_hash": "be2aba14ad98af1da14eabc1c92f168270227231ab0a17f540f1ef53281e9fbf",
+        "signature_hash": "317cd6f50d4c509102736c7b8d86372ca1ed5e8dead07caddd08cc37638da374"
+      },
+      "kind": "function",
+      "line_span": [12, 17],
+      "path": "tests/test_lexicon.py",
+      "qualname": "test_segment_keeps_unknown_initialism_together",
+      "signature": "test_segment_keeps_unknown_initialism_together() -> None",
+      "source_id": "py:function:tests/test_lexicon.py::test_segment_keeps_unknown_initialism_together"
+    },
+    "py:function:tests/test_lexicon.py::test_segment_two_known_words": {
+      "hashes": {
+        "body_hash": "f1841a6fe982289ada7e5d9d769aa1ab74acc808d212aa9695f3c416de811a31",
+        "content_hash": "f03014d55d275c64d858a66923fee6ef6653575cdfed69b3836bb06720603233",
+        "decorator_hash": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "docstring_hash": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "public_contract_hash": "08ab1d1e3f548cb44c4a2d0e3d57a8b701d099911c8ccc36dac42be95af56090",
+        "signature_hash": "84f8725e2c46fa927dee67f1e160ffdd824ba1ecc4ebf3d033c133f0814cbd13"
+      },
+      "kind": "function",
+      "line_span": [20, 24],
+      "path": "tests/test_lexicon.py",
+      "qualname": "test_segment_two_known_words",
+      "signature": "test_segment_two_known_words() -> None",
+      "source_id": "py:function:tests/test_lexicon.py::test_segment_two_known_words"
+    },
+    "py:function:tests/test_remote_context.py::semantic_entry": {
+      "hashes": {
+        "body_hash": "504a9953dc3ce63a5966373d4dac028ecbf197e07e371a4ab39f4dfdac0a05a7",
+        "content_hash": "f9524d6dd96f38a6e4f5efc41d02575d699ff07b2a99740330a3619da6f1a9f5",
+        "decorator_hash": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "docstring_hash": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "public_contract_hash": "2203e894ac76a4601b2cfa431dae645219cd836da8c78cfa31ab89af35a6bdff",
+        "signature_hash": "373a2ddd255246d411a4cda86486c86ee29784cbfc362fb91ba4c7053f698afa"
+      },
+      "kind": "function",
+      "line_span": [11, 17],
+      "path": "tests/test_remote_context.py",
+      "qualname": "semantic_entry",
+      "signature": "semantic_entry(word: str, topic: str) -> dict[str, object]",
+      "source_id": "py:function:tests/test_remote_context.py::semantic_entry"
+    },
+    "py:function:tests/test_remote_context.py::test_offline_missing_word_is_controlled": {
+      "hashes": {
+        "body_hash": "d25dcc8896841109b57a66b0918622d192f17ca26205b08bbca561944e3cfd51",
+        "content_hash": "8c36acb9aae22cba3c02cb13ce62d14cebc921c08c8df9106aaee3adb411fde6",
+        "decorator_hash": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "docstring_hash": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "public_contract_hash": "086675f0503410f27e6a354c209b7e9070034f3631b5308d7e58776bbb59b3e1",
+        "signature_hash": "1557bf562ad5f79722a075d77301794dccdaa8e61edc4b23c0cb2d2de4d11594"
+      },
+      "kind": "function",
+      "line_span": [71, 73],
+      "path": "tests/test_remote_context.py",
+      "qualname": "test_offline_missing_word_is_controlled",
+      "signature": "test_offline_missing_word_is_controlled(tmp_path: Path) -> None",
+      "source_id": "py:function:tests/test_remote_context.py::test_offline_missing_word_is_controlled"
+    },
+    "py:function:tests/test_remote_context.py::test_python_dictionary_is_local_only_by_default": {
+      "hashes": {
+        "body_hash": "d9efa643e7e2ed1b40b329f14cac4c7b48d45077b6e7a86cad8e8e45d87c13d0",
+        "content_hash": "e5624d3a6662209b6cb264f2a82fa75b3997163654f485913fdc8339094f22e6",
+        "decorator_hash": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "docstring_hash": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "public_contract_hash": "2a580d4e3d746c2404c7b8e01c6d76c5efcbb4dd42f404fc812a1fb94be6693f",
+        "signature_hash": "0a43e53939410d8668226107485c4e3054d0a71949f4794b6603e4e78b620bdd"
+      },
+      "kind": "function",
+      "line_span": [20, 31],
+      "path": "tests/test_remote_context.py",
+      "qualname": "test_python_dictionary_is_local_only_by_default",
+      "signature": "test_python_dictionary_is_local_only_by_default(tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> None",
+      "source_id": "py:function:tests/test_remote_context.py::test_python_dictionary_is_local_only_by_default"
+    },
+    "py:function:tests/test_remote_context.py::test_remote_context_fetches_only_nearby_non_target_tokens": {
+      "hashes": {
+        "body_hash": "c2d2a1e01604122fcf35901dcca3ad67f59c9f717df953dd16f15e685fee8437",
+        "content_hash": "07bd80cf55f4990ef0b871f9590a6ce9fcb4a6e4701ec688c6d754cfb1c1738c",
+        "decorator_hash": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "docstring_hash": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "public_contract_hash": "35b06d0c37d0c05dd1846e11b87077c3f78b206b0237c0cc6026f710c87221cf",
+        "signature_hash": "a93b5234efc9c16324927a347451fde3146bd0ac29aaac8102f5d882cccf0a9a"
+      },
+      "kind": "function",
+      "line_span": [34, 51],
+      "path": "tests/test_remote_context.py",
+      "qualname": "test_remote_context_fetches_only_nearby_non_target_tokens",
+      "signature": "test_remote_context_fetches_only_nearby_non_target_tokens(tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> None",
+      "source_id": "py:function:tests/test_remote_context.py::test_remote_context_fetches_only_nearby_non_target_tokens"
+    },
+    "py:function:tests/test_remote_context.py::test_target_is_not_fetched_as_self_evidence": {
+      "hashes": {
+        "body_hash": "26cc5ffe366bd134b12b2b87fc5dfbb92bd05788bcaafb611fa1ec35981849b0",
+        "content_hash": "7071c1dbbd85f1d7258f3132e3287184f99ffd45128c574df0525d145e2b1890",
+        "decorator_hash": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "docstring_hash": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "public_contract_hash": "26042c5a30fd2e2c6956f63c57e0d839d4ef226d6a7223cd4536d57c85c80447",
+        "signature_hash": "5bcb0ad86633e307ab7a91a17013cea98f293206767b03b2acca72b6a81a1b45"
+      },
+      "kind": "function",
+      "line_span": [54, 68],
+      "path": "tests/test_remote_context.py",
+      "qualname": "test_target_is_not_fetched_as_self_evidence",
+      "signature": "test_target_is_not_fetched_as_self_evidence(tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> None",
+      "source_id": "py:function:tests/test_remote_context.py::test_target_is_not_fetched_as_self_evidence"
+    },
+    "py:method:lexhint/cli.py::_ArgumentParser.error": {
+      "hashes": {
+        "body_hash": "64ec7e54c34b0f229fc64e3ff50270ed6ae94e352bd7d238b4e5997cabab2323",
+        "content_hash": "a0364717142767a205bd1f0d24cefdd6e241d53f1200b184eaf6cc2eaf44d949",
+        "decorator_hash": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "docstring_hash": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "public_contract_hash": "4f0482f30556ffb70a84291d3a5de8e16e600fd8efd139b1d7e00b2595dd5d31",
+        "signature_hash": "bb7ce8d34d6d9e6f77a9900fdd195095cd17d622da6ccbebf2d3dabcd725af1e"
+      },
+      "kind": "method",
+      "line_span": [35, 37],
+      "path": "lexhint/cli.py",
+      "qualname": "_ArgumentParser.error",
+      "signature": "error(self, message: str) -> NoReturn",
+      "source_id": "py:method:lexhint/cli.py::_ArgumentParser.error"
+    },
+    "py:method:lexhint/cli.py::_HelpFormatter.__init__": {
+      "hashes": {
+        "body_hash": "3c4abe3a21eb78bd6adfa5ed2d1f1fc7dd744435ade63ec9d97626df218b4959",
+        "content_hash": "d451b5c38c87e541387e396aa91ec6267c57c271155a55b30beea2372aec9605",
+        "decorator_hash": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "docstring_hash": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "public_contract_hash": "3f2520f08c9a8cdce08ff8c64d592b2426753c2961954ba63b4b6d570bde86a6",
+        "signature_hash": "35e193c09f2b32e3ebc338fda9eae0eb05ffdee310b7fb0e0211ef7226d0b1dc"
+      },
+      "kind": "method",
+      "line_span": [30, 31],
+      "path": "lexhint/cli.py",
+      "qualname": "_HelpFormatter.__init__",
+      "signature": "__init__(self, prog: str) -> None",
+      "source_id": "py:method:lexhint/cli.py::_HelpFormatter.__init__"
+    },
+    "py:method:lexhint/cli.py::_Style.__init__": {
+      "hashes": {
+        "body_hash": "0cd44d9c7c7618fb87c59b991848b0abc2ae4c521a00cd3df80eba04a60d0a48",
+        "content_hash": "31413aa4f73330381ed2ec622b620ec9282a529ad3bd26231d6ee52be9b0f845",
+        "decorator_hash": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "docstring_hash": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "public_contract_hash": "dfbf295f9165ea278936f34844d30a099f4258067c197145cb98b9938c762109",
+        "signature_hash": "0a6d7f703560c7e463dd2b41c16bdcac6c8c6dc027f553e4f5679bbc18a6ace1"
+      },
+      "kind": "method",
+      "line_span": [41, 42],
+      "path": "lexhint/cli.py",
+      "qualname": "_Style.__init__",
+      "signature": "__init__(self, enabled: bool) -> None",
+      "source_id": "py:method:lexhint/cli.py::_Style.__init__"
+    },
+    "py:method:lexhint/cli.py::_Style._wrap": {
+      "hashes": {
+        "body_hash": "896cdeea20d9ff5c7c73a6c348d151dc5f48cd863d5d77f9c30d3977e953dafd",
+        "content_hash": "90cb3b35eea7465b67a022281243d2ee0af30043dbff11f237c4bb1ade6b72ee",
+        "decorator_hash": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "docstring_hash": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "public_contract_hash": "3bfcc643a87047fab8ea3aeca1597a0f68e8bd92164efb28c891a0fd443ed726",
+        "signature_hash": "a6aa53f3b2fbd016ff47be665d08c48c0f7c90373cf323f08d31b268637da86e"
+      },
+      "kind": "method",
+      "line_span": [44, 48],
+      "path": "lexhint/cli.py",
+      "qualname": "_Style._wrap",
+      "signature": "_wrap(self, code: str, value: object) -> str",
+      "source_id": "py:method:lexhint/cli.py::_Style._wrap"
+    },
+    "py:method:lexhint/cli.py::_Style.bold": {
+      "hashes": {
+        "body_hash": "e8e4da7990fa1969f916d06dc67f5d02c24e7cd57b11457f7248b6444f9ace98",
+        "content_hash": "3965d572351a50ad081feff0ffa6e7575ab3f57df4ea3bf8fc66e229f6b347d5",
+        "decorator_hash": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "docstring_hash": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "public_contract_hash": "02f8ae2ff9af556b7ceffb7ee5f67bbad0f9703acdde714f362b2120cfe7ddda",
+        "signature_hash": "20f89266c6f44bc0841a0516682d97964aa2f59758a7278a790e10c388524495"
+      },
+      "kind": "method",
+      "line_span": [50, 51],
+      "path": "lexhint/cli.py",
+      "qualname": "_Style.bold",
+      "signature": "bold(self, value: object) -> str",
+      "source_id": "py:method:lexhint/cli.py::_Style.bold"
+    },
+    "py:method:lexhint/cli.py::_Style.cyan": {
+      "hashes": {
+        "body_hash": "a3f548321860e108603f47ea7183804498280783e548674ef60ac276ffb545d9",
+        "content_hash": "debcb1937a91095eaa3c913f8a5c80013a9aa2911fedc54d7b8c37947dcb8b79",
+        "decorator_hash": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "docstring_hash": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "public_contract_hash": "ed6cade2ed54e3498a4e5b73cab462c10ffd8ee968bf631f1e85007248cf57ee",
+        "signature_hash": "4ab95289c5dbe5d819a4f0388cae77e54a5bf685ce6fe50a52ced381b1d91c3f"
+      },
+      "kind": "method",
+      "line_span": [62, 63],
+      "path": "lexhint/cli.py",
+      "qualname": "_Style.cyan",
+      "signature": "cyan(self, value: object) -> str",
+      "source_id": "py:method:lexhint/cli.py::_Style.cyan"
+    },
+    "py:method:lexhint/cli.py::_Style.dim": {
+      "hashes": {
+        "body_hash": "9969181f5dc23c56e598ee3caa17a25bde75540dbc4fb096f0c499d130a03e9f",
+        "content_hash": "3296a320862357d6d45794220497c314e6dda8e5441eca1209e2f54e5a1856c1",
+        "decorator_hash": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "docstring_hash": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "public_contract_hash": "5052d3606be3c87332128136923f8cd43607a101adcef917174bb116af12c7f3",
+        "signature_hash": "90fd4e19f77f9b3b32191bef938939c20d8c439a1f79bfd0f4fc59ec46259b9b"
+      },
+      "kind": "method",
+      "line_span": [53, 54],
+      "path": "lexhint/cli.py",
+      "qualname": "_Style.dim",
+      "signature": "dim(self, value: object) -> str",
+      "source_id": "py:method:lexhint/cli.py::_Style.dim"
+    },
+    "py:method:lexhint/cli.py::_Style.green": {
+      "hashes": {
+        "body_hash": "f4e54392d14031ea329a943b2bee1b36355f919607c2575fb55597e3cf7c84bc",
+        "content_hash": "ea123f13f83cc6c914611fd1f75b404439f61e7cf1e6dbe572f0f9eec7a6e55a",
+        "decorator_hash": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "docstring_hash": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "public_contract_hash": "6122029560949ccf5abdbc67718b9a1400680be8eb827e4ccaa4de31524afe9c",
+        "signature_hash": "3b59758232376a551d45c564ffe37b8d4f97f69a52b97700c9ca914fff250b4e"
+      },
+      "kind": "method",
+      "line_span": [56, 57],
+      "path": "lexhint/cli.py",
+      "qualname": "_Style.green",
+      "signature": "green(self, value: object) -> str",
+      "source_id": "py:method:lexhint/cli.py::_Style.green"
+    },
+    "py:method:lexhint/cli.py::_Style.yellow": {
+      "hashes": {
+        "body_hash": "4e1472961b6e0a1d4506cc13065c10c0a29b863cabf709c96f46a91e08207719",
+        "content_hash": "632216c77cf800886e9c8b57b0d9b6854012faf14a1b1c5eb0218e1d55cf76ae",
+        "decorator_hash": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "docstring_hash": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "public_contract_hash": "90bfe807de7fbdfdf04091bbfc3b9292920c40b1573a1f69cc21984ca542b46b",
+        "signature_hash": "0fa0e1a86299b93f0b876454c84553db9e7d30494b410a1f6d32cb738b77af08"
+      },
+      "kind": "method",
+      "line_span": [59, 60],
+      "path": "lexhint/cli.py",
+      "qualname": "_Style.yellow",
+      "signature": "yellow(self, value: object) -> str",
+      "source_id": "py:method:lexhint/cli.py::_Style.yellow"
+    },
+    "py:method:lexhint/dictionary.py::Dictionary.__init__": {
+      "hashes": {
+        "body_hash": "7f88c2228aeef4191b4b442474fb67df3e96c9fe36c38bc3e42936f07b86c679",
+        "content_hash": "039292bf99b7fff1d3176a1f656ae78c12ff7cb500950627fe91bf9fe73eb3ca",
+        "decorator_hash": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "docstring_hash": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "public_contract_hash": "cf9517c1b10852855dd9f2381297f92e1407af23feb8ca5ba98ff8c8a181ff8c",
+        "signature_hash": "78f2e9b01f1aaf7657ad0c8bdba3b26d4fd2dcfa2ade37157bdbf0b37dbea59c"
+      },
+      "kind": "method",
+      "line_span": [147, 171],
+      "path": "lexhint/dictionary.py",
+      "qualname": "Dictionary.__init__",
+      "signature": "__init__(self, language: str, *, path: str | Path | None=None, fetch_missing: bool=False, offline: bool=False, timeout: float=30.0) -> None",
+      "source_id": "py:method:lexhint/dictionary.py::Dictionary.__init__"
+    },
+    "py:method:lexhint/dictionary.py::Dictionary._connect": {
+      "hashes": {
+        "body_hash": "4552ab6e162b8082f337affbeaf05fb40218c5f3719e9692c238d44228c7dbc0",
+        "content_hash": "b8bc454211f1a0f2fe25538e3702addb438c4a67241f06dd76fd386e4a07f162",
+        "decorator_hash": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "docstring_hash": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "public_contract_hash": "e306c8375e20695e73f20d1e2695b9c6462b812c632166772755b5b1ee096083",
+        "signature_hash": "5cdc6eb24f2965cd141743ef70c58e5052f6d14d059db957746054873383b6bc"
+      },
+      "kind": "method",
+      "line_span": [191, 195],
+      "path": "lexhint/dictionary.py",
+      "qualname": "Dictionary._connect",
+      "signature": "_connect(self) -> sqlite3.Connection",
+      "source_id": "py:method:lexhint/dictionary.py::Dictionary._connect"
+    },
+    "py:method:lexhint/dictionary.py::Dictionary._ensure_word": {
+      "hashes": {
+        "body_hash": "40b249fa621efc68b05441e5ff89b38c040f994cafd0a3482e9fd38a38c090bf",
+        "content_hash": "4c0069c087a478b0e38c27fd31c544ad3417931f2f002bd61100df16040bca5c",
+        "decorator_hash": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "docstring_hash": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "public_contract_hash": "92e414c49201ee8e004c97e783934929610b268803ba12f7db64f396f82fbb2a",
+        "signature_hash": "a22713968de59d2a52564f8fd4eb06a8c4a1f76cb6aa1cc06c6d7afc8f42558a"
+      },
+      "kind": "method",
+      "line_span": [221, 236],
+      "path": "lexhint/dictionary.py",
+      "qualname": "Dictionary._ensure_word",
+      "signature": "_ensure_word(self, word: str, *, refresh: bool=False) -> None",
+      "source_id": "py:method:lexhint/dictionary.py::Dictionary._ensure_word"
+    },
+    "py:method:lexhint/dictionary.py::Dictionary._resolve_path": {
+      "hashes": {
+        "body_hash": "e8a39bfd965914c67ef338da313b7d33a882777484dad395c151cb18e37ee02d",
+        "content_hash": "98774aacfa3ba3a98c46f33419a2f824f8b6cd7039a185a2e5737847585999e5",
+        "decorator_hash": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "docstring_hash": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "public_contract_hash": "45622281290b9a2bc45f534cade2d06a6000c0ac6dff23af401b8d7a6042ff2b",
+        "signature_hash": "f8e43aa7a16fbf94b099c4e8d1f984188be912d6adc3ab291f388dd8995d8cc5"
+      },
+      "kind": "method",
+      "line_span": [177, 189],
+      "path": "lexhint/dictionary.py",
+      "qualname": "Dictionary._resolve_path",
+      "signature": "_resolve_path(self) -> Path",
+      "source_id": "py:method:lexhint/dictionary.py::Dictionary._resolve_path"
+    },
+    "py:method:lexhint/dictionary.py::Dictionary._target_indices": {
+      "hashes": {
+        "body_hash": "2f6cc6fca2f51086b3ab7d6a56205ee0b7d325a08f8c5c05f705511b7fe84ac8",
+        "content_hash": "cb6106dd305ac4aee9e866f7b81fe56657f0b49e5494df25aeea02c3c1d045a8",
+        "decorator_hash": "c03b99a362cacd1cc63571d4165ff4fddd6bde18d671a095d1038abaecfe9100",
+        "docstring_hash": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "public_contract_hash": "a55d046a79b0b2943cc586af106da6b566eaa93d10d42e24738232b6e99c98ea",
+        "signature_hash": "3ec7f75e7634d7598ab11faad3ac75aeaf644bccf907c031c9ed50057af57004"
+      },
+      "kind": "method",
+      "line_span": [316, 330],
+      "path": "lexhint/dictionary.py",
+      "qualname": "Dictionary._target_indices",
+      "signature": "_target_indices(tokens: list[tuple[str, int, int]], target: tuple[int, int]) -> set[int]",
+      "source_id": "py:method:lexhint/dictionary.py::Dictionary._target_indices"
+    },
+    "py:method:lexhint/dictionary.py::Dictionary._topics_for_words": {
+      "hashes": {
+        "body_hash": "b77481d8738f1f4703f2db8f4c6997b4d83dfd46d34684adeef8f0765a9ca398",
+        "content_hash": "0cf3590b307b861f61252dd509189e067c1cb48a08435153b6686eb968aabef7",
+        "decorator_hash": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "docstring_hash": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "public_contract_hash": "b9666c559c6678b6d25efb9e6c57c927f2d83ecc5f2c4d3dd0cda7155a64e93c",
+        "signature_hash": "86b4d5625783e258c0547a9a7e02ef127bfc92f2596f7d21eee15893333fc96e"
+      },
+      "kind": "method",
+      "line_span": [279, 313],
+      "path": "lexhint/dictionary.py",
+      "qualname": "Dictionary._topics_for_words",
+      "signature": "_topics_for_words(self, words: Iterable[str], *, refresh: bool=False) -> dict[str, set[str]]",
+      "source_id": "py:method:lexhint/dictionary.py::Dictionary._topics_for_words"
+    },
+    "py:method:lexhint/dictionary.py::Dictionary._validate_metadata": {
+      "hashes": {
+        "body_hash": "9d4442949b78afc53aa8c4e0b7ea6d513ea9ab7f2dfaaf0c8fd39239581cd406",
+        "content_hash": "afb490baeda3818398a6d554cb0cea65b4544b54557bbabb8852bbb3f1a94ddf",
+        "decorator_hash": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "docstring_hash": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "public_contract_hash": "2c8731ebcb1d8a56dd7d56562ab985348e0f3c8fe7eac985bd1ee3ad7b215d34",
+        "signature_hash": "53ac51b778b09c54844e8b514a3cc5c52d82d59cb144a586d4167ba4650cce5b"
+      },
+      "kind": "method",
+      "line_span": [197, 219],
+      "path": "lexhint/dictionary.py",
+      "qualname": "Dictionary._validate_metadata",
+      "signature": "_validate_metadata(self) -> None",
+      "source_id": "py:method:lexhint/dictionary.py::Dictionary._validate_metadata"
+    },
+    "py:method:lexhint/dictionary.py::Dictionary.contains": {
+      "hashes": {
+        "body_hash": "73f10dd80892a75722ef1008e783a2f32e92813a7c4f767ace4864acb0886195",
+        "content_hash": "fffa896e861def7607357e989180d129b103122c49044f490adb751f5ca5bef6",
+        "decorator_hash": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "docstring_hash": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "public_contract_hash": "665f41a7b6ae28f791d6cf0b4618582a90d2b67d787bcaf91ec7e685b55d9518",
+        "signature_hash": "7eec368cf002ecb2a3896cc3329016205f592f21e559bb8f8df8f03c0ac7bdc8"
+      },
+      "kind": "method",
+      "line_span": [270, 271],
+      "path": "lexhint/dictionary.py",
+      "qualname": "Dictionary.contains",
+      "signature": "contains(self, word: str) -> bool",
+      "source_id": "py:method:lexhint/dictionary.py::Dictionary.contains"
+    },
+    "py:method:lexhint/dictionary.py::Dictionary.from_path": {
+      "hashes": {
+        "body_hash": "78303b463897ff9b972fd4085d5c20bfff717bf8d4e4327de9263444adf409a1",
+        "content_hash": "65784cc25caa7c0d3a907b446391a7a4afcd215bc0aedd27fe19737abc349136",
+        "decorator_hash": "b9ac1dd2a88fbd2b8fc01b47481fd299dd4ffdae854ba8dda155c916c17f544b",
+        "docstring_hash": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "public_contract_hash": "5a712668bf3ffc43d8d8671dd3d84f9e8ea61973dd91282037488b5155753213",
+        "signature_hash": "93f94fe94a3f8e3710f2a0ebe25f11161b53af305bcf302644021c6d3992412f"
+      },
+      "kind": "method",
+      "line_span": [174, 175],
+      "path": "lexhint/dictionary.py",
+      "qualname": "Dictionary.from_path",
+      "signature": "from_path(cls, path: str | Path, *, language: str='und') -> Dictionary",
+      "source_id": "py:method:lexhint/dictionary.py::Dictionary.from_path"
+    },
+    "py:method:lexhint/dictionary.py::Dictionary.senses": {
+      "hashes": {
+        "body_hash": "c0cce8d5043551499adb3bd51bc4caa53c969056f23f34bb8c31b74b3c6efabc",
+        "content_hash": "85f74a3f4b7963582006ba669199339dd07528e4aacbdd102ec52f50a799c6e6",
+        "decorator_hash": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "docstring_hash": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "public_contract_hash": "9d052db435a075c83b74d5f6975479e1e4657521db9c4f37e6db7622653e9ab6",
+        "signature_hash": "031c2d7d3e6a4f8de30c83095bb00d0b3358fdf7ba0c566c174eb48ab06aaef0"
+      },
+      "kind": "method",
+      "line_span": [238, 268],
+      "path": "lexhint/dictionary.py",
+      "qualname": "Dictionary.senses",
+      "signature": "senses(self, word: str, *, all_case_variants: bool=False, refresh: bool=False) -> tuple[Sense, ...]",
+      "source_id": "py:method:lexhint/dictionary.py::Dictionary.senses"
+    },
+    "py:method:lexhint/dictionary.py::Dictionary.supports": {
+      "hashes": {
+        "body_hash": "62a60e6f26967ba6ce6be65253bf9fb7764b9731e81ceb17e3f5a5af654cd2b4",
+        "content_hash": "d79f24d4843403d701638e5b137141cd51b92d9480c7936ff48cc2225c2f3f88",
+        "decorator_hash": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "docstring_hash": "964ba743db8c4ca9d0f57bcd8b22174abd784abda2521a519ae0dfcf0db6bbe1",
+        "public_contract_hash": "07b712186294d6d4a46bb050c4aac975eef08a3f37c30320f23cd6b09c1c94d7",
+        "signature_hash": "db23392f0270e370bc7d8db7ead416071f0e6aad6323d3a5a96e7cecf82e5bc7"
+      },
+      "kind": "method",
+      "line_span": [391, 414],
+      "path": "lexhint/dictionary.py",
+      "qualname": "Dictionary.supports",
+      "signature": "supports(self, text: str, *, target: tuple[int, int], topic: str, window: int=6, decay: float=0.7, threshold: float=0.4, refresh: bool=False) -> ContextSupport | None",
+      "source_id": "py:method:lexhint/dictionary.py::Dictionary.supports"
+    },
+    "py:method:lexhint/dictionary.py::Dictionary.topic_scores": {
+      "hashes": {
+        "body_hash": "f53cf4d1e3e9f4b4788ef03a150f42b3f0c0d1b5c1aa4dfefa16596922d4ee9d",
+        "content_hash": "4744508b75182521a715039d409f17f0fa05f9c828ded1363f8651749e761ac0",
+        "decorator_hash": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "docstring_hash": "bd2335cbaa302ade88ccaea2141828f58a3c995f7abb06c65498fc1dde1f10eb",
+        "public_contract_hash": "d788538847b068d2b9e573908fc29f189f2063c630b920c67b9dd4b51edf6008",
+        "signature_hash": "be87f436b446624732347bdeaf7aadf2fafc4b36c18ac85ab92ffc612777c9a2"
+      },
+      "kind": "method",
+      "line_span": [332, 389],
+      "path": "lexhint/dictionary.py",
+      "qualname": "Dictionary.topic_scores",
+      "signature": "topic_scores(self, text: str, *, target: tuple[int, int], window: int=6, decay: float=0.7, limit: int | None=None, refresh: bool=False) -> tuple[TopicScore, ...]",
+      "source_id": "py:method:lexhint/dictionary.py::Dictionary.topic_scores"
+    },
+    "py:method:lexhint/dictionary.py::Dictionary.topics": {
+      "hashes": {
+        "body_hash": "9faf5b3dd297aa07fc4550a75f235094adfbf88527c2202332ff07af34719be7",
+        "content_hash": "cd09ce501d652c94a15cbcb43d16dbc7de9817810ce7eab5761477725781fcb1",
+        "decorator_hash": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "docstring_hash": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "public_contract_hash": "0aa994b6ba3c55a915d6cfbdb30a4520131f2ef09fc66db02a049ee67e1a0f45",
+        "signature_hash": "bf1e3585cc840adcf5b31e21aae74a34165f9ee517b480ae9be0c0df94e75191"
+      },
+      "kind": "method",
+      "line_span": [273, 277],
+      "path": "lexhint/dictionary.py",
+      "qualname": "Dictionary.topics",
+      "signature": "topics(self, word: str) -> tuple[str, ...]",
+      "source_id": "py:method:lexhint/dictionary.py::Dictionary.topics"
+    },
+    "py:method:lexhint/lexicon.py::Lexicon.__contains__": {
+      "hashes": {
+        "body_hash": "25168a69fb293f131841a0e39c197118300c978f00bcb0cbf5600cc89054ed88",
+        "content_hash": "daceb60eb5de9613f646c09422e85adf9fe37e85a753d1b3aa6450d626e7dd9e",
+        "decorator_hash": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "docstring_hash": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "public_contract_hash": "d822cdf703d6eb5df853a928a93cd5792000d78ca6e95574a4248ae392991e02",
+        "signature_hash": "c0612926e9cbd5ff67a34e7d8ec1136675ad1086e8196130e1973c7f25b74947"
+      },
+      "kind": "method",
+      "line_span": [105, 106],
+      "path": "lexhint/lexicon.py",
+      "qualname": "Lexicon.__contains__",
+      "signature": "__contains__(self, word: object) -> bool",
+      "source_id": "py:method:lexhint/lexicon.py::Lexicon.__contains__"
+    },
+    "py:method:lexhint/lexicon.py::Lexicon.__init__": {
+      "hashes": {
+        "body_hash": "51089cf49902ef700088830629c7060fa0fea0f7bfc70d1795e3c5d4fffa4d5e",
+        "content_hash": "156dc58e1a3d1f4799d45dc6745f0e36a7f01b2acc75dbb50f8630b5c0d25d39",
+        "decorator_hash": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "docstring_hash": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "public_contract_hash": "3ac41c96e71c0119704a30e099f53130443077ebb4f96c5bdaa48dc4b7eab940",
+        "signature_hash": "3b093605f9b1faf86c5b34da6d17915e11f76e4a2f7c1ac89c339e6e9a8c9573"
+      },
+      "kind": "method",
+      "line_span": [37, 50],
+      "path": "lexhint/lexicon.py",
+      "qualname": "Lexicon.__init__",
+      "signature": "__init__(self, language: str, *, auto_fetch: bool=False, path: str | Path | None=None, words: Iterable[str] | None=None) -> None",
+      "source_id": "py:method:lexhint/lexicon.py::Lexicon.__init__"
+    },
+    "py:method:lexhint/lexicon.py::Lexicon.__len__": {
+      "hashes": {
+        "body_hash": "5a563a1098bad7389b930c3a084b1ea83acacf0a8d5fedd27b2a1346abca8ffd",
+        "content_hash": "2fe2e3027ddf060edf826f4b359afe66dda050998a730fff25777c4bc671c1fc",
+        "decorator_hash": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "docstring_hash": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "public_contract_hash": "6e42a0d8cc78506744ce6d016aa584633716e83e3932f21242999bf0c80d8321",
+        "signature_hash": "ed393cd2352c438865268efc0486371599f364094105fbe0694da8497550119a"
+      },
+      "kind": "method",
+      "line_span": [95, 98],
+      "path": "lexhint/lexicon.py",
+      "qualname": "Lexicon.__len__",
+      "signature": "__len__(self) -> int",
+      "source_id": "py:method:lexhint/lexicon.py::Lexicon.__len__"
+    },
+    "py:method:lexhint/lexicon.py::Lexicon._ensure_loaded": {
+      "hashes": {
+        "body_hash": "ecdaf7cd242e5bac15414e26db4bdf1954a04e515ef613c132a0e08403bb4429",
+        "content_hash": "a4979a3d9a77e687ff1c99e6534f39f732dd961fd7e9492558ec1a953573c3d6",
+        "decorator_hash": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "docstring_hash": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "public_contract_hash": "3cb25e67548a314bed54950f6c6dec600f1507e21c0c70a1d8000374ccfc62db",
+        "signature_hash": "1d2fa6b887b6ed69be99af9bf69f719b059aa41ab1667b4983a9b85066b7f000"
+      },
+      "kind": "method",
+      "line_span": [79, 93],
+      "path": "lexhint/lexicon.py",
+      "qualname": "Lexicon._ensure_loaded",
+      "signature": "_ensure_loaded(self) -> None",
+      "source_id": "py:method:lexhint/lexicon.py::Lexicon._ensure_loaded"
+    },
+    "py:method:lexhint/lexicon.py::Lexicon._resolve_path": {
+      "hashes": {
+        "body_hash": "4e51e601573b00f1463647e008feedacd150231abf4abd2e799f86ab57052dce",
+        "content_hash": "a1abf566f200daf3faf30e95b7fa340844f132c0e0348154bad2839c4446a20b",
+        "decorator_hash": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "docstring_hash": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "public_contract_hash": "1236eeb3701fc9f14fd2a89fcf03ffcfa50e227907180163f47df41739da7e68",
+        "signature_hash": "f8e43aa7a16fbf94b099c4e8d1f984188be912d6adc3ab291f388dd8995d8cc5"
+      },
+      "kind": "method",
+      "line_span": [56, 77],
+      "path": "lexhint/lexicon.py",
+      "qualname": "Lexicon._resolve_path",
+      "signature": "_resolve_path(self) -> Path",
+      "source_id": "py:method:lexhint/lexicon.py::Lexicon._resolve_path"
+    },
+    "py:method:lexhint/lexicon.py::Lexicon.contains": {
+      "hashes": {
+        "body_hash": "80ce94a24487f305d8d481b051f8f5adfd42d45b1048d2924745013796eea25b",
+        "content_hash": "1783668594400096ebf6dd7cd410300ec67aa7159aee616ccca85c906e7cad45",
+        "decorator_hash": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "docstring_hash": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "public_contract_hash": "665f41a7b6ae28f791d6cf0b4618582a90d2b67d787bcaf91ec7e685b55d9518",
+        "signature_hash": "7eec368cf002ecb2a3896cc3329016205f592f21e559bb8f8df8f03c0ac7bdc8"
+      },
+      "kind": "method",
+      "line_span": [100, 103],
+      "path": "lexhint/lexicon.py",
+      "qualname": "Lexicon.contains",
+      "signature": "contains(self, word: str) -> bool",
+      "source_id": "py:method:lexhint/lexicon.py::Lexicon.contains"
+    },
+    "py:method:lexhint/lexicon.py::Lexicon.from_words": {
+      "hashes": {
+        "body_hash": "6de70ed481f7744a65f058f6059610ba8da87c03e8d047f22412c303f1207db5",
+        "content_hash": "32c411037a0b1286a49699c799a249c86faa66e855e4f639325b84a48f6bd72e",
+        "decorator_hash": "b9ac1dd2a88fbd2b8fc01b47481fd299dd4ffdae854ba8dda155c916c17f544b",
+        "docstring_hash": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "public_contract_hash": "1de37a088dd3182174a1a9c4215eebe516e90665a0f0df71450be949028e0e9b",
+        "signature_hash": "709a5115ee23f425f4b73c3c80cc017599072552854a8a08df8615e118d135c4"
+      },
+      "kind": "method",
+      "line_span": [53, 54],
+      "path": "lexhint/lexicon.py",
+      "qualname": "Lexicon.from_words",
+      "signature": "from_words(cls, words: Iterable[str], *, language: str='und') -> Lexicon",
+      "source_id": "py:method:lexhint/lexicon.py::Lexicon.from_words"
+    },
+    "py:method:lexhint/lexicon.py::Lexicon.rank": {
+      "hashes": {
+        "body_hash": "098c0a35b88a4a6fdc7b63bf551d965d8151453e52848e3611f956ec1bf6e0ee",
+        "content_hash": "4300cca709c0c9c5a8c3cfa572f0ff3545057edf46a00827469927df809ea484",
+        "decorator_hash": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "docstring_hash": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "public_contract_hash": "66c4e6d9fc12359ba511d4711c93e86e37c668fe0ef139f5e7a63aed775edd58",
+        "signature_hash": "74e4dcf6f3c30ff0094a83555c971bdc1d2899d9cfe816aef0638feab1e6f7cd"
+      },
+      "kind": "method",
+      "line_span": [108, 111],
+      "path": "lexhint/lexicon.py",
+      "qualname": "Lexicon.rank",
+      "signature": "rank(self, word: str) -> int | None",
+      "source_id": "py:method:lexhint/lexicon.py::Lexicon.rank"
+    },
+    "py:method:lexhint/lexicon.py::Lexicon.segment": {
+      "hashes": {
+        "body_hash": "0ec31aa6659404dca346c5de9307d2b8cca34186195edc91865edb7daa98dd76",
+        "content_hash": "c0b2c2155587ba813828fa882ec3e289fc9abf2956abf30ccab18f07ceecad6b",
+        "decorator_hash": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "docstring_hash": "4524328bd0e8d3d2af5cf218e311ee15b3a7f9c2d7338865feed8eb19a0b1656",
+        "public_contract_hash": "c9bbf5429aaa1a8c269ec535c359b897d8b1e340eef4de1d2c4b436a030fc3fe",
+        "signature_hash": "167ed61201070af31170e9bae82246cf8a85e8f386ec214983d6047a74871394"
+      },
+      "kind": "method",
+      "line_span": [120, 177],
+      "path": "lexhint/lexicon.py",
+      "qualname": "Lexicon.segment",
+      "signature": "segment(self, text: str, *, max_word_length: int=32) -> tuple[Segment, ...]",
+      "source_id": "py:method:lexhint/lexicon.py::Lexicon.segment"
+    },
+    "py:method:lexhint/lexicon.py::Lexicon.top": {
+      "hashes": {
+        "body_hash": "8ad364d1a74f49da9a5495518fe1d6cdc09ed62ed17ebafb00103adac889d647",
+        "content_hash": "7d93369e53e001be5359c1833223b77ac6fd082939af2b597531cbbd805f0234",
+        "decorator_hash": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "docstring_hash": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "public_contract_hash": "30a4ecd1ff301309a70f12b4afc0ad5c195b8a343baf8d0b66e2aaedd197ecb3",
+        "signature_hash": "0ee2e2ca7ab2decb01f55e500647975cae207991be2080b58058a72a8e94be51"
+      },
+      "kind": "method",
+      "line_span": [113, 118],
+      "path": "lexhint/lexicon.py",
+      "qualname": "Lexicon.top",
+      "signature": "top(self, n: int) -> tuple[str, ...]",
+      "source_id": "py:method:lexhint/lexicon.py::Lexicon.top"
+    },
+    "py:method:tests/test_cli.py::FakeLexicon.__init__": {
+      "hashes": {
+        "body_hash": "a8dbf6b57b55cb7b700341ebce5d2c8f7a35b5a20df3c17e46dacf5b6be4b61b",
+        "content_hash": "db604b457d9573b6b6ce379ef57dde870877967ab95417ac2af620ca614d2f01",
+        "decorator_hash": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "docstring_hash": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "public_contract_hash": "d352e9666050546314784a78d7e49805408bb23689219472ab2e372f9265b1cf",
+        "signature_hash": "2938ba27ab7b50d15a4889d682bc5c3c13dab44bee8aac53b036c83eba1e8051"
+      },
+      "kind": "method",
+      "line_span": [17, 18],
+      "path": "tests/test_cli.py",
+      "qualname": "FakeLexicon.__init__",
+      "signature": "__init__(self, language: str, **_: object) -> None",
+      "source_id": "py:method:tests/test_cli.py::FakeLexicon.__init__"
+    },
+    "py:method:tests/test_cli.py::FakeLexicon.rank": {
+      "hashes": {
+        "body_hash": "4bbf40b80b6b99c2385c2f6f14c2176998945212acff98e72d57f75d2dfd09a0",
+        "content_hash": "a98787d665de2a3771754e180db9104bbd44023857f9baff2786fa16d006aa9f",
+        "decorator_hash": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "docstring_hash": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "public_contract_hash": "c6748a846273a67019f840e91a1b2ca48488abecbc3d28b119271b7ecc6fa198",
+        "signature_hash": "74e4dcf6f3c30ff0094a83555c971bdc1d2899d9cfe816aef0638feab1e6f7cd"
+      },
+      "kind": "method",
+      "line_span": [20, 21],
+      "path": "tests/test_cli.py",
+      "qualname": "FakeLexicon.rank",
+      "signature": "rank(self, word: str) -> int | None",
+      "source_id": "py:method:tests/test_cli.py::FakeLexicon.rank"
+    },
+    "py:method:tests/test_cli.py::FakeLexicon.segment": {
+      "hashes": {
+        "body_hash": "e0f4c004a139d7fea47f1b308a55981bbbaf2438bd46e28efa5b6e6052d30590",
+        "content_hash": "689cabfd426e1a3681fcdfee884d84a5a9c4431faf694bfe4004093ba943777a",
+        "decorator_hash": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "docstring_hash": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "public_contract_hash": "2bbdf44702d5544ce1c6bd716ce8f8fe2f768182a42a9148d59e20ec5058c6b7",
+        "signature_hash": "95b4708cb5dc8ae6e2b360450a67cf5d0b5caacc052dc60c2640a3a1ffb1d124"
+      },
+      "kind": "method",
+      "line_span": [23, 25],
+      "path": "tests/test_cli.py",
+      "qualname": "FakeLexicon.segment",
+      "signature": "segment(self, text: str) -> tuple[Segment, ...]",
+      "source_id": "py:method:tests/test_cli.py::FakeLexicon.segment"
+    },
+    "py:module:lexhint/__init__.py": {
+      "hashes": {
+        "body_hash": "d4c7dd008dabe64f2898edcff6235071b16ae3fd396f3fcbc0261a47ba14cddf",
+        "content_hash": "5c17d5aea15cc7546cabde96e414cbeb6682b1d1b58618d27e3606a1a98ebcac",
+        "decorator_hash": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "docstring_hash": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "public_contract_hash": "e3f47e179f0bd6326d39db1b5c3d5dc3aa5be2d4bbfb14c678c8e93f1b42bd13",
+        "signature_hash": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+      },
+      "kind": "module",
+      "line_span": [1, 59],
+      "path": "lexhint/__init__.py",
+      "qualname": "lexhint/__init__.py",
+      "signature": "lexhint/__init__.py",
+      "source_id": "py:module:lexhint/__init__.py"
+    },
+    "py:module:lexhint/__main__.py": {
+      "hashes": {
+        "body_hash": "58c788892f76d1dce5b3771e07954812350e96225c5a591672d9e73076e4ac7c",
+        "content_hash": "963999eb302e2c7b89c2bedd5ca6c74029bab4023de540b092183f3d344fe5c5",
+        "decorator_hash": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "docstring_hash": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "public_contract_hash": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "signature_hash": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+      },
+      "kind": "module",
+      "line_span": [1, 3],
+      "path": "lexhint/__main__.py",
+      "qualname": "lexhint/__main__.py",
+      "signature": "lexhint/__main__.py",
+      "source_id": "py:module:lexhint/__main__.py"
+    },
+    "py:module:lexhint/builder.py": {
+      "hashes": {
+        "body_hash": "c97319704649d04a1d352e91c514dea51b0ef7e9b884a604d057645adf664af6",
+        "content_hash": "b97d945926eed850d71a24aa7227e97c201b967af4be40000e7ec4b38694bd00",
+        "decorator_hash": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "docstring_hash": "a2650b7c83e96b457b99277e9dd1bf6647e8df64ed928ce6b4068a913143090a",
+        "public_contract_hash": "09b4795b6224bbfdbc486b063623e73443bdb03193d9955fa8820dbea26db2d4",
+        "signature_hash": "abeac413cf47d040214507f05200227ff835ac8bfcd50751b136747950949347"
+      },
+      "kind": "module",
+      "line_span": [1, 158],
+      "path": "lexhint/builder.py",
+      "qualname": "lexhint/builder.py",
+      "signature": "lexhint/builder.py",
+      "source_id": "py:module:lexhint/builder.py"
+    },
+    "py:module:lexhint/cli.py": {
+      "hashes": {
+        "body_hash": "085ecb40867f971c5704b360b477b53c6f69dd8dcd0ba188a6e99567b664b4a8",
+        "content_hash": "ea5a149b08b585f3e8345cd4d2ea64a2953832d50e73f34c1a3f5cb93daa4288",
+        "decorator_hash": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "docstring_hash": "01ba4719c80b6fe911b091a7c05124b64eeece964e09c058ef8f9805daca546b",
+        "public_contract_hash": "1ec61c942571c258ce1c13c38e582b3caaf5580ed0004a8cf3fcbc70c9dcea47",
+        "signature_hash": "d426833b5e45cdd0810cc541446684c5419ccd44bd73364f0709999791fddc8c"
+      },
+      "kind": "module",
+      "line_span": [1, 576],
+      "path": "lexhint/cli.py",
+      "qualname": "lexhint/cli.py",
+      "signature": "lexhint/cli.py",
+      "source_id": "py:module:lexhint/cli.py"
+    },
+    "py:module:lexhint/dictionary.py": {
+      "hashes": {
+        "body_hash": "6148c29490a6586552a3be9c1ffabef74f16eebeb4103993c9f55cbc420535c2",
+        "content_hash": "0836ea1dc2537f20dc04afd499e5868c85c2c27e07aa9513575b95ebeba58324",
+        "decorator_hash": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "docstring_hash": "ef326da56cffbb9a5c1fcda7f67cb4663aead66e9d2288831e1f6f2de66bbcee",
+        "public_contract_hash": "93eeccd9900dd21644d327f8efad1268f6db06cecd7de223c1243209e7ebd7d3",
+        "signature_hash": "396be5f99dd31d2d9a5add9635b71a6f6039af75fd899e3e3ba675acd5550c01"
+      },
+      "kind": "module",
+      "line_span": [1, 425],
+      "path": "lexhint/dictionary.py",
+      "qualname": "lexhint/dictionary.py",
+      "signature": "lexhint/dictionary.py",
+      "source_id": "py:module:lexhint/dictionary.py"
+    },
+    "py:module:lexhint/download.py": {
+      "hashes": {
+        "body_hash": "f39cc422879ff309b5a471c3f27bfd016fd5f4cac120e034a4474e5809eccc2c",
+        "content_hash": "16f94a345453259b2c9f685702eaadca96d19a77e6ba7c582c0772e9fae75387",
+        "decorator_hash": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "docstring_hash": "ea7beee88847c3afbc0d3f0def86a871eb5d510140648daf53d8df77728fec9a",
+        "public_contract_hash": "89cac56da8a0718123f2c2b3204ada4aa80cdb2e9254940d02b6d1e595895355",
+        "signature_hash": "88df931ae17755fa84072e9f486bedd5af2e5b151d9ce0ebec3e41a2adde20e3"
+      },
+      "kind": "module",
+      "line_span": [1, 102],
+      "path": "lexhint/download.py",
+      "qualname": "lexhint/download.py",
+      "signature": "lexhint/download.py",
+      "source_id": "py:module:lexhint/download.py"
+    },
+    "py:module:lexhint/kaikki.py": {
+      "hashes": {
+        "body_hash": "110c8e0df5e7bdd668af3f31f91768b1098236fbe7c181b1c121117b3bd6eba8",
+        "content_hash": "bb8fbdf0460e93f4c793aa9a4d2db056da17c5935f883f9067c0be081b695559",
+        "decorator_hash": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "docstring_hash": "ab317d3b472d4f955b18d030f7a3cdb0f39f7c4a722e72bd545beb23c72b2488",
+        "public_contract_hash": "dfc76394069568e6ba65a7b2de9a47deb294f0a398ee7ecd1104e298126f1d96",
+        "signature_hash": "80c9774c798e1df8539d67b2e8c93180ea96e7fc695a4c9fb2d707074112b76d"
+      },
+      "kind": "module",
+      "line_span": [1, 71],
+      "path": "lexhint/kaikki.py",
+      "qualname": "lexhint/kaikki.py",
+      "signature": "lexhint/kaikki.py",
+      "source_id": "py:module:lexhint/kaikki.py"
+    },
+    "py:module:lexhint/lexicon.py": {
+      "hashes": {
+        "body_hash": "77b7bf9382a3657829c49f2012f733a5b92c2ee8df25f0434edf3d66c425e2ce",
+        "content_hash": "485afc5c50ded17f15943b20347fa85f7085246aebc92554ed8ff9b7e319db69",
+        "decorator_hash": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "docstring_hash": "3d8fe32aa7db2cb6147883793332d0118913b9963318485f2ba55ed0ae337192",
+        "public_contract_hash": "3fb4e3baba9ccc466a3414af154ce3c0d6f4ea6b71f5d79186933a5921671f53",
+        "signature_hash": "ab12fc83acceb3cf851780c1dc4efcdb6de8935f9449b629016c1be0bc129aa8"
+      },
+      "kind": "module",
+      "line_span": [1, 177],
+      "path": "lexhint/lexicon.py",
+      "qualname": "lexhint/lexicon.py",
+      "signature": "lexhint/lexicon.py",
+      "source_id": "py:module:lexhint/lexicon.py"
+    },
+    "py:module:lexhint/models.py": {
+      "hashes": {
+        "body_hash": "9e000be67765470bea7ab1bdbb5ce2cba656ffc8d269816af3a619805e9e9d1c",
+        "content_hash": "3995e40d57c23602474e810ae515c38f0a46793bb056b168a1a2d63fc4d81c16",
+        "decorator_hash": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "docstring_hash": "8f48d186493a7b52bc03556447d257d2bab45ba56f0f4ce453133de6077fe9c2",
+        "public_contract_hash": "5533fad223c317c3e7b4e7d6050a1f555a81088cc8b936b07281fd4930bf821f",
+        "signature_hash": "f36eabc2b7c1113d9597d610ac0420440beb91a695c54ab8ad006e28c15e7f33"
+      },
+      "kind": "module",
+      "line_span": [1, 61],
+      "path": "lexhint/models.py",
+      "qualname": "lexhint/models.py",
+      "signature": "lexhint/models.py",
+      "source_id": "py:module:lexhint/models.py"
+    },
+    "py:module:lexhint/store.py": {
+      "hashes": {
+        "body_hash": "5370b4710ae4a1fb954286a864694f6948c7e69cfed8448de93c9a928e847951",
+        "content_hash": "52377ad6946b95d99c1158aae4ec539e8b924ee2283910fa492e6d71e19b6c30",
+        "decorator_hash": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "docstring_hash": "abe4ee7a105042f73b12b1f1a28788522d2f253445a475a94ab4d6e1f7b0ec52",
+        "public_contract_hash": "d1488bfb0f98c15d01f79e3e4b13bf176adeea80a68ec741db96bcd21d3ca73f",
+        "signature_hash": "32ab6ebf065b6b07e048048ab2273648842784c7ad924fec0cc73c4738dfb64a"
+      },
+      "kind": "module",
+      "line_span": [1, 242],
+      "path": "lexhint/store.py",
+      "qualname": "lexhint/store.py",
+      "signature": "lexhint/store.py",
+      "source_id": "py:module:lexhint/store.py"
+    },
+    "py:module:tests/test_builder.py": {
+      "hashes": {
+        "body_hash": "2ec12f7bcb20d31916b747fa5c13463217147e693d82c440224a4bb0d2935480",
+        "content_hash": "68a664d57b334b0b10f7fc56afa13f11780b0ba3a1ba3916d62fdacd56954b68",
+        "decorator_hash": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "docstring_hash": "6a3cf5192354f71615ac51034b3e97c20eda99643fcaf5bbe6d41ad59bd12167",
+        "public_contract_hash": "59e03c03e7562a18a51eb27e28edc8dd95e40e10b90517223869809da3c73aa2",
+        "signature_hash": "24b23a714a49cff8403bc17cff8c1f2cf54fce4b531bdd8d6844bb228591b850"
+      },
+      "kind": "module",
+      "line_span": [1, 60],
+      "path": "tests/test_builder.py",
+      "qualname": "tests/test_builder.py",
+      "signature": "tests/test_builder.py",
+      "source_id": "py:module:tests/test_builder.py"
+    },
+    "py:module:tests/test_cli.py": {
+      "hashes": {
+        "body_hash": "b0611a7ea8fd185cddde7e5a3c5ee79889dcc32ebfe19d413e7c5f2ece5fa250",
+        "content_hash": "6f6ed003829b4b20367511d3bd5a57bbcbe1fc33c003aa7d2d9e96904c5aca01",
+        "decorator_hash": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "docstring_hash": "1e135afb54bf948ed616b7e518ea9f59c8edad95a2d1dfbae8adc60b167c5f6c",
+        "public_contract_hash": "8effb2f4e71b4792b02b531501291e57bbfc921a61a6886a61728456d22b0dd1",
+        "signature_hash": "77721185ec812d3cf66a0df29cfc01d1eb2c942fae81cdfe12ee088a34c13416"
+      },
+      "kind": "module",
+      "line_span": [1, 107],
+      "path": "tests/test_cli.py",
+      "qualname": "tests/test_cli.py",
+      "signature": "tests/test_cli.py",
+      "source_id": "py:module:tests/test_cli.py"
+    },
+    "py:module:tests/test_cli_lazy.py": {
+      "hashes": {
+        "body_hash": "f226a0024cf7a0009636901414aeec141d97e3cadec8b12a059c83fd2d90654a",
+        "content_hash": "07f5803eea077abb8253c3324bbfafc2af1ee07f367b3ceefd9af09b8afbc6eb",
+        "decorator_hash": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "docstring_hash": "d088784b7ecb87f1ea17e6f982fa968ffefcc07b79de6ecc548fc00242868da6",
+        "public_contract_hash": "66a5a829bb41120d1a65789fe9b033283ca9146a1c550eec0cbeb565e9ff8987",
+        "signature_hash": "e4a3e160b1f4e4849f4f8c2259c583929fc9408fda97db8a835ca1569dca2a7d"
+      },
+      "kind": "module",
+      "line_span": [1, 131],
+      "path": "tests/test_cli_lazy.py",
+      "qualname": "tests/test_cli_lazy.py",
+      "signature": "tests/test_cli_lazy.py",
+      "source_id": "py:module:tests/test_cli_lazy.py"
+    },
+    "py:module:tests/test_dictionary.py": {
+      "hashes": {
+        "body_hash": "5648ac9380ecc609f3373e8533edc859d049dce41cc3078e39a45be45fae2137",
+        "content_hash": "e03d9faa486a7c2e326f8fa9e2aeee782b5d4a0943126d185514cb606562854a",
+        "decorator_hash": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "docstring_hash": "886760af898381620a8980841c646ae70e894b5292c3138e6dfd75b6904deffb",
+        "public_contract_hash": "5629354709ba04205cea78ee988d5a645cf31d548b98cee4c8d706eb632120a0",
+        "signature_hash": "05bf3bfcaa4e9c84906a71ddfaa069ab2e0dbb96e59ef491c26dee4a95a21e1d"
+      },
+      "kind": "module",
+      "line_span": [1, 153],
+      "path": "tests/test_dictionary.py",
+      "qualname": "tests/test_dictionary.py",
+      "signature": "tests/test_dictionary.py",
+      "source_id": "py:module:tests/test_dictionary.py"
+    },
+    "py:module:tests/test_download.py": {
+      "hashes": {
+        "body_hash": "f4e4a8dba1bd3535276849693e33b66cd155ead3c40ecd707ff76a1a8da363b8",
+        "content_hash": "a9820b70ba3e58e730cc03028397304c53541d643d98ce5192c3b43d99e600b8",
+        "decorator_hash": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "docstring_hash": "75a11da44c802486bc6f65640aa48a730f0f684c5c07a42ba3cd1735eb3fb070",
+        "public_contract_hash": "6e4b2960a5c1b9de0f1383d8a65798d4190f556a12982c3edbe8f53d7a9ee13f",
+        "signature_hash": "038f6833d149018f0fc10f1e77266ca34963c4642c2863dc492540dab0a2f1cc"
+      },
+      "kind": "module",
+      "line_span": [1, 11],
+      "path": "tests/test_download.py",
+      "qualname": "tests/test_download.py",
+      "signature": "tests/test_download.py",
+      "source_id": "py:module:tests/test_download.py"
+    },
+    "py:module:tests/test_kaikki.py": {
+      "hashes": {
+        "body_hash": "4b487aebd93c72b9dfeabb66f825b79fc92328fc7a573f14d094b47109c0c97a",
+        "content_hash": "e645bb68c5dd42994eb55a59b16f10a611967fe08c45b395043007908f79dc4f",
+        "decorator_hash": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "docstring_hash": "d088784b7ecb87f1ea17e6f982fa968ffefcc07b79de6ecc548fc00242868da6",
+        "public_contract_hash": "f3c337e7ec304894621995555ecb807b3341d8353897c77315539e7b410534b3",
+        "signature_hash": "0fcbc3b4dcc5d7fbea71f4ff71a8d9ff6c88a95beb912f6cad4e60f42985d888"
+      },
+      "kind": "module",
+      "line_span": [1, 58],
+      "path": "tests/test_kaikki.py",
+      "qualname": "tests/test_kaikki.py",
+      "signature": "tests/test_kaikki.py",
+      "source_id": "py:module:tests/test_kaikki.py"
+    },
+    "py:module:tests/test_lazy_dictionary.py": {
+      "hashes": {
+        "body_hash": "b02d27702a7d4afc999286d548092b84400428b703ea575851ea1246fb6b263f",
+        "content_hash": "be01e4c0fd8d3cd7106ad382905024f77c5faec151503046ab246b9a99f76f77",
+        "decorator_hash": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "docstring_hash": "79488488398f5f5aed236dd6e9f914599370d04dfe70fda61b8c83bf739b1088",
+        "public_contract_hash": "08e7d8bad45c439a3514c8191d190181552f4aca956aa76b4867969f042bad8b",
+        "signature_hash": "989a46d4c4c2eb509488919533991ef8da7fdf5d81abc78b37b82db2cbd00401"
+      },
+      "kind": "module",
+      "line_span": [1, 177],
+      "path": "tests/test_lazy_dictionary.py",
+      "qualname": "tests/test_lazy_dictionary.py",
+      "signature": "tests/test_lazy_dictionary.py",
+      "source_id": "py:module:tests/test_lazy_dictionary.py"
+    },
+    "py:module:tests/test_lexicon.py": {
+      "hashes": {
+        "body_hash": "7ecda86fb8de6a00f6d0163a899de979319f0d9f0dfd2d5895dc4bf869c1e63b",
+        "content_hash": "781e656b5d7961f6e1403a030a5859577a805f19551e8e1e7b673faca62c4211",
+        "decorator_hash": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "docstring_hash": "545c38b0922de19734fbffde62792c37c2aef6a3216cfa472449173165220f7d",
+        "public_contract_hash": "2ae366958f84d3444d5043469390b3365fcfe2f194aeea2a45109c2d9db5f503",
+        "signature_hash": "d3f11e8eea9e2770310f5d3feb7c8c2abb62f596f5137af0c449230d185a10e9"
+      },
+      "kind": "module",
+      "line_span": [1, 33],
+      "path": "tests/test_lexicon.py",
+      "qualname": "tests/test_lexicon.py",
+      "signature": "tests/test_lexicon.py",
+      "source_id": "py:module:tests/test_lexicon.py"
+    },
+    "py:module:tests/test_remote_context.py": {
+      "hashes": {
+        "body_hash": "04037989a1bc2809667797d5070a994584094044dca1bdce1ef905d2b7be6272",
+        "content_hash": "549ab8b2a5f3cc06aeb27826aaaecc2a8e8d4d9ab02e84083d1a11c28f952f0c",
+        "decorator_hash": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "docstring_hash": "7c370d9536d7d0d6a0f7cd7f9826692acd93e4fb05ba46f7b630b879740343d3",
+        "public_contract_hash": "cd218b259201cf95fe35f151bfe318afaebc388eec6ec13ef537d5c36f2a7621",
+        "signature_hash": "cae7e60ada11281e911b6421684504751c58c3cf5c009ef83d53d946a797b167"
+      },
+      "kind": "module",
+      "line_span": [1, 73],
+      "path": "tests/test_remote_context.py",
+      "qualname": "tests/test_remote_context.py",
+      "signature": "tests/test_remote_context.py",
+      "source_id": "py:module:tests/test_remote_context.py"
+    }
+  }
+}
