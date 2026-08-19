@@ -11,6 +11,42 @@ It does **not** verbalize text itself. Its two jobs are:
 
 There are no hand-maintained per-language context JSON files.
 
+## Quick start
+
+Install for development:
+
+```bash
+python -m pip install -e ".[dev]"
+```
+
+Prepare the default English word list and try the CLI:
+
+```bash
+lexhint setup
+lexhint word house
+lexhint segment chatgpt
+```
+
+English is the CLI default. Use an explicit language when needed:
+
+```bash
+lexhint setup de
+lexhint word de Haus
+# or: LEXHINT_LANGUAGE=de lexhint word Haus
+```
+
+Human-readable output is the default; add `--json` to any command for scripts.
+The runtime itself has no third-party Python dependencies.
+
+To add dictionary-derived context data, the built-in Kaikki source is used automatically:
+
+```bash
+lexhint dictionary build en
+```
+
+The Kaikki source is large and is streamed rather than downloaded to a temporary copy.
+`lexhint setup en --dictionary` performs both setup steps in one command.
+
 ## Layout
 
 The project deliberately uses a flat source layout:
@@ -40,14 +76,6 @@ python -m build
 The bootstrap ZIP configures `0.1.0` as the `setuptools-scm` fallback version because Git
 metadata is not part of a normal ZIP archive. Installed runtime version lookup uses
 `importlib.metadata`, so no generated version module is kept in the source tree.
-
-## Install for development
-
-```bash
-python -m pip install -e ".[dev]"
-```
-
-The runtime itself has no third-party Python dependencies.
 
 # 1. Common-word lexicon
 
@@ -92,8 +120,8 @@ A speech layer can therefore keep `chat` lexical and spell the unknown `gpt` run
 CLI:
 
 ```bash
-lexhint word en chat
-lexhint segment en chatgpt
+lexhint word chat
+lexhint segment chatgpt
 ```
 
 # 2. Dictionary-derived context
@@ -105,24 +133,18 @@ The Kaikki raw English-edition extraction contains many languages, so the builde
 `lang_code` and can produce indexes for `en`, `de`, `fr`, and other languages from the
 same source when those entries are present.
 
-First ensure the 50k frequency list exists:
-
-```bash
-lexhint fetch en
-```
-
-Then build a filtered dictionary from a downloaded Kaikki file:
+The CLI fetches the 50k frequency list automatically when building a dictionary.
+To build from a downloaded Kaikki file:
 
 ```bash
 lexhint dictionary build en ~/Downloads/raw-wiktextract-data.jsonl.gz
 ```
 
-You can also stream the official raw source directly without keeping the multi-gigabyte
+Or use the built-in official Kaikki source directly without keeping the multi-gigabyte
 download on disk:
 
 ```bash
-lexhint dictionary build en \
-  https://kaikki.org/dictionary/raw-wiktextract-data.jsonl.gz
+lexhint dictionary build en
 ```
 
 That source is very large. The builder reads it line-by-line and stores only senses for

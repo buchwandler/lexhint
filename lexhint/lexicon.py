@@ -11,6 +11,8 @@ from collections.abc import Iterable
 from .download import cached_wordlist_path, fetch_wordlist
 from .models import Segment
 
+_MAX_TWO_LETTER_RANK = 2_000
+
 
 class LexiconNotInstalled(FileNotFoundError):
     """Raised when a requested language word list is not locally available."""
@@ -144,6 +146,12 @@ class Lexicon:
                 if rank is None:
                     continue
                 length = end - start
+                # Two-letter matches are useful for very common function words ("at",
+                # "in", "to"), but obscure abbreviations should not consume part of an
+                # otherwise unknown initialism. Without this guard, a frequency-list entry
+                # such as "gp" can turn "chatgpt" into "chat" + "gp" + "t".
+                if length == 2 and rank > _MAX_TWO_LETTER_RANK:
+                    continue
                 score = best[start] + (length * 6.0) - math.log10(rank + 9)
                 if score > best[end]:
                     best[end] = score

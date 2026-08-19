@@ -7,7 +7,7 @@ import os
 import sqlite3
 import tempfile
 import urllib.request
-from collections.abc import Iterator, Mapping
+from collections.abc import Callable, Iterator, Mapping
 from contextlib import contextmanager
 from pathlib import Path
 from typing import BinaryIO, TextIO
@@ -111,6 +111,7 @@ def build_dictionary(
     output: str | Path | None = None,
     limit: int = 50_000,
     timeout: float = 60.0,
+    progress: Callable[[DictionaryBuildStats], None] | None = None,
 ) -> tuple[Path, DictionaryBuildStats]:
     """Build a compact SQLite dictionary by filtering Wiktextract JSONL to common words."""
     if limit <= 0:
@@ -192,6 +193,8 @@ def build_dictionary(
                     sense_count += 1
                 if matched % 5000 == 0:
                     connection.commit()
+                if progress is not None and scanned % 100_000 == 0:
+                    progress(DictionaryBuildStats(scanned, matched, len(seen_words), sense_count))
 
             connection.executemany(
                 "INSERT OR REPLACE INTO metadata(key, value) VALUES (?, ?)",
@@ -203,6 +206,8 @@ def build_dictionary(
                 ),
             )
             connection.commit()
+            if progress is not None:
+                progress(DictionaryBuildStats(scanned, matched, len(seen_words), sense_count))
             connection.execute("ANALYZE")
             connection.commit()
         finally:

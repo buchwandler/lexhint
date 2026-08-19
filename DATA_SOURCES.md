@@ -1,6 +1,6 @@
 # Data sources
 
-`lexhint` code is MIT licensed. This source archive does not bundle the external
+`lexhint` code is Apache-2.0 licensed. This source archive does not bundle the external
 frequency lists or Wiktionary-derived dictionary data described below.
 
 ## FrequencyWords

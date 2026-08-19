@@ -22,3 +22,12 @@ def test_segment_two_known_words() -> None:
     result = lexicon.segment("stackoverflow")
     assert [part.text for part in result] == ["stack", "overflow"]
     assert all(part.known for part in result)
+
+
+def test_segment_ignores_obscure_two_letter_match_inside_initialism() -> None:
+    lexicon = Lexicon.from_words(["the", "chat"] + [f"word{i}" for i in range(2500)] + ["gp"])
+    result = lexicon.segment("chatgpt")
+    assert result == (
+        Segment("chat", known=True, rank=2),
+        Segment("gpt", known=False),
+    )
