@@ -4,10 +4,11 @@ import json
 import re
 import sqlite3
 import unicodedata
+from collections.abc import Iterable
 from importlib.resources import files
 from pathlib import Path
-from collections.abc import Iterable
 
+from .builder import SCHEMA_VERSION
 from .download import cached_dictionary_path
 from .models import ContextSupport, Sense, TopicScore
 
@@ -18,8 +19,16 @@ class DictionaryNotInstalled(FileNotFoundError):
     """Raised when a compact dictionary index is not locally available."""
 
 
+class DictionaryIncompatible(RuntimeError):
+    """Raised when a dictionary index does not match the runtime contract."""
+
+
 def _normalize(value: str) -> str:
     return unicodedata.normalize("NFC", value).casefold()
+
+
+def _display_normalize(value: str) -> str:
+    return unicodedata.normalize("NFC", value)
 
 
 def _loads_tuple(value: str) -> tuple[str, ...]:
@@ -38,13 +47,19 @@ class Dictionary:
                 f"no dictionary index installed for {self.language!r}; "
                 "run 'lexhint dictionary build ...'"
             )
+        self._validate_metadata()
 
     @classmethod
     def from_path(cls, path: str | Path, *, language: str = "und") -> Dictionary:
         return cls(language, path=path)
 
     def _resolve_path(self) -> Path:
-        vendored = files("lexhint").joinpath("data", "dictionaries", f"{self.language}.sqlite3")
+        vendored = (
+            files("lexhint")
+            .joinpath("data")
+            .joinpath("dictionaries")
+            .joinpath(f"{self.language}.sqlite3")
+        )
         try:
             if vendored.is_file():
                 return Path(str(vendored))
@@ -58,22 +73,53 @@ class Dictionary:
         connection.row_factory = sqlite3.Row
         return connection
 
-    def senses(self, word: str) -> tuple[Sense, ...]:
+    def _validate_metadata(self) -> None:
+        try:
+            with self._connect() as connection:
+                metadata = {
+                    str(row["key"]): str(row["value"])
+                    for row in connection.execute("SELECT key, value FROM metadata")
+                }
+        except sqlite3.DatabaseError as exc:
+            raise DictionaryIncompatible(
+                f"dictionary index for {self.language!r} is not a valid lexhint index"
+            ) from exc
+
+        actual_schema = metadata.get("schema_version")
+        if actual_schema != SCHEMA_VERSION:
+            raise DictionaryIncompatible(
+                f"dictionary index for {self.language!r} uses schema "
+                f"{actual_schema or 'unknown'}; schema {SCHEMA_VERSION} is required"
+            )
+
+        actual_language = metadata.get("language")
+        if actual_language != self.language:
+            raise DictionaryIncompatible(
+                f"dictionary index is for language {actual_language or 'unknown'!r}; "
+                f"language {self.language!r} was requested"
+            )
+
+    def senses(self, word: str, *, all_case_variants: bool = False) -> tuple[Sense, ...]:
         normalized = _normalize(word)
         with self._connect() as connection:
             rows = connection.execute(
-                "SELECT display_word, pos, glosses, topics, categories, tags "
-                "FROM senses WHERE word = ? ORDER BY id",
+                "SELECT display_word, pos, glosses, topics FROM senses WHERE word = ? ORDER BY id",
                 (normalized,),
             ).fetchall()
+
+        if not all_case_variants:
+            display_word = _display_normalize(word)
+            exact = [
+                row for row in rows if _display_normalize(str(row["display_word"])) == display_word
+            ]
+            rows = exact or rows
+
         return tuple(
             Sense(
                 word=str(row["display_word"]),
                 pos=str(row["pos"]),
                 glosses=_loads_tuple(str(row["glosses"])),
                 topics=_loads_tuple(str(row["topics"])),
-                categories=_loads_tuple(str(row["categories"])),
-                tags=_loads_tuple(str(row["tags"])),
             )
             for row in rows
         )
@@ -93,20 +139,35 @@ class Dictionary:
         return tuple(sorted(values))
 
     def _topics_for_words(self, words: Iterable[str]) -> dict[str, set[str]]:
-        normalized = tuple(dict.fromkeys(_normalize(word) for word in words if word))
-        if not normalized:
+        original_tokens = tuple(dict.fromkeys(word for word in words if word))
+        folded_keys = tuple(dict.fromkeys(_normalize(word) for word in original_tokens))
+        if not folded_keys:
             return {}
-        result: dict[str, set[str]] = {word: set() for word in normalized}
+
+        rows_by_folded: dict[str, list[sqlite3.Row]] = {word: [] for word in folded_keys}
         with self._connect() as connection:
-            for offset in range(0, len(normalized), 500):
-                chunk = normalized[offset : offset + 500]
+            for offset in range(0, len(folded_keys), 500):
+                chunk = folded_keys[offset : offset + 500]
                 placeholders = ",".join("?" for _ in chunk)
                 rows = connection.execute(
-                    f"SELECT word, topics FROM senses WHERE word IN ({placeholders})",  # noqa: S608
+                    f"SELECT word, display_word, topics FROM senses WHERE word IN ({placeholders})",  # noqa: S608
                     chunk,
                 ).fetchall()
                 for row in rows:
-                    result[str(row["word"])].update(_loads_tuple(str(row["topics"])))
+                    rows_by_folded[str(row["word"])].append(row)
+
+        result: dict[str, set[str]] = {}
+        for token in original_tokens:
+            rows = rows_by_folded[_normalize(token)]
+            display_word = _display_normalize(token)
+            exact = [
+                row for row in rows if _display_normalize(str(row["display_word"])) == display_word
+            ]
+            selected = exact or rows
+            values: set[str] = set()
+            for row in selected:
+                values.update(_loads_tuple(str(row["topics"])))
+            result[token] = values
         return result
 
     @staticmethod
@@ -162,8 +223,7 @@ class Dictionary:
             distance = min(abs(index - target_index) for target_index in target_indices)
             if distance > window:
                 continue
-            normalized = _normalize(token)
-            for topic in topics_by_word.get(normalized, ()):
+            for topic in topics_by_word.get(token, ()):
                 key = _normalize(topic)
                 scores[key] = scores.get(key, 0.0) + decay**distance
                 cues.setdefault(key, []).append(token)

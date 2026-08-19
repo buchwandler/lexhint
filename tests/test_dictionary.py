@@ -1,6 +1,9 @@
+import sqlite3
 from pathlib import Path
 
-from lexhint import Dictionary, Lexicon, build_dictionary
+import pytest
+
+from lexhint import Dictionary, DictionaryIncompatible, build_dictionary
 
 FIXTURE = Path(__file__).parent / "fixtures" / "kaikki-mini.jsonl"
 
@@ -11,23 +14,48 @@ def span(text: str, target: str) -> tuple[int, int]:
 
 
 def build(tmp_path: Path) -> Dictionary:
-    lexicon = Lexicon.from_words(["the", "scale", "compiler", "chord", "is", "chat"])
-    path, stats = build_dictionary("en", FIXTURE, lexicon=lexicon, output=tmp_path / "en.sqlite3")
-    assert stats.scanned_entries == 5
-    assert stats.matched_entries == 3
-    assert stats.words == 3
-    assert stats.senses == 5
+    path, stats = build_dictionary("en", FIXTURE, output=tmp_path / "en.sqlite3")
+    assert stats.scanned_entries == 7
+    assert stats.kept_entries == 5
+    assert stats.words == 4
+    assert stats.senses == 7
     return Dictionary.from_path(path, language="en")
 
 
-def test_dictionary_parses_senses_and_topics(tmp_path: Path) -> None:
+def test_dictionary_parses_semantic_senses_and_topics(tmp_path: Path) -> None:
     dictionary = build(tmp_path)
     senses = dictionary.senses("scale")
     assert len(senses) == 2
     assert "music" in dictionary.topics("scale")
     assert "metrology" in dictionary.topics("scale")
+    assert dictionary.senses("compiler")
     assert "computing" in dictionary.topics("compiler")
-    assert not dictionary.contains("banana")
+    assert dictionary.contains("banana")
+    assert not dictionary.contains("metadataonly")
+
+
+def test_topic_bearing_senses_only_and_duplicates_are_stored(tmp_path: Path) -> None:
+    dictionary = build(tmp_path)
+    assert dictionary.senses("metadataonly") == ()
+    assert len(dictionary.senses("compiler")) == 1
+
+
+def test_schema_columns_are_compact(tmp_path: Path) -> None:
+    path, _ = build_dictionary("en", FIXTURE, output=tmp_path / "en.sqlite3")
+    with sqlite3.connect(path) as connection:
+        columns = {row[1] for row in connection.execute("PRAGMA table_info(senses)")}
+    assert columns == {"id", "word", "display_word", "pos", "glosses", "topics"}
+
+
+def test_case_preference_is_consistent(tmp_path: Path) -> None:
+    dictionary = build(tmp_path)
+    assert dictionary.topics("house") == ("housing", "music")
+    assert dictionary.topics("House") == ("politics",)
+    assert dictionary.topics("HOUSE") == ("housing", "music", "politics")
+    assert {sense.word for sense in dictionary.senses("house", all_case_variants=True)} == {
+        "house",
+        "House",
+    }
 
 
 def test_music_context_is_dictionary_derived(tmp_path: Path) -> None:
@@ -47,6 +75,15 @@ def test_software_context_is_dictionary_derived(tmp_path: Path) -> None:
     assert "compiler" in [cue.casefold() for cue in support.cues]
 
 
+def test_context_does_not_leak_proper_name_topics(tmp_path: Path) -> None:
+    dictionary = build(tmp_path)
+    text = "The house track is Am."
+    scores = dictionary.topic_scores(text, target=span(text, "Am"))
+    topics = {score.topic for score in scores}
+    assert "music" in topics
+    assert "politics" not in topics
+
+
 def test_candidate_does_not_validate_itself(tmp_path: Path) -> None:
     dictionary = build(tmp_path)
     text = "scale"
@@ -57,3 +94,23 @@ def test_unrelated_context_fails_closed(tmp_path: Path) -> None:
     dictionary = build(tmp_path)
     text = "Am I late?"
     assert dictionary.supports(text, target=span(text, "Am"), topic="music") is None
+
+
+def test_schema_incompatibility_is_controlled(tmp_path: Path) -> None:
+    path = tmp_path / "schema-1.sqlite3"
+    with sqlite3.connect(path) as connection:
+        connection.execute("CREATE TABLE metadata (key TEXT PRIMARY KEY, value TEXT NOT NULL)")
+        connection.execute("INSERT INTO metadata VALUES ('schema_version', '1')")
+        connection.execute("INSERT INTO metadata VALUES ('language', 'en')")
+    with pytest.raises(DictionaryIncompatible, match="schema 1; schema 2 is required"):
+        Dictionary.from_path(path, language="en")
+
+
+def test_wrong_language_is_incompatible(tmp_path: Path) -> None:
+    path = tmp_path / "wrong-language.sqlite3"
+    with sqlite3.connect(path) as connection:
+        connection.execute("CREATE TABLE metadata (key TEXT PRIMARY KEY, value TEXT NOT NULL)")
+        connection.execute("INSERT INTO metadata VALUES ('schema_version', '2')")
+        connection.execute("INSERT INTO metadata VALUES ('language', 'de')")
+    with pytest.raises(DictionaryIncompatible, match="language 'en' was requested"):
+        Dictionary.from_path(path, language="en")

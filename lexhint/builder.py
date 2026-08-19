@@ -6,6 +6,7 @@ import json
 import os
 import sqlite3
 import tempfile
+import unicodedata
 import urllib.request
 from collections.abc import Callable, Iterator, Mapping
 from contextlib import contextmanager
@@ -14,10 +15,13 @@ from typing import BinaryIO, TextIO
 from urllib.parse import urlparse
 
 from .download import cached_dictionary_path
-from .lexicon import Lexicon, normalize_word
 from .models import DictionaryBuildStats
 
-SCHEMA_VERSION = "1"
+SCHEMA_VERSION = "2"
+
+
+def _normalize_word(value: str) -> str:
+    return unicodedata.normalize("NFC", value).casefold()
 
 
 def _strings(value: object) -> tuple[str, ...]:
@@ -51,15 +55,19 @@ def _text_source(source: str | Path, *, timeout: float = 60.0) -> Iterator[TextI
     value = str(source)
     with _binary_source(source, timeout=timeout) as binary:
         if value.lower().endswith(".gz"):
-            with gzip.GzipFile(fileobj=binary, mode="rb") as decompressed:
-                with io.TextIOWrapper(decompressed, encoding="utf-8") as text:
-                    yield text
+            with (
+                gzip.GzipFile(fileobj=binary, mode="rb") as decompressed,
+                io.TextIOWrapper(decompressed, encoding="utf-8") as text,
+            ):
+                yield text
         else:
             with io.TextIOWrapper(binary, encoding="utf-8") as text:
                 yield text
 
 
-def iter_wiktextract_entries(source: str | Path, *, timeout: float = 60.0) -> Iterator[dict]:
+def iter_wiktextract_entries(
+    source: str | Path, *, timeout: float = 60.0
+) -> Iterator[dict[str, object]]:
     """Stream JSONL objects from a local path or HTTP(S) source."""
     with _text_source(source, timeout=timeout) as handle:
         for line_number, line in enumerate(handle, start=1):
@@ -91,10 +99,10 @@ def _create_schema(connection: sqlite3.Connection) -> None:
             pos TEXT NOT NULL,
             glosses TEXT NOT NULL,
             topics TEXT NOT NULL,
-            categories TEXT NOT NULL,
-            tags TEXT NOT NULL
+            UNIQUE(word, display_word, pos, glosses, topics)
         );
         CREATE INDEX senses_word_idx ON senses(word);
+        CREATE INDEX senses_display_word_idx ON senses(display_word);
         """
     )
 
@@ -107,18 +115,12 @@ def build_dictionary(
     language: str,
     source: str | Path,
     *,
-    lexicon: Lexicon | None = None,
     output: str | Path | None = None,
-    limit: int = 50_000,
     timeout: float = 60.0,
     progress: Callable[[DictionaryBuildStats], None] | None = None,
 ) -> tuple[Path, DictionaryBuildStats]:
-    """Build a compact SQLite dictionary by filtering Wiktextract JSONL to common words."""
-    if limit <= 0:
-        raise ValueError("limit must be > 0")
+    """Build a compact semantic SQLite dictionary from Wiktextract JSONL."""
     base_language = language.lower().split("-", 1)[0]
-    selected_lexicon = lexicon or Lexicon(base_language)
-    wanted = set(selected_lexicon.top(limit))
     target = Path(output) if output is not None else cached_dictionary_path(base_language)
     target = target.expanduser()
     target.parent.mkdir(parents=True, exist_ok=True)
@@ -129,7 +131,7 @@ def build_dictionary(
     tmp.unlink(missing_ok=True)
 
     scanned = 0
-    matched = 0
+    kept_entries = 0
     sense_count = 0
     seen_words: set[str] = set()
 
@@ -143,7 +145,6 @@ def build_dictionary(
                     ("schema_version", SCHEMA_VERSION),
                     ("language", base_language),
                     ("source", str(source)),
-                    ("lexicon_limit", str(limit)),
                 ),
             )
 
@@ -151,63 +152,66 @@ def build_dictionary(
                 scanned += 1
                 if str(entry.get("lang_code") or "").lower() != base_language:
                     continue
+
                 display_word = str(entry.get("word") or "")
-                word = normalize_word(display_word)
-                if not word or word not in wanted:
+                word = _normalize_word(display_word)
+                if not word:
                     continue
-                matched += 1
-                seen_words.add(word)
+
                 pos = str(entry.get("pos") or "")
                 entry_topics = _strings(entry.get("topics"))
-                entry_categories = _strings(entry.get("categories"))
-                entry_tags = _strings(entry.get("tags"))
                 senses = entry.get("senses")
                 if not isinstance(senses, list):
                     senses = []
 
+                entry_kept = False
                 for raw_sense in senses:
                     if not isinstance(raw_sense, Mapping):
                         continue
                     glosses = _strings(raw_sense.get("glosses"))
                     topics = tuple(dict.fromkeys(entry_topics + _strings(raw_sense.get("topics"))))
-                    categories = tuple(
-                        dict.fromkeys(entry_categories + _strings(raw_sense.get("categories")))
-                    )
-                    tags = tuple(dict.fromkeys(entry_tags + _strings(raw_sense.get("tags"))))
-                    if not (glosses or topics or categories or tags):
+                    if not topics:
                         continue
-                    connection.execute(
-                        "INSERT INTO senses("
-                        "word, display_word, pos, glosses, topics, categories, tags"
-                        ") VALUES (?, ?, ?, ?, ?, ?, ?)",
+
+                    cursor = connection.execute(
+                        "INSERT OR IGNORE INTO senses("
+                        "word, display_word, pos, glosses, topics"
+                        ") VALUES (?, ?, ?, ?, ?)",
                         (
                             word,
                             display_word,
                             pos,
                             _json_tuple(glosses),
                             _json_tuple(topics),
-                            _json_tuple(categories),
-                            _json_tuple(tags),
                         ),
                     )
-                    sense_count += 1
-                if matched % 5000 == 0:
+                    if cursor.rowcount:
+                        entry_kept = True
+                        sense_count += 1
+
+                if entry_kept:
+                    kept_entries += 1
+                    seen_words.add(word)
+
+                if scanned % 5000 == 0:
                     connection.commit()
                 if progress is not None and scanned % 100_000 == 0:
-                    progress(DictionaryBuildStats(scanned, matched, len(seen_words), sense_count))
+                    progress(
+                        DictionaryBuildStats(scanned, kept_entries, len(seen_words), sense_count)
+                    )
 
             connection.executemany(
                 "INSERT OR REPLACE INTO metadata(key, value) VALUES (?, ?)",
                 (
                     ("scanned_entries", str(scanned)),
-                    ("matched_entries", str(matched)),
+                    ("kept_entries", str(kept_entries)),
                     ("words", str(len(seen_words))),
                     ("senses", str(sense_count)),
                 ),
             )
             connection.commit()
             if progress is not None:
-                progress(DictionaryBuildStats(scanned, matched, len(seen_words), sense_count))
+                progress(DictionaryBuildStats(scanned, kept_entries, len(seen_words), sense_count))
             connection.execute("ANALYZE")
             connection.commit()
         finally:
@@ -216,4 +220,4 @@ def build_dictionary(
     finally:
         tmp.unlink(missing_ok=True)
 
-    return target, DictionaryBuildStats(scanned, matched, len(seen_words), sense_count)
+    return target, DictionaryBuildStats(scanned, kept_entries, len(seen_words), sense_count)

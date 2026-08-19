@@ -133,8 +133,8 @@ The Kaikki raw English-edition extraction contains many languages, so the builde
 `lang_code` and can produce indexes for `en`, `de`, `fr`, and other languages from the
 same source when those entries are present.
 
-The CLI fetches the 50k frequency list automatically when building a dictionary.
-To build from a downloaded Kaikki file:
+The common-word lexicon and semantic dictionary are independent resources. Dictionary
+building does not require a FrequencyWords list. To build from a downloaded Kaikki file:
 
 ```bash
 lexhint dictionary build en ~/Downloads/raw-wiktextract-data.jsonl.gz
@@ -147,23 +147,27 @@ download on disk:
 lexhint dictionary build en
 ```
 
-That source is very large. The builder reads it line-by-line and stores only senses for
-the selected top-50k lexicon. The resulting database defaults to:
+That source is very large. The builder reads it line-by-line and stores compact
+topic-bearing semantic senses used by lexhint's context-evidence API. Dictionary vocabulary
+is not restricted to the FrequencyWords common-word list; technical semantic cues such as
+"compiler" can therefore be retained. The resulting database defaults to:
 
 ```text
 ~/.cache/lexhint/dictionaries/en.sqlite3
 ```
 
-The compact index stores only:
+The compact schema v2 index stores only:
 
 ```text
 word
+display spelling
 part of speech
 glosses
 topics
-categories
-tags
 ```
+
+It is deliberately a semantic hint index, not a full Wiktionary mirror. A sense is
+retained when entry-level or sense-level Wiktextract topics are present.
 
 ## Dictionary API
 
@@ -279,7 +283,7 @@ python tools/vendor_dictionary.py en
 ```
 
 Review `DATA_SOURCES.md` before redistributing external data. Generated dictionary and
-word-list files have data-license obligations independent of the MIT-licensed Python code.
+word-list files have data-license obligations independent of the Apache-2.0-licensed Python code.
 
 # Tests
 

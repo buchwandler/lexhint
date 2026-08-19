@@ -20,8 +20,6 @@ class Sense:
     pos: str
     glosses: tuple[str, ...] = ()
     topics: tuple[str, ...] = ()
-    categories: tuple[str, ...] = ()
-    tags: tuple[str, ...] = ()
 
 
 @dataclass(frozen=True, slots=True)
@@ -47,6 +45,6 @@ class DictionaryBuildStats:
     """Summary of a streaming dictionary build."""
 
     scanned_entries: int
-    matched_entries: int
+    kept_entries: int
     words: int
     senses: int

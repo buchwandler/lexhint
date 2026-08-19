@@ -25,15 +25,18 @@ source is the pre-extracted data published by Kaikki:
   https://kaikki.org/dictionary/raw-wiktextract-data.jsonl.gz
 - Wiktextract project: https://github.com/tatuylonen/wiktextract
 
-The builder streams the source, keeps only entries whose `lang_code` matches the
-requested language and whose normalized word is in the selected FrequencyWords
-lexicon, then stores compact sense data in SQLite:
+The builder streams the source, keeps entries whose `lang_code` matches the requested
+language, and stores compact topic-bearing semantic senses used by lexhint's
+context-evidence API. The FrequencyWords lexicon is a separate resource and is not used
+as a dictionary allowlist. Stored fields are:
 
+- normalized word key
+- display spelling
 - part of speech
 - glosses
-- topics
-- categories
-- tags
+- explicit topics
+
+Senses with only categories or tags and no explicit semantic topic are not stored.
 
 Wiktionary entry text is dual-licensed under CC BY-SA 4.0 and GFDL. If you vendor
 or redistribute a generated SQLite dictionary, review and comply with the applicable

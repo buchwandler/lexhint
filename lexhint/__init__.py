@@ -8,7 +8,7 @@ except PackageNotFoundError:
     __version__ = "0+unknown"
 
 from .builder import build_dictionary, iter_wiktextract_entries
-from .dictionary import Dictionary, DictionaryNotInstalled
+from .dictionary import Dictionary, DictionaryIncompatible, DictionaryNotInstalled
 from .download import (
     KAIKKI_RAW_URL,
     DownloadError,
@@ -22,6 +22,7 @@ __all__ = [
     "ContextSupport",
     "Dictionary",
     "DictionaryBuildStats",
+    "DictionaryIncompatible",
     "DictionaryNotInstalled",
     "DownloadError",
     "KAIKKI_RAW_URL",

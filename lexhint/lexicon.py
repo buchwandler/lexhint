@@ -3,10 +3,10 @@ from __future__ import annotations
 import gzip
 import math
 import unicodedata
+from collections.abc import Iterable
 from functools import lru_cache
 from importlib.resources import files
 from pathlib import Path
-from collections.abc import Iterable
 
 from .download import cached_wordlist_path, fetch_wordlist
 from .models import Segment
@@ -57,7 +57,9 @@ class Lexicon:
         if self._explicit_path is not None:
             return self._explicit_path
 
-        vendored = files("lexhint").joinpath("data", "words", f"{self.language}.txt.gz")
+        vendored = (
+            files("lexhint").joinpath("data").joinpath("words").joinpath(f"{self.language}.txt.gz")
+        )
         try:
             if vendored.is_file():
                 return Path(str(vendored))
@@ -70,8 +72,8 @@ class Lexicon:
         if self._auto_fetch:
             return fetch_wordlist(self.language)
         raise LexiconNotInstalled(
-            f"no word list installed for {self.language!r}; run 'lexhint fetch {self.language}' "
-            "or pass auto_fetch=True"
+            f"no word list installed for {self.language!r}; "
+            f"run 'lexhint setup {self.language}' or pass auto_fetch=True"
         )
 
     def _ensure_loaded(self) -> None:

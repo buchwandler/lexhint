@@ -1,5 +1,7 @@
 {"word":"scale","lang":"English","lang_code":"en","pos":"noun","senses":[{"glosses":["A graduated measure."],"topics":["metrology"]},{"glosses":["A series of musical notes ordered by pitch."],"topics":["music"]}]}
-{"word":"compiler","lang":"English","lang_code":"en","pos":"noun","senses":[{"glosses":["One who compiles."]},{"glosses":["A computer program that transforms source code."],"topics":["computing"]}]}
-{"word":"chord","lang":"English","lang_code":"en","pos":"noun","senses":[{"glosses":["A harmonic set of notes."],"topics":["music"]}]}
+{"word":"compiler","lang":"English","lang_code":"en","pos":"noun","senses":[{"glosses":["One who compiles."]},{"glosses":["A computer program that transforms source code into object code."],"topics":["computing"]},{"glosses":["A computer program that transforms source code into object code."],"topics":["computing"]}]}
+{"word":"house","lang":"English","lang_code":"en","pos":"noun","senses":[{"glosses":["A building for human habitation."],"topics":["housing"]},{"glosses":["A musical house style."],"topics":["music"]}]}
+{"word":"House","lang":"English","lang_code":"en","pos":"proper noun","senses":[{"glosses":["A political chamber or legislative body."],"topics":["politics"]}]}
+{"word":"metadataonly","lang":"English","lang_code":"en","pos":"noun","senses":[{"glosses":[],"categories":["Pages with entries"],"tags":["something"],"topics":[]}]}
 {"word":"banana","lang":"English","lang_code":"en","pos":"noun","senses":[{"glosses":["An elongated fruit."],"topics":["food"]}]}
 {"word":"scale","lang":"German","lang_code":"de","pos":"noun","senses":[{"glosses":["Not an English entry."],"topics":["music"]}]}

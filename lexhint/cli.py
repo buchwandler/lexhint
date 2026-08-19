@@ -7,13 +7,14 @@ import sys
 from collections.abc import Sequence
 from dataclasses import asdict
 from pathlib import Path
+from typing import NoReturn
 
 from . import __version__
 from .builder import build_dictionary
-from .dictionary import Dictionary, DictionaryNotInstalled
+from .dictionary import Dictionary, DictionaryIncompatible, DictionaryNotInstalled
 from .download import KAIKKI_RAW_URL, SUPPORTED_LANGUAGES, DownloadError, fetch_wordlist
 from .lexicon import Lexicon, LexiconNotInstalled
-from .models import DictionaryBuildStats
+from .models import ContextSupport, DictionaryBuildStats, Segment, Sense
 
 _DEFAULT_LANGUAGE = "en"
 
@@ -24,7 +25,7 @@ class _HelpFormatter(argparse.RawDescriptionHelpFormatter):
 
 
 class _ArgumentParser(argparse.ArgumentParser):
-    def error(self, message: str) -> None:
+    def error(self, message: str) -> NoReturn:
         self.print_usage(sys.stderr)
         self.exit(2, f"\nerror: {message}\nTry '{self.prog} --help' for help.\n")
 
@@ -56,10 +57,10 @@ class _Style:
 
 
 def _default_language() -> str:
-    value = os.environ.get("LEXHINT_LANGUAGE", _DEFAULT_LANGUAGE).lower().split("-", 1)[0]
-    if value not in SUPPORTED_LANGUAGES:
+    value = os.environ.get("LEXHINT_LANGUAGE")
+    if value is None:
         return _DEFAULT_LANGUAGE
-    return value
+    return _validate_language(value)
 
 
 def _span(text: str, target: str | None) -> tuple[int, int]:
@@ -152,7 +153,6 @@ def _parser() -> argparse.ArgumentParser:
     )
     setup.add_argument("--dictionary", action="store_true", help="also build the dictionary index")
     setup.add_argument("--source", default=KAIKKI_RAW_URL, help="dictionary JSONL path or URL")
-    setup.add_argument("--limit", type=int, default=50_000, help="maximum frequency words to keep")
     setup.add_argument("--force", action="store_true", help="re-download the word list")
 
     fetch = sub.add_parser(
@@ -199,8 +199,8 @@ def _parser() -> argparse.ArgumentParser:
         help="build a compact dictionary index",
         description="Stream a Wiktextract/Kaikki JSONL source into a compact SQLite index.",
         epilog=(
-            "SOURCE defaults to the official Kaikki raw Wiktextract URL. The frequency "
-            "word list is fetched automatically when missing."
+            "The source defaults to the official Kaikki raw Wiktextract URL and is "
+            "streamed without requiring the FrequencyWords word list."
         ),
         formatter_class=_HelpFormatter,
     )
@@ -215,13 +215,6 @@ def _parser() -> argparse.ArgumentParser:
         "source", nargs="?", default=KAIKKI_RAW_URL, help="local JSONL(.gz) path or URL"
     )
     build.add_argument("--output", help="output SQLite path")
-    build.add_argument("--limit", type=int, default=50_000, help="maximum frequency words to keep")
-    build.add_argument(
-        "--auto-fetch-wordlist",
-        action=argparse.BooleanOptionalAction,
-        default=True,
-        help="fetch the frequency word list when missing (default: enabled)",
-    )
 
     inspect = dictionary_sub.add_parser(
         "word",
@@ -278,13 +271,13 @@ def _human_word(word: str, rank: int | None, style: _Style) -> None:
     print(f"{style.bold(word)}  {style.green('✓ known')}  {style.dim(f'rank #{rank:,}')}")
 
 
-def _human_segments(text: str, items: Sequence[object], style: _Style) -> None:
+def _human_segments(text: str, items: Sequence[Segment], style: _Style) -> None:
     print(style.bold(text))
-    width = max((len(getattr(item, "text")) for item in items), default=0)
+    width = max((len(item.text) for item in items), default=0)
     for item in items:
-        value = getattr(item, "text")
-        known = bool(getattr(item, "known"))
-        rank = getattr(item, "rank")
+        value = item.text
+        known = item.known
+        rank = item.rank
         status_text = "✓ known" if known else "· unknown"
         status = style.green(status_text) if known else style.yellow(status_text)
         rank_text = style.dim(f"#{rank:,}") if rank is not None else style.dim("—")
@@ -292,24 +285,24 @@ def _human_segments(text: str, items: Sequence[object], style: _Style) -> None:
         print(f"  {style.cyan(value.ljust(width))}  {status}{padding}  {rank_text}")
 
 
-def _human_build(path: Path, stats: object, style: _Style) -> None:
+def _human_build(path: Path, stats: DictionaryBuildStats, style: _Style) -> None:
     print(f"{style.green('✓')} dictionary ready  {style.dim(path)}")
     print(
         "  "
-        f"{getattr(stats, 'words'):,} words · {getattr(stats, 'senses'):,} senses · "
-        f"{getattr(stats, 'scanned_entries'):,} entries scanned"
+        f"{stats.words:,} words · {stats.senses:,} senses · "
+        f"{stats.scanned_entries:,} entries scanned"
     )
 
 
-def _human_senses(word: str, senses: Sequence[object], style: _Style) -> None:
+def _human_senses(word: str, senses: Sequence[Sense], style: _Style) -> None:
     print(style.bold(word))
     if not senses:
         print(f"  {style.yellow('· no dictionary senses found')}")
         return
     for index, sense in enumerate(senses, start=1):
-        pos = getattr(sense, "pos") or "sense"
-        glosses = getattr(sense, "glosses")
-        topics = getattr(sense, "topics")
+        pos = sense.pos or "sense"
+        glosses = sense.glosses
+        topics = sense.topics
         print(f"  {style.dim(str(index) + '.')} {style.cyan(pos)}")
         for gloss in glosses:
             print(f"     {gloss}")
@@ -317,22 +310,22 @@ def _human_senses(word: str, senses: Sequence[object], style: _Style) -> None:
             print(f"     {style.dim('topics:')} {', '.join(topics)}")
 
 
-def _human_context(topic: str, support: object | None, style: _Style) -> None:
+def _human_context(topic: str, support: ContextSupport | None, style: _Style) -> None:
     if support is None:
         print(f"{style.bold(topic)}  {style.yellow('· no supporting evidence')}")
         return
-    score = getattr(support, "score")
-    cues = getattr(support, "cues")
+    score = support.score
+    cues = support.cues
     print(f"{style.bold(topic)}  {style.green('✓ supported')}  {style.dim(f'score {score:.3f}')}")
     if cues:
         print(f"  {style.dim('cues:')} {', '.join(cues)}")
 
 
-def _progress(stats: object) -> None:
+def _progress(stats: DictionaryBuildStats) -> None:
     print(
         "\r  "
-        f"{getattr(stats, 'scanned_entries'):,} entries scanned · "
-        f"{getattr(stats, 'words'):,} words · {getattr(stats, 'senses'):,} senses",
+        f"{stats.scanned_entries:,} entries scanned · "
+        f"{stats.words:,} words · {stats.senses:,} senses",
         end="",
         file=sys.stderr,
         flush=True,
@@ -344,19 +337,14 @@ def _build(
     source: str,
     *,
     output: str | None,
-    limit: int,
-    auto_fetch: bool,
     show_progress: bool,
 ) -> tuple[Path, DictionaryBuildStats]:
-    lexicon = Lexicon(language, auto_fetch=auto_fetch)
     callback = _progress if show_progress else None
     try:
         return build_dictionary(
             language,
             source,
-            lexicon=lexicon,
             output=output,
-            limit=limit,
             progress=callback,
         )
     finally:
@@ -381,8 +369,6 @@ def _run(args: argparse.Namespace, *, json_output: bool, style: _Style) -> int:
                 language,
                 args.source,
                 output=None,
-                limit=args.limit,
-                auto_fetch=True,
                 show_progress=sys.stderr.isatty(),
             )
             if json_output:
@@ -451,8 +437,6 @@ def _run(args: argparse.Namespace, *, json_output: bool, style: _Style) -> int:
             language,
             args.source,
             output=args.output,
-            limit=args.limit,
-            auto_fetch=args.auto_fetch_wordlist,
             show_progress=sys.stderr.isatty(),
         )
         if json_output:
@@ -477,8 +461,6 @@ def _run(args: argparse.Namespace, *, json_output: bool, style: _Style) -> int:
                             "pos": sense.pos,
                             "glosses": sense.glosses,
                             "topics": sense.topics,
-                            "categories": sense.categories,
-                            "tags": sense.tags,
                         }
                         for sense in senses
                     ],
@@ -528,21 +510,34 @@ def main(argv: Sequence[str] | None = None) -> int:
 
     try:
         return _run(args, json_output=json_output, style=style)
-    except (LexiconNotInstalled, DictionaryNotInstalled, DownloadError, ValueError, OSError) as exc:
+    except (
+        LexiconNotInstalled,
+        DictionaryIncompatible,
+        DictionaryNotInstalled,
+        DownloadError,
+        ValueError,
+        OSError,
+    ) as exc:
         if isinstance(exc, LexiconNotInstalled):
             message = "no word list installed for the requested language"
             hint = "run 'lexhint setup <language>'"
         elif isinstance(exc, DictionaryNotInstalled):
             message = "no dictionary index installed for the requested language"
             hint = "run 'lexhint dictionary build <language>'"
+        elif isinstance(exc, DictionaryIncompatible):
+            message = str(exc)
+            hint = "run 'lexhint dictionary build <language>'"
         else:
             message = str(exc)
             hint = None
 
         if json_output:
-            print(json.dumps({"error": message}, ensure_ascii=False), file=sys.stderr)
+            payload: dict[str, str] = {"error": message}
+            if hint is not None:
+                payload["hint"] = hint
+            print(json.dumps(payload, ensure_ascii=False), file=sys.stderr)
         else:
             print(f"error: {message}", file=sys.stderr)
             if hint is not None:
                 print(f"hint: {hint}", file=sys.stderr)
-        return 2
+        return 1
