@@ -4,6 +4,7 @@ import json
 import sqlite3
 import unicodedata
 from collections.abc import Iterable, Iterator, Mapping
+from contextlib import closing
 from dataclasses import dataclass
 from datetime import datetime, timezone
 from pathlib import Path
@@ -142,7 +143,7 @@ def initialize_partial(path: str | Path, language: str) -> Path:
 
 def lookup_status(path: str | Path, query: str) -> str | None:
     normalized_query = normalize_display_word(query)
-    with sqlite3.connect(path) as connection:
+    with closing(sqlite3.connect(path)) as connection:
         row = connection.execute(
             "SELECT status FROM lookups WHERE query = ?", (normalized_query,)
         ).fetchone()
@@ -198,13 +199,13 @@ def replace_word_rows(
 
 
 def dictionary_coverage(path: str | Path) -> str:
-    with sqlite3.connect(path) as connection:
+    with closing(sqlite3.connect(path)) as connection:
         row = connection.execute("SELECT value FROM metadata WHERE key = 'coverage'").fetchone()
     return "" if row is None else str(row[0])
 
 
 def lookup_sense_count(path: str | Path, query: str) -> int:
-    with sqlite3.connect(path) as connection:
+    with closing(sqlite3.connect(path)) as connection:
         row = connection.execute(
             "SELECT COUNT(*) FROM senses WHERE display_word = ?",
             (normalize_display_word(query),),
@@ -213,7 +214,7 @@ def lookup_sense_count(path: str | Path, query: str) -> int:
 
 
 def migrate_partial_v3_to_v4(path: str | Path) -> bool:
-    with sqlite3.connect(path, timeout=30.0) as connection:
+    with closing(sqlite3.connect(path, timeout=30.0)) as connection:
         actual = metadata(connection)
         if actual.get("schema_version") != LEGACY_SCHEMA_VERSION:
             return False

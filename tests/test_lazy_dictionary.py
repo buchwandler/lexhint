@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import sqlite3
+from contextlib import closing
 from pathlib import Path
 
 import pytest
@@ -46,7 +47,7 @@ def test_incremental_fetch_accumulates_and_hits_cache(
     assert dictionary.topics("compiler") == ("computing",)
     assert dictionary.topics("scale") == ("music",)
 
-    with sqlite3.connect(path) as connection:
+    with closing(sqlite3.connect(path)) as connection:
         assert connection.execute("SELECT COUNT(*) FROM lookups").fetchone() == (2,)
         assert dict(connection.execute("SELECT key, value FROM metadata"))["coverage"] == "partial"
 
@@ -70,7 +71,7 @@ def test_empty_and_not_found_lookups_are_cached(
     assert fetch_dictionary_word("en", "missing", path=path).status == "cached"
     assert calls == ["ordinary", "missing"]
 
-    with sqlite3.connect(path) as connection:
+    with closing(sqlite3.connect(path)) as connection:
         statuses = dict(connection.execute("SELECT query, status FROM lookups"))
     assert statuses == {"ordinary": "complete", "missing": "not_found"}
 
@@ -137,7 +138,7 @@ def test_lazy_fetch_keeps_all_love_senses(tmp_path: Path, monkeypatch: pytest.Mo
 
 def test_schema_v3_partial_cache_is_invalidated(tmp_path: Path) -> None:
     path = tmp_path / "v3-partial.sqlite3"
-    with sqlite3.connect(path) as connection:
+    with closing(sqlite3.connect(path)) as connection:
         create_schema(connection)
         set_metadata(
             connection,
@@ -154,7 +155,7 @@ def test_schema_v3_partial_cache_is_invalidated(tmp_path: Path) -> None:
 
     dictionary = Dictionary("en", path=path)
 
-    with sqlite3.connect(path) as connection:
+    with closing(sqlite3.connect(path)) as connection:
         metadata = dict(connection.execute("SELECT key, value FROM metadata"))
         assert metadata["schema_version"] == "4"
         assert connection.execute("SELECT COUNT(*) FROM senses").fetchone() == (0,)
@@ -164,7 +165,7 @@ def test_schema_v3_partial_cache_is_invalidated(tmp_path: Path) -> None:
 
 def test_schema_v3_full_cache_requires_rebuild(tmp_path: Path) -> None:
     path = tmp_path / "v3-full.sqlite3"
-    with sqlite3.connect(path) as connection:
+    with closing(sqlite3.connect(path)) as connection:
         create_schema(connection)
         set_metadata(
             connection,

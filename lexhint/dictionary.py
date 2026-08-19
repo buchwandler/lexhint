@@ -4,6 +4,7 @@ import json
 import re
 import sqlite3
 from collections.abc import Iterable
+from contextlib import closing
 from importlib.resources import files
 from pathlib import Path
 
@@ -27,7 +28,7 @@ from .store import (
     normalize_display_word,
     normalize_word,
     replace_word_rows,
-    )
+)
 
 _WORD_RE = re.compile(r"[^\W\d_]+(?:[-'][^\W\d_]+)*", re.UNICODE)
 
@@ -58,12 +59,12 @@ def _loads_tuple(value: str) -> tuple[str, ...]:
 
 
 def _runtime_metadata(path: Path) -> dict[str, str]:
-    with sqlite3.connect(path) as connection:
+    with closing(sqlite3.connect(path)) as connection:
         actual = metadata(connection)
     if actual.get("schema_version") == LEGACY_SCHEMA_VERSION:
         if actual.get("coverage") == "partial":
             migrate_partial_v3_to_v4(path)
-            with sqlite3.connect(path) as connection:
+            with closing(sqlite3.connect(path)) as connection:
                 actual = metadata(connection)
         elif actual.get("coverage") == "full":
             raise DictionaryIncompatible(
@@ -243,7 +244,7 @@ class Dictionary:
     ) -> tuple[Sense, ...]:
         self._ensure_word(word, refresh=refresh)
         normalized = _normalize(word)
-        with self._connect() as connection:
+        with closing(self._connect()) as connection:
             rows = connection.execute(
                 "SELECT display_word, pos, glosses, topics FROM senses WHERE word = ? ORDER BY id",
                 (normalized,),
@@ -286,7 +287,7 @@ class Dictionary:
             return {}
 
         rows_by_folded: dict[str, list[sqlite3.Row]] = {word: [] for word in folded_keys}
-        with self._connect() as connection:
+        with closing(self._connect()) as connection:
             for offset in range(0, len(folded_keys), 500):
                 chunk = folded_keys[offset : offset + 500]
                 placeholders = ",".join("?" for _ in chunk)

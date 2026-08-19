@@ -1,5 +1,6 @@
 import gzip
 import sqlite3
+from contextlib import closing
 from pathlib import Path
 
 from lexhint import build_dictionary
@@ -44,13 +45,13 @@ def test_fixture_build_is_independent_of_wordlist(tmp_path: Path, monkeypatch) -
     assert stats.kept_entries == 5
     assert not (tmp_path / "empty-cache" / "words" / "en.txt.gz").exists()
 
-    with sqlite3.connect(path) as connection:
+    with closing(sqlite3.connect(path)) as connection:
         assert connection.execute(
             "SELECT value FROM metadata WHERE key = 'schema_version'"
         ).fetchone() == ("4",)
         columns = {row[1] for row in connection.execute("PRAGMA table_info(senses)")}
     assert columns == {"id", "word", "display_word", "pos", "glosses", "topics"}
-    with sqlite3.connect(path) as connection:
+    with closing(sqlite3.connect(path)) as connection:
         metadata = dict(connection.execute("SELECT key, value FROM metadata"))
         assert metadata["coverage"] == "full"
         assert metadata["source_kind"] == "bulk"

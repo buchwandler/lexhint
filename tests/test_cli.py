@@ -2,6 +2,7 @@ from __future__ import annotations
 
 import json
 import sqlite3
+from contextlib import closing
 from pathlib import Path
 
 import pytest
@@ -95,10 +96,11 @@ def test_schema_incompatibility_has_rebuild_hint(
     tmp_path: Path, capsys: pytest.CaptureFixture[str]
 ) -> None:
     path = tmp_path / "schema-1.sqlite3"
-    with sqlite3.connect(path) as connection:
+    with closing(sqlite3.connect(path)) as connection:
         connection.execute("CREATE TABLE metadata (key TEXT PRIMARY KEY, value TEXT NOT NULL)")
         connection.execute("INSERT INTO metadata VALUES ('schema_version', '1')")
         connection.execute("INSERT INTO metadata VALUES ('language', 'en')")
+        connection.commit()
     assert cli.main(["dictionary", "word", "en", "compiler", "--path", str(path)]) == 1
     error = capsys.readouterr().err
     assert "schema 1" in error

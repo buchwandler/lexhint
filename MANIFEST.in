@@ -1,5 +1,7 @@
 include README.md
 include LICENSE
 include DATA_SOURCES.md
+include RELEASING.md
+include lexhint/py.typed
 recursive-include lexhint/data *.txt.gz *.sqlite3 .gitkeep
 recursive-include tests/fixtures *.jsonl

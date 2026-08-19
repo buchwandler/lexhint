@@ -1,4 +1,5 @@
 import sqlite3
+from contextlib import closing
 from pathlib import Path
 
 import pytest
@@ -76,7 +77,7 @@ def test_love_entries_keep_gloss_only_senses_and_topics() -> None:
 
 def test_schema_columns_are_compact(tmp_path: Path) -> None:
     path, _ = build_dictionary("en", FIXTURE, output=tmp_path / "en.sqlite3")
-    with sqlite3.connect(path) as connection:
+    with closing(sqlite3.connect(path)) as connection:
         columns = {row[1] for row in connection.execute("PRAGMA table_info(senses)")}
     assert columns == {"id", "word", "display_word", "pos", "glosses", "topics"}
 
@@ -132,19 +133,21 @@ def test_unrelated_context_fails_closed(tmp_path: Path) -> None:
 
 def test_schema_incompatibility_is_controlled(tmp_path: Path) -> None:
     path = tmp_path / "schema-1.sqlite3"
-    with sqlite3.connect(path) as connection:
+    with closing(sqlite3.connect(path)) as connection:
         connection.execute("CREATE TABLE metadata (key TEXT PRIMARY KEY, value TEXT NOT NULL)")
         connection.execute("INSERT INTO metadata VALUES ('schema_version', '1')")
         connection.execute("INSERT INTO metadata VALUES ('language', 'en')")
+        connection.commit()
     with pytest.raises(DictionaryIncompatible, match="schema 1; schema 4 is required"):
         Dictionary.from_path(path, language="en")
 
 
 def test_wrong_language_is_incompatible(tmp_path: Path) -> None:
     path = tmp_path / "wrong-language.sqlite3"
-    with sqlite3.connect(path) as connection:
+    with closing(sqlite3.connect(path)) as connection:
         connection.execute("CREATE TABLE metadata (key TEXT PRIMARY KEY, value TEXT NOT NULL)")
         connection.execute("INSERT INTO metadata VALUES ('schema_version', '4')")
         connection.execute("INSERT INTO metadata VALUES ('language', 'de')")
+        connection.commit()
     with pytest.raises(DictionaryIncompatible, match="language 'en' was requested"):
         Dictionary.from_path(path, language="en")

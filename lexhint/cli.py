@@ -161,7 +161,8 @@ def _parser() -> argparse.ArgumentParser:
         description="Fetch the word list needed for normal lexhint use.",
         epilog=(
             "Add --dictionary to also build the compact Wiktionary-derived dictionary. "
-            "The dictionary source is large and is streamed by default."
+            "This is an advanced operation: the default Kaikki source is very large and "
+            "is streamed line-by-line by the builder."
         ),
         formatter_class=_HelpFormatter,
     )
@@ -216,10 +217,15 @@ def _parser() -> argparse.ArgumentParser:
     build = dictionary_sub.add_parser(
         "build",
         help="build a compact dictionary index",
-        description="Stream a Wiktextract/Kaikki JSONL source into a compact SQLite index.",
+        description=(
+            "Stream a Wiktextract/Kaikki JSONL source into a compact SQLite index. "
+            "This full-build path is intended for advanced users and maintainers because "
+            "the default source is very large."
+        ),
         epilog=(
             "The source defaults to the official Kaikki raw Wiktextract URL and is "
-            "streamed without requiring the FrequencyWords word list."
+            "streamed without requiring the FrequencyWords word list. Use dictionary fetch "
+            "for a lightweight per-word cache instead."
         ),
         formatter_class=_HelpFormatter,
     )
