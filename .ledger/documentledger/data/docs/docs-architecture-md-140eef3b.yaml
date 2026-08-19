@@ -1,183 +1,183 @@
 schema: documentledger.doc_record.v4
 doc_path: docs/architecture.md
 linked_sources:
-- lexhint/builder.py
-- lexhint/dictionary.py
-- lexhint/lexicon.py
-- lexhint/models.py
+  - lexhint/builder.py
+  - lexhint/dictionary.py
+  - lexhint/lexicon.py
+  - lexhint/models.py
 sections:
-- section_id: md:section:docs/architecture.md::building-block-view
-  doc_path: docs/architecture.md
-  heading_path:
-  - Building Block View
-  heading_slug: building-block-view
-  line_span:
-  - 118
-  - 136
-  section_hash: 8f9c39e1459194a4ae4a8a63f552c9db4e0212b422d7ec0e541fbcc42692cf93
-  summary: Building Block View
-  text: '# Building Block View
+  - section_id: md:section:docs/architecture.md::building-block-view
+    doc_path: docs/architecture.md
+    heading_path:
+      - Building Block View
+    heading_slug: building-block-view
+    line_span:
+      - 118
+      - 136
+    section_hash: 8f9c39e1459194a4ae4a8a63f552c9db4e0212b422d7ec0e541fbcc42692cf93
+    summary: Building Block View
+    text: "# Building Block View
 
 
-    The package is a set of focused Python modules with the CLI as the outer adapter.
+      The package is a set of focused Python modules with the CLI as the outer adapter.
 
 
-    - `lexhint.cli` parses commands, resolves languages and flags, formats human output,
-    and emits stable JSON.
+      - `lexhint.cli` parses commands, resolves languages and flags, formats human output,
+      and emits stable JSON.
 
-    - `lexhint.lexicon.Lexicon` resolves a vendored or cached gzip word list, loads
-    it lazily, provides membership and rank, and segments compact text.
+      - `lexhint.lexicon.Lexicon` resolves a vendored or cached gzip word list, loads
+      it lazily, provides membership and rank, and segments compact text.
 
-    - `lexhint.dictionary.Dictionary` validates schema and language metadata, reads
-    senses, and computes topic scores and context support.
+      - `lexhint.dictionary.Dictionary` validates schema and language metadata, reads
+      senses, and computes topic scores and context support.
 
-    - `lexhint.store` defines schema-v4 SQLite storage, normalization, semantic row
-    extraction, lookup state, and partial-cache updates.
+      - `lexhint.store` defines schema-v4 SQLite storage, normalization, semantic row
+      extraction, lookup state, and partial-cache updates.
 
-    - `lexhint.kaikki` builds exact-word Kaikki URLs and streams JSONL responses for
-    lazy fetches.
+      - `lexhint.kaikki` builds exact-word Kaikki URLs and streams JSONL responses for
+      lazy fetches.
 
-    - `lexhint.builder` streams local or remote bulk JSONL and writes a complete SQLite
-    index.
+      - `lexhint.builder` streams local or remote bulk JSONL and writes a complete SQLite
+      index.
 
-    - `lexhint.download` defines supported languages, upstream URLs, cache paths,
-    and atomic word-list downloads.
+      - `lexhint.download` defines supported languages, upstream URLs, cache paths,
+      and atomic word-list downloads.
 
-    - `lexhint.models` contains the immutable evidence and operation-result dataclasses.
-
-
-    The public package exports the principal `Lexicon`, `Dictionary`, models, and
-    version from `lexhint.__init__`. Tests exercise module boundaries with local fixtures
-    and mocked network calls.
+      - `lexhint.models` contains the immutable evidence and operation-result dataclasses.
 
 
-
-
-    <!-- archledger: no accepted records for this section yet -->'
-  links:
-  - source_id: py:class:lexhint/dictionary.py::Dictionary
-    source_path: lexhint/dictionary.py
-    coverage: implementation-note
-    impact: unknown
-    reason: The building-block view names the Dictionary component.
-    tracked_hashes:
-      body_hash: 58e65f051294770bb2b1617902b07921676162718d8b5bd01cafec2177ce3a80
-  - source_id: py:class:lexhint/lexicon.py::Lexicon
-    source_path: lexhint/lexicon.py
-    coverage: implementation-note
-    impact: unknown
-    reason: The building-block view names the Lexicon component.
-    tracked_hashes:
-      body_hash: a7d1afa1b2626859565e28a0ec9e9365b852b1a71ff1186bee56c02d24473678
-  - source_id: py:class:lexhint/models.py::Segment
-    source_path: lexhint/models.py
-    coverage: implementation-note
-    impact: unknown
-    reason: The building-block view names the public evidence models.
-    tracked_hashes:
-      body_hash: 4390c0c56aea0debb70b42e3a609687d19be42578c491b5a70ad2e661d3ca9d2
-- section_id: md:section:docs/architecture.md::bulk-dictionary-build
-  doc_path: docs/architecture.md
-  heading_path:
-  - Runtime View
-  - Bulk dictionary build
-  heading_slug: bulk-dictionary-build
-  line_span:
-  - 153
-  - 160
-  section_hash: 3983ebb0a5ddadc437d1670b22e04839d1ea13ff22ce375e3e0f297bd8ef0144
-  summary: Bulk dictionary build
-  text: '## Bulk dictionary build
-
-
-    The builder reads a local path or HTTP(S) source through a text stream, filters
-    entries by `lang_code`, retains senses with glosses or topics, commits incrementally,
-    records build statistics, runs `ANALYZE`, and atomically replaces the target database.
+      The public package exports the principal `Lexicon`, `Dictionary`, models, and
+      version from `lexhint.__init__`. Tests exercise module boundaries with local fixtures
+      and mocked network calls.
 
 
 
 
-    <!-- archledger: no accepted records for this section yet -->'
-  links:
-  - source_id: py:function:lexhint/builder.py::build_dictionary
-    source_path: lexhint/builder.py
-    coverage: implementation-note
-    impact: unknown
-    reason: The runtime view describes the bulk dictionary builder.
-    tracked_hashes:
-      body_hash: b34e0962ed98aba6a5fecf7474e1a1b70452eb4437c88891e76684f95429a57a
-- section_id: md:section:docs/architecture.md::lazy-dictionary-context
-  doc_path: docs/architecture.md
-  heading_path:
-  - Runtime View
-  - Lazy dictionary context
-  heading_slug: lazy-dictionary-context
-  line_span:
-  - 146
-  - 152
-  section_hash: f4d9a31b28a7476ca3ddf7d229a26f958bc14eb8b7f9b505bf2b233d0bc5e07b
-  summary: Lazy dictionary context
-  text: '## Lazy dictionary context
+      <!-- archledger: no accepted records for this section yet -->"
+    links:
+      - source_id: py:class:lexhint/dictionary.py::Dictionary
+        source_path: lexhint/dictionary.py
+        coverage: implementation-note
+        impact: unknown
+        reason: The building-block view names the Dictionary component.
+        tracked_hashes:
+          body_hash: 58e65f051294770bb2b1617902b07921676162718d8b5bd01cafec2177ce3a80
+      - source_id: py:class:lexhint/lexicon.py::Lexicon
+        source_path: lexhint/lexicon.py
+        coverage: implementation-note
+        impact: unknown
+        reason: The building-block view names the Lexicon component.
+        tracked_hashes:
+          body_hash: a7d1afa1b2626859565e28a0ec9e9365b852b1a71ff1186bee56c02d24473678
+      - source_id: py:class:lexhint/models.py::Segment
+        source_path: lexhint/models.py
+        coverage: implementation-note
+        impact: unknown
+        reason: The building-block view names the public evidence models.
+        tracked_hashes:
+          body_hash: 4390c0c56aea0debb70b42e3a609687d19be42578c491b5a70ad2e661d3ca9d2
+  - section_id: md:section:docs/architecture.md::bulk-dictionary-build
+    doc_path: docs/architecture.md
+    heading_path:
+      - Runtime View
+      - Bulk dictionary build
+    heading_slug: bulk-dictionary-build
+    line_span:
+      - 153
+      - 160
+    section_hash: 3983ebb0a5ddadc437d1670b22e04839d1ea13ff22ce375e3e0f297bd8ef0144
+    summary: Bulk dictionary build
+    text: "## Bulk dictionary build
 
 
-    1. `Dictionary` opens or initializes a schema-v4 partial SQLite cache and validates
-    language and coverage metadata.
-
-    2. Context tokenization finds nearby word tokens and identifies the target token
-    by overlap or nearest span.
-
-    3. The target token is excluded. Missing nearby words are fetched individually
-    only when `fetch_missing` is enabled and offline mode is not active.
-
-    4. Stored explicit topics are aggregated with distance decay. `supports` returns
-    evidence only when the requested topic reaches the threshold.'
-  links:
-  - source_id: py:class:lexhint/dictionary.py::Dictionary
-    source_path: lexhint/dictionary.py
-    coverage: implementation-note
-    impact: unknown
-    reason: The runtime view describes Dictionary context operations.
-    tracked_hashes:
-      body_hash: 58e65f051294770bb2b1617902b07921676162718d8b5bd01cafec2177ce3a80
-- section_id: md:section:docs/architecture.md::word-membership-and-segmentation
-  doc_path: docs/architecture.md
-  heading_path:
-  - Runtime View
-  - Word membership and segmentation
-  heading_slug: word-membership-and-segmentation
-  line_span:
-  - 139
-  - 145
-  section_hash: 3c6e6f4882d79f4bccbca7ba7bc506ae64bb1f75a12117824bfb2fe64319190c
-  summary: Word membership and segmentation
-  text: '## Word membership and segmentation
+      The builder reads a local path or HTTP(S) source through a text stream, filters
+      entries by `lang_code`, retains senses with glosses or topics, commits incrementally,
+      records build statistics, runs `ANALYZE`, and atomically replaces the target database.
 
 
-    1. The CLI or API selects a language and constructs `Lexicon`.
 
-    2. The lexicon resolves a vendored resource, user cache, or explicitly requested
-    path and loads it on first use.
 
-    3. `rank` returns one-based source order. `segment` evaluates candidate word spans,
-    rewards longer and frequent words, penalizes unknown characters, and merges adjacent
-    unknown spans.
+      <!-- archledger: no accepted records for this section yet -->"
+    links:
+      - source_id: py:function:lexhint/builder.py::build_dictionary
+        source_path: lexhint/builder.py
+        coverage: implementation-note
+        impact: unknown
+        reason: The runtime view describes the bulk dictionary builder.
+        tracked_hashes:
+          body_hash: b34e0962ed98aba6a5fecf7474e1a1b70452eb4437c88891e76684f95429a57a
+  - section_id: md:section:docs/architecture.md::lazy-dictionary-context
+    doc_path: docs/architecture.md
+    heading_path:
+      - Runtime View
+      - Lazy dictionary context
+    heading_slug: lazy-dictionary-context
+    line_span:
+      - 146
+      - 152
+    section_hash: f4d9a31b28a7476ca3ddf7d229a26f958bc14eb8b7f9b505bf2b233d0bc5e07b
+    summary: Lazy dictionary context
+    text: "## Lazy dictionary context
 
-    4. The result is a tuple of `Segment` values for the consumer.'
-  links:
-  - source_id: py:class:lexhint/lexicon.py::Lexicon
-    source_path: lexhint/lexicon.py
-    coverage: implementation-note
-    impact: unknown
-    reason: The runtime view describes Lexicon membership and segmentation.
-    tracked_hashes:
-      body_hash: a7d1afa1b2626859565e28a0ec9e9365b852b1a71ff1186bee56c02d24473678
-  - source_id: py:class:lexhint/models.py::Segment
-    source_path: lexhint/models.py
-    coverage: implementation-note
-    impact: unknown
-    reason: The runtime view describes Segment results.
-    tracked_hashes:
-      body_hash: 4390c0c56aea0debb70b42e3a609687d19be42578c491b5a70ad2e661d3ca9d2
+
+      1. `Dictionary` opens or initializes a schema-v4 partial SQLite cache and validates
+      language and coverage metadata.
+
+      2. Context tokenization finds nearby word tokens and identifies the target token
+      by overlap or nearest span.
+
+      3. The target token is excluded. Missing nearby words are fetched individually
+      only when `fetch_missing` is enabled and offline mode is not active.
+
+      4. Stored explicit topics are aggregated with distance decay. `supports` returns
+      evidence only when the requested topic reaches the threshold."
+    links:
+      - source_id: py:class:lexhint/dictionary.py::Dictionary
+        source_path: lexhint/dictionary.py
+        coverage: implementation-note
+        impact: unknown
+        reason: The runtime view describes Dictionary context operations.
+        tracked_hashes:
+          body_hash: 58e65f051294770bb2b1617902b07921676162718d8b5bd01cafec2177ce3a80
+  - section_id: md:section:docs/architecture.md::word-membership-and-segmentation
+    doc_path: docs/architecture.md
+    heading_path:
+      - Runtime View
+      - Word membership and segmentation
+    heading_slug: word-membership-and-segmentation
+    line_span:
+      - 139
+      - 145
+    section_hash: 3c6e6f4882d79f4bccbca7ba7bc506ae64bb1f75a12117824bfb2fe64319190c
+    summary: Word membership and segmentation
+    text: "## Word membership and segmentation
+
+
+      1. The CLI or API selects a language and constructs `Lexicon`.
+
+      2. The lexicon resolves a vendored resource, user cache, or explicitly requested
+      path and loads it on first use.
+
+      3. `rank` returns one-based source order. `segment` evaluates candidate word spans,
+      rewards longer and frequent words, penalizes unknown characters, and merges adjacent
+      unknown spans.
+
+      4. The result is a tuple of `Segment` values for the consumer."
+    links:
+      - source_id: py:class:lexhint/lexicon.py::Lexicon
+        source_path: lexhint/lexicon.py
+        coverage: implementation-note
+        impact: unknown
+        reason: The runtime view describes Lexicon membership and segmentation.
+        tracked_hashes:
+          body_hash: a7d1afa1b2626859565e28a0ec9e9365b852b1a71ff1186bee56c02d24473678
+      - source_id: py:class:lexhint/models.py::Segment
+        source_path: lexhint/models.py
+        coverage: implementation-note
+        impact: unknown
+        reason: The runtime view describes Segment results.
+        tracked_hashes:
+          body_hash: 4390c0c56aea0debb70b42e3a609687d19be42578c491b5a70ad2e661d3ca9d2
 last_fresh_scan_version: 2
 last_fresh_hash: 7737182418cc6928cda9db99f3adfc5edea0c0dc0eee045da7b42f3a28754ec3
 notes: Bootstrap documentation completed after scan version 2.

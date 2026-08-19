@@ -88,8 +88,6 @@ The consumer decides how evidence affects pronunciation. For example, `lexhint` 
 - Full builds stream the bulk JSONL source line by line into SQLite.
 - Outputs are dataclasses, tuples, CLI text, or stable JSON. No service endpoint or daemon is required.
 
-
-
 ## Business Context
 
 <!-- archledger: no accepted records for this section yet -->
@@ -132,8 +130,6 @@ The package is a set of focused Python modules with the CLI as the outer adapter
 
 The public package exports only the principal runtime `Lexicon`, `Dictionary`, evidence models, exceptions, and version from `lexhint.__init__`. Build/download helpers remain importable from their owning advanced modules. Tests exercise module boundaries with local fixtures and mocked network calls.
 
-
-
 <!-- archledger: no accepted records for this section yet -->
 
 # Runtime View
@@ -156,8 +152,6 @@ The public package exports only the principal runtime `Lexicon`, `Dictionary`, e
 
 The builder reads a local path or HTTP(S) source through a text stream, filters entries by `lang_code`, retains senses with glosses or topics, commits incrementally, records source identity/hash and build statistics, runs `ANALYZE`, and atomically replaces the target database.
 
-
-
 <!-- archledger: no accepted records for this section yet -->
 
 # Deployment View
@@ -173,8 +167,6 @@ The builder reads a local path or HTTP(S) source through a text stream, filters 
 - `--offline` prevents missing dictionary data from being fetched. A complete local index supports fully offline context queries.
 - Temporary files are created beside cache targets and atomically renamed into place, limiting partially written resources.
 - Code-only release artifacts do not include user caches or generated external datasets.
-
-
 
 <!-- archledger: no accepted records for this section yet -->
 
@@ -199,8 +191,6 @@ Python APIs return immutable dataclasses and tuples. CLI JSON serializes explici
 ### Verification and licensing
 
 Tests cover segmentation, parsing, schema behavior, lazy fetching, target exclusion, and CLI contracts using fixtures and mocked network access. External data provenance and redistribution duties are maintained separately in `DATA_SOURCES.md`.
-
-
 
 <!-- archledger: no accepted records for this section yet -->
 
@@ -231,8 +221,6 @@ The current architecture records these decisions.
 | Resilience        | Atomic resource replacement, cached empty lookups, offline mode, and controlled exceptions                             | A transient or unavailable network does not corrupt an existing cache.                  |
 | Maintainability   | Focused modules, compact public models, documented data provenance, and boundary tests                                 | Storage, network parsing, segmentation, and CLI behavior can be tested independently.   |
 | Compliance        | External resources remain separate from code and their licenses are documented                                         | A distributor can review data obligations before vendoring generated indexes.           |
-
-
 
 ## Quality Requirements Overview
 

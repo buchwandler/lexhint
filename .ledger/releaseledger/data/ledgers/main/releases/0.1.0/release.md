@@ -7,7 +7,7 @@ versioning:
 version: 0.1.0
 status: canceled
 title: Initial release
-released_at: '2026-08-19'
+released_at: "2026-08-19"
 previous_version: null
 cancel_reason: Never shipped; correcting the pre-release ledger state.
 superseded_by: null
