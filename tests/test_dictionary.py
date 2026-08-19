@@ -43,7 +43,6 @@ def test_gloss_bearing_senses_and_duplicates_are_stored(tmp_path: Path) -> None:
     assert len(dictionary.senses("compiler")) == 2
 
 
-
 def love_entries() -> tuple[dict[str, object], ...]:
     return (
         {
@@ -74,6 +73,7 @@ def test_love_entries_keep_gloss_only_senses_and_topics() -> None:
     assert len(rows) == 5
     assert sum(bool(row.topics) for row in rows) == 1
     assert [row.pos for row in rows] == ["noun", "noun", "noun", "verb", "verb"]
+
 
 def test_schema_columns_are_compact(tmp_path: Path) -> None:
     path, _ = build_dictionary("en", FIXTURE, output=tmp_path / "en.sqlite3")

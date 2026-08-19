@@ -65,7 +65,7 @@ def test_offline_missing_dictionary_word_fails_clearly(
 
 def test_dictionary_word_shows_gloss_only_and_topic_senses(
     tmp_path: Path, monkeypatch: pytest.MonkeyPatch, capsys: pytest.CaptureFixture[str]
- ) -> None:
+) -> None:
     path = tmp_path / "en.sqlite3"
     entries = (
         {
@@ -102,7 +102,7 @@ def test_dictionary_word_shows_gloss_only_and_topic_senses(
 
 def test_dictionary_word_json_keeps_empty_topics(
     tmp_path: Path, monkeypatch: pytest.MonkeyPatch, capsys: pytest.CaptureFixture[str]
- ) -> None:
+) -> None:
     path = tmp_path / "en.sqlite3"
     monkeypatch.setattr(
         dictionary_module,
