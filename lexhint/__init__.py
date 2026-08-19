@@ -7,53 +7,25 @@ try:
 except PackageNotFoundError:
     __version__ = "0+unknown"
 
-from .builder import build_dictionary, iter_wiktextract_entries
 from .dictionary import (
     Dictionary,
-    DictionaryFetchError,
     DictionaryIncompatible,
     DictionaryNotInstalled,
     DictionaryOfflineError,
-    DictionaryWordNotFound,
-    fetch_dictionary_word,
-)
-from .download import (
-    KAIKKI_RAW_URL,
-    DownloadError,
-    cached_dictionary_path,
-    fetch_wordlist,
 )
 from .lexicon import Lexicon, LexiconNotInstalled
-from .models import (
-    ContextSupport,
-    DictionaryBuildStats,
-    DictionaryFetchResult,
-    Segment,
-    Sense,
-    TopicScore,
-)
+from .models import ContextCue, LexicalSegment, Sense, TopicEvidence
 
 __all__ = [
-    "ContextSupport",
+    "ContextCue",
     "Dictionary",
-    "DictionaryBuildStats",
     "DictionaryIncompatible",
     "DictionaryNotInstalled",
-    "DownloadError",
-    "KAIKKI_RAW_URL",
+    "DictionaryOfflineError",
     "Lexicon",
     "LexiconNotInstalled",
-    "Segment",
+    "LexicalSegment",
     "Sense",
-    "TopicScore",
+    "TopicEvidence",
     "__version__",
-    "build_dictionary",
-    "cached_dictionary_path",
-    "fetch_wordlist",
-    "iter_wiktextract_entries",
-    "DictionaryFetchError",
-    "DictionaryFetchResult",
-    "DictionaryOfflineError",
-    "DictionaryWordNotFound",
-    "fetch_dictionary_word",
 ]

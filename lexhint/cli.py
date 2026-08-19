@@ -21,7 +21,13 @@ from .dictionary import (
 )
 from .download import KAIKKI_RAW_URL, SUPPORTED_LANGUAGES, DownloadError, fetch_wordlist
 from .lexicon import Lexicon, LexiconNotInstalled
-from .models import ContextSupport, DictionaryBuildStats, DictionaryFetchResult, Segment, Sense
+from .models import (
+    DictionaryBuildStats,
+    DictionaryFetchResult,
+    LexicalSegment,
+    Sense,
+    TopicEvidence,
+)
 
 _DEFAULT_LANGUAGE = "en"
 
@@ -311,13 +317,13 @@ def _human_word(word: str, rank: int | None, style: _Style) -> None:
     print(f"{style.bold(word)}  {style.green('✓ known')}  {style.dim(f'rank #{rank:,}')}")
 
 
-def _human_segments(text: str, items: Sequence[Segment], style: _Style) -> None:
+def _human_segments(text: str, items: Sequence[LexicalSegment], style: _Style) -> None:
     print(style.bold(text))
     width = max((len(item.text) for item in items), default=0)
     for item in items:
         value = item.text
-        known = item.known
-        rank = item.rank
+        known = item.in_lexicon
+        rank = item.frequency_rank
         status_text = "✓ known" if known else "· unknown"
         status = style.green(status_text) if known else style.yellow(status_text)
         rank_text = style.dim(f"#{rank:,}") if rank is not None else style.dim("—")
@@ -348,14 +354,14 @@ def _human_senses(word: str, senses: Sequence[Sense], style: _Style) -> None:
             print(f"     {style.dim('topics:')} {', '.join(sense.topics)}")
 
 
-def _human_context(topic: str, support: ContextSupport | None, style: _Style) -> None:
+def _human_context(topic: str, support: TopicEvidence | None, style: _Style) -> None:
     if support is None:
         print(f"{style.bold(topic)}  {style.yellow('· no supporting evidence')}")
         return
     score = style.dim(f"score {support.score:.3f}")
     print(f"{style.bold(topic)}  {style.green('✓ supported')}  {score}")
     if support.cues:
-        print(f"  {style.dim('cues:')} {', '.join(support.cues)}")
+        print(f"  {style.dim('cues:')} {', '.join(cue.text for cue in support.cues)}")
 
 
 def _progress(stats: DictionaryBuildStats) -> None:
@@ -515,7 +521,10 @@ def _run(args: argparse.Namespace, *, json_output: bool, style: _Style, offline:
                     "supported": support is not None,
                     "evidence": None
                     if support is None
-                    else {"score": support.score, "cues": support.cues},
+                    else {
+                        "score": support.score,
+                        "cues": [asdict(cue) for cue in support.cues],
+                    },
                 }
             )
         else:

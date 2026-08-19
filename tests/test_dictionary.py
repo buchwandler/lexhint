@@ -4,7 +4,8 @@ from pathlib import Path
 
 import pytest
 
-from lexhint import Dictionary, DictionaryIncompatible, build_dictionary
+from lexhint import Dictionary, DictionaryIncompatible
+from lexhint.builder import build_dictionary
 from lexhint.store import semantic_rows
 
 FIXTURE = Path(__file__).parent / "fixtures" / "kaikki-mini.jsonl"
@@ -21,7 +22,7 @@ def build(tmp_path: Path) -> Dictionary:
     assert stats.kept_entries == 5
     assert stats.words == 4
     assert stats.senses == 8
-    return Dictionary.from_path(path, language="en")
+    return Dictionary.from_path(path)
 
 
 def test_dictionary_parses_semantic_senses_and_topics(tmp_path: Path) -> None:
@@ -99,7 +100,7 @@ def test_music_context_is_dictionary_derived(tmp_path: Path) -> None:
     support = dictionary.supports(text, target=span(text, "Am"), topic="music")
     assert support is not None
     assert support.topic == "music"
-    assert "scale" in [cue.casefold() for cue in support.cues]
+    assert "scale" in [cue.text.casefold() for cue in support.cues]
 
 
 def test_software_context_is_dictionary_derived(tmp_path: Path) -> None:
@@ -107,7 +108,7 @@ def test_software_context_is_dictionary_derived(tmp_path: Path) -> None:
     text = "The compiler is 8.3.2."
     support = dictionary.supports(text, target=span(text, "8.3.2"), topic="computing")
     assert support is not None
-    assert "compiler" in [cue.casefold() for cue in support.cues]
+    assert "compiler" in [cue.text.casefold() for cue in support.cues]
 
 
 def test_context_does_not_leak_proper_name_topics(tmp_path: Path) -> None:
@@ -151,3 +152,8 @@ def test_wrong_language_is_incompatible(tmp_path: Path) -> None:
         connection.commit()
     with pytest.raises(DictionaryIncompatible, match="language 'en' was requested"):
         Dictionary.from_path(path, language="en")
+
+
+def test_from_path_can_assert_the_inferred_language(tmp_path: Path) -> None:
+    path, _ = build_dictionary("en", FIXTURE, output=tmp_path / "en.sqlite3")
+    assert Dictionary.from_path(path, language="en").language == "en"

@@ -3,13 +3,13 @@ schema_version: 2
 object_type: release
 versioning:
   schema_version: 1
-  revision: 6
+  revision: 7
 version: 0.1.0
-status: released
+status: canceled
 title: Initial release
-released_at: "2026-08-19"
+released_at: '2026-08-19'
 previous_version: null
-cancel_reason: null
+cancel_reason: Never shipped; correcting the pre-release ledger state.
 superseded_by: null
 changelog_file: null
 boundary_ref: null

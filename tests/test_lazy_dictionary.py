@@ -6,15 +6,10 @@ from pathlib import Path
 
 import pytest
 
-from lexhint import (
-    Dictionary,
-    DictionaryFetchResult,
-    DictionaryIncompatible,
-    DictionaryWordNotFound,
-    build_dictionary,
-    fetch_dictionary_word,
-)
+from lexhint import Dictionary, DictionaryIncompatible
 from lexhint import dictionary as dictionary_module
+from lexhint.builder import build_dictionary
+from lexhint.dictionary import DictionaryFetchResult, DictionaryWordNotFound, fetch_dictionary_word
 from lexhint.store import create_schema, replace_word_rows, set_metadata
 
 FIXTURE = Path(__file__).parent / "fixtures" / "kaikki-mini.jsonl"
@@ -49,7 +44,10 @@ def test_incremental_fetch_accumulates_and_hits_cache(
 
     with closing(sqlite3.connect(path)) as connection:
         assert connection.execute("SELECT COUNT(*) FROM lookups").fetchone() == (2,)
-        assert dict(connection.execute("SELECT key, value FROM metadata"))["coverage"] == "partial"
+        metadata = dict(connection.execute("SELECT key, value FROM metadata"))
+        assert metadata["coverage"] == "partial"
+        assert metadata["source_mode"] == "live-partial"
+        assert metadata["snapshot_id"] == "partial-cache"
 
 
 def test_empty_and_not_found_lookups_are_cached(

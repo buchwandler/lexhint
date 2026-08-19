@@ -7,10 +7,11 @@ import urllib.request
 from collections.abc import Iterator
 from urllib.parse import quote
 
+from .download import user_agent
 from .store import iter_jsonl_entries
 
 KAIKKI_WORD_BASE_URL = "https://kaikki.org/dictionary/All%20languages%20combined/meaning"
-USER_AGENT = "lexhint/0 (+https://github.com/buchwandler/lexhint)"
+USER_AGENT = user_agent()
 
 
 class DictionaryFetchError(RuntimeError):

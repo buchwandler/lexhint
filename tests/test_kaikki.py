@@ -36,7 +36,11 @@ def test_word_entries_stream_matching_jsonl(monkeypatch: pytest.MonkeyPatch) -> 
 
 def test_word_entries_classifies_not_found(monkeypatch: pytest.MonkeyPatch) -> None:
     def fake_urlopen(request: object, timeout: float) -> object:
-        raise urllib.error.HTTPError("url", 404, "missing", {}, None)
+        error = urllib.error.HTTPError("url", 404, "missing", {}, io.BytesIO())
+        try:
+            raise error
+        finally:
+            error.close()
 
     monkeypatch.setattr(kaikki.urllib.request, "urlopen", fake_urlopen)
     with pytest.raises(kaikki.DictionaryWordNotFound):

@@ -15,7 +15,7 @@ from .kaikki import (
     fetch_word_entries,
     kaikki_word_url,
 )
-from .models import ContextSupport, DictionaryFetchResult, Sense, TopicScore
+from .models import ContextCue, DictionaryFetchResult, Sense, TopicEvidence
 from .store import (
     LEGACY_SCHEMA_VERSION,
     SCHEMA_VERSION,
@@ -171,8 +171,23 @@ class Dictionary:
         self._validate_metadata()
 
     @classmethod
-    def from_path(cls, path: str | Path, *, language: str = "und") -> Dictionary:
-        return cls(language, path=path)
+    def from_path(cls, path: str | Path, *, language: str | None = None) -> Dictionary:
+        """Open an index, inferring its language unless one is asserted.
+
+        A supplied language is checked against the index metadata.  Omitting it
+        is useful for a portable dictionary snapshot because the index remains
+        self-describing instead of requiring the misleading ``"und"`` default.
+        """
+        target = Path(path).expanduser()
+        try:
+            actual = _runtime_metadata(target)
+        except (OSError, sqlite3.DatabaseError) as exc:
+            raise DictionaryIncompatible("dictionary index has unreadable metadata") from exc
+        stored_language = actual.get("language")
+        if not stored_language:
+            raise DictionaryIncompatible("dictionary index has no language metadata")
+        selected_language = language or stored_language
+        return cls(selected_language, path=target)
 
     def _resolve_path(self) -> Path:
         vendored = (
@@ -338,11 +353,13 @@ class Dictionary:
         decay: float = 0.7,
         limit: int | None = None,
         refresh: bool = False,
-    ) -> tuple[TopicScore, ...]:
+    ) -> tuple[TopicEvidence, ...]:
         """Aggregate nearby dictionary topics around a source span.
 
         The target token itself is excluded so a candidate cannot validate itself.
-        This is diagnostic context evidence, not general-purpose word-sense disambiguation.
+        This is soft, diagnostic context evidence, not general-purpose word-sense
+        disambiguation.  Missing evidence is not negative evidence: a partial
+        cache or sparse upstream topic annotation can simply have no result.
         """
         if window < 0:
             raise ValueError("window must be >= 0")
@@ -365,8 +382,8 @@ class Dictionary:
         topics_by_word = self._topics_for_words(candidate_tokens, refresh=refresh)
 
         scores: dict[str, float] = {}
-        cues: dict[str, list[str]] = {}
-        for index, (token, _, _) in enumerate(tokens):
+        cues: dict[str, list[ContextCue]] = {}
+        for index, (token, token_start, token_end) in enumerate(tokens):
             if index in target_indices:
                 continue
             distance = min(abs(index - target_index) for target_index in target_indices)
@@ -374,12 +391,14 @@ class Dictionary:
                 continue
             for topic in topics_by_word.get(token, ()):
                 key = _normalize(topic)
-                scores[key] = scores.get(key, 0.0) + decay**distance
-                cues.setdefault(key, []).append(token)
+                weight = decay**distance
+                scores[key] = scores.get(key, 0.0) + weight
+                cues.setdefault(key, []).append(
+                    ContextCue(token, token_start, token_end, distance, weight)
+                )
 
         ranked = [
-            TopicScore(topic, score, tuple(dict.fromkeys(cues[topic])))
-            for topic, score in scores.items()
+            TopicEvidence(topic, score, tuple(cues[topic])) for topic, score in scores.items()
         ]
         ranked.sort(key=lambda item: (-item.score, item.topic))
         if limit is not None:
@@ -398,8 +417,8 @@ class Dictionary:
         decay: float = 0.7,
         threshold: float = 0.4,
         refresh: bool = False,
-    ) -> ContextSupport | None:
-        """Return nearby dictionary evidence for a requested semantic topic."""
+    ) -> TopicEvidence | None:
+        """Return nearby soft dictionary evidence for a requested topic."""
         wanted = _normalize(topic)
         for score in self.topic_scores(
             text,
@@ -410,7 +429,7 @@ class Dictionary:
             refresh=refresh,
         ):
             if _normalize(score.topic) == wanted and score.score >= threshold:
-                return ContextSupport(score.topic, score.score, score.cues)
+                return score
         return None
 
 

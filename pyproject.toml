@@ -54,7 +54,9 @@ include = ["lexhint*"]
 lexhint = ["py.typed", "data/words/*.txt.gz", "data/dictionaries/*.sqlite3", "data/**/.gitkeep"]
 
 [tool.setuptools_scm]
-fallback_version = "0.1.0"
+# A Git-less source archive must never silently identify itself as a released
+# version. Release artifacts are built from an exact version tag.
+fallback_version = "0+unknown"
 
 [tool.pytest.ini_options]
 testpaths = ["tests"]

@@ -8,7 +8,7 @@ from pathlib import Path
 import pytest
 
 from lexhint import cli
-from lexhint.models import Segment
+from lexhint.models import LexicalSegment
 
 FIXTURE = Path(__file__).parent / "fixtures" / "kaikki-mini.jsonl"
 
@@ -20,9 +20,9 @@ class FakeLexicon:
     def rank(self, word: str) -> int | None:
         return 213 if word.casefold() == "house" else None
 
-    def segment(self, text: str) -> tuple[Segment, ...]:
+    def segment(self, text: str) -> tuple[LexicalSegment, ...]:
         assert text == "chatgpt"
-        return (Segment("chat", True, 2668), Segment("gpt", False))
+        return (LexicalSegment("chat", True, 2668), LexicalSegment("gpt", False))
 
 
 def test_word_uses_default_english(

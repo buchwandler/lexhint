@@ -3,8 +3,7 @@ import sqlite3
 from contextlib import closing
 from pathlib import Path
 
-from lexhint import build_dictionary
-from lexhint.builder import iter_wiktextract_entries
+from lexhint.builder import build_dictionary, iter_wiktextract_entries
 
 FIXTURE = Path(__file__).parent / "fixtures" / "kaikki-mini.jsonl"
 
@@ -55,6 +54,10 @@ def test_fixture_build_is_independent_of_wordlist(tmp_path: Path, monkeypatch) -
         metadata = dict(connection.execute("SELECT key, value FROM metadata"))
         assert metadata["coverage"] == "full"
         assert metadata["source_kind"] == "bulk"
+        assert metadata["source_mode"] == "reproducible-full"
+        assert metadata["snapshot_id"].startswith("sha256:")
+        assert len(metadata["source_sha256"]) == 64
+        assert metadata["extractor_schema_version"] == "4"
         assert connection.execute(
             "SELECT name FROM sqlite_master WHERE name = 'lookups'"
         ).fetchone()

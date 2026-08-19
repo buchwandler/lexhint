@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import gzip
+import hashlib
 import io
 import os
 import sqlite3
@@ -8,11 +9,12 @@ import tempfile
 import urllib.request
 from collections.abc import Callable, Iterator
 from contextlib import contextmanager
+from datetime import datetime, timezone
 from pathlib import Path
 from typing import BinaryIO, TextIO
 from urllib.parse import urlparse
 
-from .download import cached_dictionary_path
+from .download import cached_dictionary_path, package_version, user_agent
 from .models import DictionaryBuildStats
 from .store import (
     SCHEMA_VERSION,
@@ -26,6 +28,17 @@ from .store import (
 __all__ = ["SCHEMA_VERSION", "build_dictionary", "iter_wiktextract_entries"]
 
 
+def _local_source_sha256(source: str | Path) -> str | None:
+    value = Path(source).expanduser()
+    if not value.is_file():
+        return None
+    digest = hashlib.sha256()
+    with value.open("rb") as handle:
+        for chunk in iter(lambda: handle.read(1024 * 1024), b""):
+            digest.update(chunk)
+    return digest.hexdigest()
+
+
 @contextmanager
 def _binary_source(source: str | Path, *, timeout: float) -> Iterator[BinaryIO]:
     value = str(source)
@@ -33,7 +46,7 @@ def _binary_source(source: str | Path, *, timeout: float) -> Iterator[BinaryIO]:
     if parsed.scheme in {"http", "https"}:
         request = urllib.request.Request(
             value,
-            headers={"User-Agent": "lexhint/0 (+https://github.com/buchwandler/lexhint)"},
+            headers={"User-Agent": user_agent()},
         )
         with urllib.request.urlopen(request, timeout=timeout) as response:
             yield response
@@ -78,6 +91,12 @@ def build_dictionary(
     target = Path(output) if output is not None else cached_dictionary_path(base_language)
     target = target.expanduser()
     target.parent.mkdir(parents=True, exist_ok=True)
+    source_value = str(source)
+    source_sha256 = _local_source_sha256(source)
+    source_mode = "reproducible-full" if source_sha256 is not None else "live-full"
+    snapshot_id = (
+        f"sha256:{source_sha256}" if source_sha256 is not None else f"source:{source_value}"
+    )
 
     fd, tmp_name = tempfile.mkstemp(prefix="lexhint-dict-", suffix=".sqlite3", dir=target.parent)
     os.close(fd)
@@ -100,7 +119,13 @@ def build_dictionary(
                     "language": base_language,
                     "coverage": "full",
                     "source_kind": "bulk",
-                    "source": str(source),
+                    "source": source_value,
+                    "source_mode": source_mode,
+                    "snapshot_id": snapshot_id,
+                    "source_sha256": source_sha256 or "",
+                    "built_at": datetime.now(timezone.utc).isoformat(),
+                    "lexhint_version": package_version(),
+                    "extractor_schema_version": SCHEMA_VERSION,
                 },
             )
 

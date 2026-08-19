@@ -4,12 +4,16 @@ from dataclasses import dataclass
 
 
 @dataclass(frozen=True, slots=True)
-class Segment:
-    """One lexical or unknown segment of an identifier-like string."""
+class LexicalSegment:
+    """One segment of a compact label.
+
+    ``in_lexicon`` is lexical-resource evidence only.  It does not decide
+    whether the segment is a word, acronym, brand, name, or pronunciation.
+    """
 
     text: str
-    known: bool
-    rank: int | None = None
+    in_lexicon: bool
+    frequency_rank: int | None = None
 
 
 @dataclass(frozen=True, slots=True)
@@ -23,21 +27,23 @@ class Sense:
 
 
 @dataclass(frozen=True, slots=True)
-class TopicScore:
-    """Context score for one dictionary topic."""
+class ContextCue:
+    """One nearby token contributing dictionary topic evidence."""
 
-    topic: str
-    score: float
-    cues: tuple[str, ...]
+    text: str
+    start: int
+    end: int
+    distance: int
+    weight: float
 
 
 @dataclass(frozen=True, slots=True)
-class ContextSupport:
-    """Evidence that nearby dictionary senses support a requested topic."""
+class TopicEvidence:
+    """Soft, diagnostic context evidence for one dictionary topic."""
 
     topic: str
     score: float
-    cues: tuple[str, ...]
+    cues: tuple[ContextCue, ...]
 
 
 @dataclass(frozen=True, slots=True)

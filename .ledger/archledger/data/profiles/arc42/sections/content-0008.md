@@ -7,7 +7,7 @@ section: cross_cutting_concepts
 title: Cross-cutting Concepts
 order: 80
 status: accepted
-version: 2
+version: 3
 body_format: markdown
 ---
 
@@ -17,7 +17,7 @@ Unicode NFC normalization is used for stored display values and case folding for
 
 ### Data lifecycle and caching
 
-Word lists are immutable normalized gzip files. Partial dictionaries maintain lookup status and timestamps so empty and not-found results are not repeatedly requested. Full coverage is authoritative and does not trigger lazy fetches. Schema compatibility is checked at runtime; partial schema-v3 caches are invalidated, while full incompatible indexes require a rebuild.
+Word lists are immutable normalized gzip files with a JSON provenance sidecar containing the pinned source revision, normalized SHA-256, and word count. Partial dictionaries maintain lookup status and timestamps so empty and not-found results are not repeatedly requested; their metadata identifies them as live partial caches. Full coverage is authoritative and does not trigger lazy fetches; local full indexes record a reproducible source snapshot identity. Schema compatibility is checked at runtime; partial schema-v3 caches are invalidated, while full incompatible indexes require a rebuild.
 
 ### Errors and offline behavior
 
@@ -25,7 +25,7 @@ Resource absence, malformed input, network failures, not-found results, incompat
 
 ### Interfaces and observability
 
-Python APIs return immutable dataclasses and tuples. CLI JSON serializes explicit fields and build statistics. Progress reporting is sent to stderr and is used only for interactive bulk builds.
+Python APIs return immutable dataclasses and tuples. CLI JSON serializes explicit fields, structured context cues, and build statistics. Progress reporting is sent to stderr and is used only for interactive bulk builds.
 
 ### Verification and licensing
 

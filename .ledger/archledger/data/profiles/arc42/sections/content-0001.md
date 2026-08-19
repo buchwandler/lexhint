@@ -7,7 +7,7 @@ section: introduction_and_goals
 title: Introduction and Goals
 order: 10
 status: accepted
-version: 2
+version: 3
 body_format: markdown
 ---
 
@@ -26,7 +26,8 @@ body_format: markdown
 
 - Keep the runtime dependency-free beyond the Python standard library.
 - Make network use explicit, bounded, cacheable, and avoidable with `--offline`.
-- Preserve deterministic normalization, segmentation, storage, and JSON behavior.
+- Preserve deterministic normalization, segmentation, storage, and JSON behavior, with
+  source and snapshot identities recorded for external data.
 - Keep external data separate from the Apache-2.0 code distribution.
 
 ## Stakeholders

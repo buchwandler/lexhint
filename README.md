@@ -99,14 +99,20 @@ Default cache:
 
 ```text
 ~/.cache/lexhint/words/<language>.txt.gz
+~/.cache/lexhint/words/<language>.metadata.json
 ```
 
 Override the complete cache root with `LEXHINT_CACHE_DIR`.
 
+Word-list downloads use a pinned FrequencyWords revision. The metadata sidecar records
+the source revision, normalized content SHA-256, language, and word count, so a cache
+can be checked for provenance and corruption before it is reused. Use `--force` when an
+explicit refresh is wanted.
+
 Python:
 
 ```python
-from lexhint import Lexicon
+from lexhint import LexicalSegment, Lexicon
 
 lex = Lexicon("en")
 
@@ -119,12 +125,14 @@ Expected segmentation shape:
 
 ```python
 (
-    Segment(text="chat", known=True, rank=...),
-    Segment(text="gpt", known=False, rank=None),
+    LexicalSegment(text="chat", in_lexicon=True, frequency_rank=...),
+    LexicalSegment(text="gpt", in_lexicon=False, frequency_rank=None),
 )
 ```
 
-A speech layer can therefore keep `chat` lexical and spell the unknown `gpt` run.
+`in_lexicon` is lexical-resource evidence only. It is not a pronunciation or
+interpretation decision. `Lexicon.segment()` accepts one compact identifier or domain
+label; the caller owns URL schemes, dots, paths, ports, and other URL syntax.
 
 CLI:
 
@@ -167,6 +175,11 @@ database defaults to:
 ```
 
 The schema v4 index stores compact sense rows plus partial-cache coverage metadata.
+Partial indexes are live, network-opt-in caches. Full indexes built from a local source
+are reproducible snapshots identified by their source SHA-256; a full index built from a
+remote URL records that it is live-full unless the caller supplies a separately pinned
+source. `Dictionary.from_path(path)` reads the language from index metadata, while
+`Dictionary.from_path(path, language="en")` asserts it.
 Each row contains:
 
 ```text
@@ -193,6 +206,11 @@ print(dictionary.topics("compiler"))
 
 The default `Dictionary("en")` is local-only. Use `fetch_missing=True` only when the
 application explicitly permits network access.
+
+No topic score is negative evidence. It means that no positive evidence was found in
+the available dictionary coverage and annotations; a missing word, a partial cache, or
+sparse upstream topic labels can all produce no score. Use a local full snapshot and
+`offline=True` for deterministic benchmark or production runs.
 
 Wiktextract provides `topics` per sense when Wiktionary supplies that semantic metadata.
 A word can therefore have several senses with different topics instead of being globally
@@ -241,7 +259,8 @@ For diagnostics, inspect all nearby dictionary topics:
 
 ```python
 for score in lex.topic_scores(text, target=(start, start + len("8.3.2"))):
-    print(score)
+    print(score.topic, score.score)
+    print([(cue.text, cue.start, cue.end, cue.weight) for cue in score.cues])
 ```
 
 CLI:

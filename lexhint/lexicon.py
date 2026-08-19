@@ -9,7 +9,7 @@ from importlib.resources import files
 from pathlib import Path
 
 from .download import cached_wordlist_path, fetch_wordlist
-from .models import Segment
+from .models import LexicalSegment
 
 _MAX_TWO_LETTER_RANK = 2_000
 
@@ -117,12 +117,16 @@ class Lexicon:
         assert self._words is not None
         return self._words[:n]
 
-    def segment(self, text: str, *, max_word_length: int = 32) -> tuple[Segment, ...]:
-        """Split a compact identifier into common words and unknown runs.
+    def segment(self, text: str, *, max_word_length: int = 32) -> tuple[LexicalSegment, ...]:
+        """Split one compact label into common words and unknown runs.
 
         The dynamic program rewards longer common words, mildly rewards high rank,
         and penalizes unknown characters. One-letter lexicon matches are ignored so
         residual initialisms remain grouped for a speech layer to spell later.
+
+        ``text`` is a single compact identifier/domain label.  URL schemes,
+        dots, paths, ports, query strings, and other URL syntax belong to the
+        caller and are not parsed here.
         """
         value = normalize_word(text)
         if not value:
@@ -159,19 +163,19 @@ class Lexicon:
                     best[end] = score
                     previous[end] = (start, True, rank)
 
-        raw: list[Segment] = []
+        raw: list[LexicalSegment] = []
         cursor = n
         while cursor > 0:
             step = previous[cursor] or (cursor - 1, False, None)
             start, known, rank = step
-            raw.append(Segment(value[start:cursor], known=known, rank=rank))
+            raw.append(LexicalSegment(value[start:cursor], in_lexicon=known, frequency_rank=rank))
             cursor = start
         raw.reverse()
 
-        merged: list[Segment] = []
+        merged: list[LexicalSegment] = []
         for item in raw:
-            if not item.known and merged and not merged[-1].known:
-                merged[-1] = Segment(merged[-1].text + item.text, known=False)
+            if not item.in_lexicon and merged and not merged[-1].in_lexicon:
+                merged[-1] = LexicalSegment(merged[-1].text + item.text, in_lexicon=False)
             else:
                 merged.append(item)
         return tuple(merged)

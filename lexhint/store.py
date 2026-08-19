@@ -133,6 +133,8 @@ def initialize_partial(path: str | Path, language: str) -> Path:
                 "language": language.lower().split("-", 1)[0],
                 "coverage": "partial",
                 "source_kind": "kaikki-word",
+                "source_mode": "live-partial",
+                "snapshot_id": "partial-cache",
             },
         )
         connection.commit()
