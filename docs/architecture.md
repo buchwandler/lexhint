@@ -120,8 +120,8 @@ The solution is organized around a small, explicit evidence pipeline.
 The package is a set of focused Python modules with the CLI as the outer adapter.
 
 - `lexhint.cli` parses commands, resolves languages and flags, formats human output, and emits stable JSON.
-- `lexhint.lexicon.Lexicon` resolves a vendored or cached gzip word list, loads it lazily, provides membership and rank, and segments compact text.
-- `lexhint.dictionary.Dictionary` validates schema and language metadata, reads senses, and computes soft `TopicEvidence` with structured `ContextCue` values.
+- `lexhint.lexicon.Lexicon` resolves an explicit, vendored, or cached gzip word list, loads it lazily, provides membership and rank, and segments compact text. Inline words are supported for isolated consumers and tests.
+- `lexhint.dictionary.Dictionary` validates schema and language metadata, reads senses, and computes soft `TopicEvidence` with structured `ContextCue` values. `from_path()` can infer the language from a self-describing index.
 - `lexhint.store` defines schema-v4 SQLite storage, normalization, semantic row extraction, lookup state, and partial-cache updates.
 - `lexhint.kaikki` builds exact-word Kaikki URLs and streams JSONL responses for lazy fetches.
 - `lexhint.builder` streams local or remote bulk JSONL and writes a complete SQLite index.
@@ -137,20 +137,20 @@ The public package exports only the principal runtime `Lexicon`, `Dictionary`, e
 ## Word membership and segmentation
 
 1. The CLI or API selects a language and constructs `Lexicon`.
-2. The lexicon resolves a vendored resource, user cache, or explicitly requested path and loads it on first use.
+2. The lexicon resolves inline words, an explicitly requested path, a vendored resource, or a user cache and loads file-backed words on first use. Missing resources are fetched only when `auto_fetch` is enabled.
 3. `rank` returns one-based source order. `segment` evaluates candidate word spans, rewards longer and frequent words, penalizes unknown characters, and merges adjacent unknown spans.
 4. The result is a tuple of `LexicalSegment` values. `in_lexicon` reports lexical-resource evidence only; it does not select pronunciation.
 
 ## Lazy dictionary context
 
-1. `Dictionary` opens or initializes a schema-v4 partial SQLite cache and validates language and coverage metadata.
+1. `Dictionary` opens or initializes a schema-v4 partial SQLite cache, or opens a full index, and validates language and coverage metadata. `from_path()` can infer the language from that metadata.
 2. Context tokenization finds nearby word tokens and identifies the target token by overlap or nearest span.
-3. The target token is excluded. Missing nearby words are fetched individually only when `fetch_missing` is enabled and offline mode is not active.
-4. Stored explicit topics are aggregated with distance decay. `supports` returns `TopicEvidence` only when the requested topic reaches the threshold. Missing evidence is not negative evidence.
+3. The target token is excluded. Missing nearby words are fetched individually only when `fetch_missing` is enabled and offline mode is not active; `refresh` explicitly revisits cached words.
+4. Stored explicit topics are aggregated with distance decay into structured cues. `topic_scores` supports bounded windows and result limits, while `supports` returns `TopicEvidence` only when the requested topic reaches the threshold. Missing evidence is not negative evidence.
 
 ## Bulk dictionary build
 
-The builder reads a local path or HTTP(S) source through a text stream, filters entries by `lang_code`, retains senses with glosses or topics, commits incrementally, records source identity/hash and build statistics, runs `ANALYZE`, and atomically replaces the target database.
+The builder reads a local path or HTTP(S) source through a text stream, filters entries by `lang_code`, retains senses with glosses or topics, commits incrementally, records source identity/hash and build statistics, labels local full indexes with a SHA-256 snapshot and remote full indexes as live, runs `ANALYZE`, and atomically replaces the target database.
 
 <!-- archledger: no accepted records for this section yet -->
 

@@ -4,7 +4,6 @@ linked_sources:
   - lexhint/cli.py
   - lexhint/dictionary.py
   - lexhint/lexicon.py
-  - lexhint/models.py
 sections:
   - section_id: md:section:README.md::1-common-word-lexicon
     doc_path: README.md
@@ -13,20 +12,30 @@ sections:
     heading_slug: 1-common-word-lexicon
     line_span:
       - 89
-      - 135
-    section_hash: f2dc29f057b7bb59ed11ef5feb5c54fc5c1d22a302506bd821674f7e868df713
+      - 147
+    section_hash: ede39a736f383d2bbb4cd109f51b96dcea6cbd950b7952e32bb10554c8e4a7f4
     summary: 1. Common-word lexicon
     text:
       "# 1. Common-word lexicon\n\nFetch a FrequencyWords top-50k list:\n\n```bash\n\
       lexhint fetch en\nlexhint fetch de fr es it pt cs\n```\n\nDefault cache:\n\n```text\n\
-      ~/.cache/lexhint/words/<language>.txt.gz\n```\n\nOverride the complete cache root\
-      \ with `LEXHINT_CACHE_DIR`.\n\nPython:\n\n```python\nfrom lexhint import Lexicon\n\
-      \nlex = Lexicon(\"en\")\n\nassert lex.contains(\"chat\")\nprint(lex.rank(\"chat\"\
-      ))\nprint(lex.segment(\"chatgpt\"))\n```\n\nExpected segmentation shape:\n\n```python\n\
-      (\n    Segment(text=\"chat\", known=True, rank=...),\n    Segment(text=\"gpt\"\
-      , known=False, rank=None),\n)\n```\n\nA speech layer can therefore keep `chat`\
-      \ lexical and spell the unknown `gpt` run.\n\nCLI:\n\n```bash\nlexhint word chat\n\
-      lexhint segment chatgpt\n```"
+      ~/.cache/lexhint/words/<language>.txt.gz\n~/.cache/lexhint/words/<language>.metadata.json\n\
+      ```\n\nOverride the complete cache root with `LEXHINT_CACHE_DIR`.\n\nWord-list\
+      \ downloads use a pinned FrequencyWords revision. The metadata sidecar records\n\
+      the source revision, normalized content SHA-256, language, and word count, so\
+      \ a cache\ncan be checked for provenance and corruption before it is reused. Use\
+      \ `--force` when an\nexplicit refresh is wanted.\n\nPython:\n\n```python\nfrom\
+      \ lexhint import LexicalSegment, Lexicon\n\nlex = Lexicon(\"en\")\n\nassert lex.contains(\"\
+      chat\")\nprint(lex.rank(\"chat\"))\nprint(lex.segment(\"chatgpt\"))\n```\n\nWord\
+      \ lists load lazily. Pass `path` to use a specific gzip list, `auto_fetch=True`\
+      \ to\nopt into downloading a missing list, or use `Lexicon.from_words(words)`\
+      \ for an\nin-memory lexicon in tests and embedded applications.\n\nExpected segmentation\
+      \ shape:\n\n```python\n(\n    LexicalSegment(text=\"chat\", in_lexicon=True, frequency_rank=...),\n\
+      \    LexicalSegment(text=\"gpt\", in_lexicon=False, frequency_rank=None),\n)\n\
+      ```\n\n`in_lexicon` is lexical-resource evidence only. It is not a pronunciation\
+      \ or\ninterpretation decision. `Lexicon.segment()` accepts one compact identifier\
+      \ or domain\nlabel; the caller owns URL schemes, dots, paths, ports, and other\
+      \ URL syntax.\n\nCLI:\n\n```bash\nlexhint word chat\nlexhint segment chatgpt\n\
+      ```"
     links:
       - source_id: py:class:lexhint/lexicon.py::Lexicon
         source_path: lexhint/lexicon.py
@@ -34,23 +43,16 @@ sections:
         impact: unknown
         reason: The section documents the Lexicon API.
         tracked_hashes:
-          body_hash: a7d1afa1b2626859565e28a0ec9e9365b852b1a71ff1186bee56c02d24473678
-      - source_id: py:class:lexhint/models.py::Segment
-        source_path: lexhint/models.py
-        coverage: implementation-note
-        impact: unknown
-        reason: The section documents Segment results.
-        tracked_hashes:
-          body_hash: 4390c0c56aea0debb70b42e3a609687d19be42578c491b5a70ad2e661d3ca9d2
+          body_hash: 307528a29678719db042592d3e57e48d661f65e030d2993e163bcbbb8bb88e88
   - section_id: md:section:README.md::2-dictionary-derived-context
     doc_path: README.md
     heading_path:
       - 2. Dictionary-derived context
     heading_slug: 2-dictionary-derived-context
     line_span:
-      - 136
-      - 182
-    section_hash: 9befb7097c1e285ce00a65b6251f6356d63306cb223f7956a21815937278e1b2
+      - 148
+      - 199
+    section_hash: aadc2f0f5aa016d19087486c23654e590b8b46ad20eaedd1161121dfca669638
     summary: 2. Dictionary-derived context
     text: '# 2. Dictionary-derived context
 
@@ -118,6 +120,19 @@ sections:
 
       The schema v4 index stores compact sense rows plus partial-cache coverage metadata.
 
+      Partial indexes are live, network-opt-in caches. Full indexes built from a local
+      source
+
+      are reproducible snapshots identified by their source SHA-256; a full index built
+      from a
+
+      remote URL records that it is live-full unless the caller supplies a separately
+      pinned
+
+      source. `Dictionary.from_path(path)` reads the language from index metadata, while
+
+      `Dictionary.from_path(path, language="en")` asserts it.
+
       Each row contains:
 
 
@@ -147,7 +162,7 @@ sections:
         impact: unknown
         reason: The section documents the Dictionary API and context operations.
         tracked_hashes:
-          body_hash: 58e65f051294770bb2b1617902b07921676162718d8b5bd01cafec2177ce3a80
+          body_hash: e637cd459de0ee38368e3427913acf817504988dda365423111e22497d80608b
   - section_id: md:section:README.md::candidate-aware-context-evidence
     doc_path: README.md
     heading_path:
@@ -155,9 +170,9 @@ sections:
       - Candidate-aware context evidence
     heading_slug: candidate-aware-context-evidence
     line_span:
-      - 201
-      - 256
-    section_hash: 0dde26d28339679c37a62c65ad3dafca09c246f8837c8964338dc39ffb0a9836
+      - 228
+      - 292
+    section_hash: 40eb8e8a873b667cdf0c234ced56b84d8b75d8d9bf7db9d0dc2c23f3825271b8
     summary: Candidate-aware context evidence
     text:
       "## Candidate-aware context evidence\n\n`spokenform` already knows the interpretation\
@@ -171,8 +186,14 @@ sections:
       8.3.2\")\n\nsupport = lex.supports(\n    text,\n    target=(start, start + len(\"\
       8.3.2\")),\n    topic=\"computing\",\n)\n```\n\nThe target token itself is deliberately\
       \ excluded from context evidence. A candidate\ncannot validate its own interpretation.\n\
-      \nFor diagnostics, inspect all nearby dictionary topics:\n\n```python\nfor score\
-      \ in lex.topic_scores(text, target=(start, start + len(\"8.3.2\"))):\n    print(score)\n\
+      \n`topic_scores()` returns `TopicEvidence` values. Each value includes structured\n\
+      `ContextCue` records with the cue text, source span, token distance, and decay\
+      \ weight.\nUse `window`, `decay`, and `limit` to control the diagnostic search;\
+      \ `supports()` also\naccepts a score `threshold`. An absent score is not negative\
+      \ evidence.\n\nFor diagnostics, inspect all nearby dictionary topics:\n\n```python\n\
+      for score in lex.topic_scores(text, target=(start, start + len(\"8.3.2\"))):\n\
+      \    print(score.topic, score.score)\n    print([\n        (cue.text, cue.start,\
+      \ cue.end, cue.distance, cue.weight)\n        for cue in score.cues\n    ])\n\
       ```\n\nCLI:\n\n```bash\nlexhint dictionary word en compiler\nlexhint dictionary\
       \ fetch scale house compiler\nlexhint --offline dictionary word en compiler\n\
       lexhint context en music \"The scale is Am.\" --target Am\nlexhint --offline context\
@@ -184,7 +205,7 @@ sections:
         impact: unknown
         reason: Candidate-aware context evidence is implemented by Dictionary.supports.
         tracked_hashes:
-          body_hash: 58e65f051294770bb2b1617902b07921676162718d8b5bd01cafec2177ce3a80
+          body_hash: e637cd459de0ee38368e3427913acf817504988dda365423111e22497d80608b
   - section_id: md:section:README.md::dictionary-api
     doc_path: README.md
     heading_path:
@@ -192,9 +213,9 @@ sections:
       - Dictionary API
     heading_slug: dictionary-api
     line_span:
-      - 183
       - 200
-    section_hash: 4ac26a62d58c0cb27a91b9d1d8d0587b71c5ac38880163a96963ab0faa75901d
+      - 227
+    section_hash: 9f7104f98758a08f9efdb3ea57df6dad06bb2883d9f0c965192c5f9df5c8e8be
     summary: Dictionary API
     text: '## Dictionary API
 
@@ -214,10 +235,32 @@ sections:
       ```
 
 
+      `Dictionary.from_path(path)` infers the language from index metadata. Supply
+
+      `language="en"` when the caller wants the index language asserted explicitly.
+      Use
+
+      `refresh=True` on `senses()` or the context methods to refresh a cached word when
+
+      network access is enabled.
+
+
       The default `Dictionary("en")` is local-only. Use `fetch_missing=True` only when
       the
 
       application explicitly permits network access.
+
+
+      No topic score is negative evidence. It means that no positive evidence was found
+      in
+
+      the available dictionary coverage and annotations; a missing word, a partial cache,
+      or
+
+      sparse upstream topic labels can all produce no score. Use a local full snapshot
+      and
+
+      `offline=True` for deterministic benchmark or production runs.
 
 
       Wiktextract provides `topics` per sense when Wiktionary supplies that semantic
@@ -234,7 +277,7 @@ sections:
         impact: unknown
         reason: The section documents the Dictionary API.
         tracked_hashes:
-          body_hash: 58e65f051294770bb2b1617902b07921676162718d8b5bd01cafec2177ce3a80
+          body_hash: e637cd459de0ee38368e3427913acf817504988dda365423111e22497d80608b
   - section_id: md:section:README.md::quick-start
     doc_path: README.md
     heading_path:
@@ -338,8 +381,10 @@ sections:
         impact: unknown
         reason: Quick-start dictionary operations use the Dictionary API.
         tracked_hashes:
-          body_hash: 58e65f051294770bb2b1617902b07921676162718d8b5bd01cafec2177ce3a80
-last_fresh_scan_version: 2
-last_fresh_hash: 8ec173db69b8251d569209ec3159831671ae7f584076255c524079fd1ca9c96d
-notes: Bootstrap documentation completed after scan version 2.
-version: 5
+          body_hash: e637cd459de0ee38368e3427913acf817504988dda365423111e22497d80608b
+last_fresh_scan_version: 3
+last_fresh_hash: 545b6ca33698dbba1625e1a1141c38109496301166502fbde743c24a1023c4e5
+notes:
+  Updated Markdown API and architecture documentation for the current Lexicon,
+  Dictionary, context-evidence, and snapshot behavior.
+version: 14

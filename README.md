@@ -121,6 +121,10 @@ print(lex.rank("chat"))
 print(lex.segment("chatgpt"))
 ```
 
+Word lists load lazily. Pass `path` to use a specific gzip list, `auto_fetch=True` to
+opt into downloading a missing list, or use `Lexicon.from_words(words)` for an
+in-memory lexicon in tests and embedded applications.
+
 Expected segmentation shape:
 
 ```python
@@ -204,6 +208,11 @@ print(dictionary.senses("scale"))  # fetches once, then works offline
 print(dictionary.topics("compiler"))
 ```
 
+`Dictionary.from_path(path)` infers the language from index metadata. Supply
+`language="en"` when the caller wants the index language asserted explicitly. Use
+`refresh=True` on `senses()` or the context methods to refresh a cached word when
+network access is enabled.
+
 The default `Dictionary("en")` is local-only. Use `fetch_missing=True` only when the
 application explicitly permits network access.
 
@@ -255,12 +264,20 @@ support = lex.supports(
 The target token itself is deliberately excluded from context evidence. A candidate
 cannot validate its own interpretation.
 
+`topic_scores()` returns `TopicEvidence` values. Each value includes structured
+`ContextCue` records with the cue text, source span, token distance, and decay weight.
+Use `window`, `decay`, and `limit` to control the diagnostic search; `supports()` also
+accepts a score `threshold`. An absent score is not negative evidence.
+
 For diagnostics, inspect all nearby dictionary topics:
 
 ```python
 for score in lex.topic_scores(text, target=(start, start + len("8.3.2"))):
     print(score.topic, score.score)
-    print([(cue.text, cue.start, cue.end, cue.weight) for cue in score.cues])
+    print([
+        (cue.text, cue.start, cue.end, cue.distance, cue.weight)
+        for cue in score.cues
+    ])
 ```
 
 CLI:
