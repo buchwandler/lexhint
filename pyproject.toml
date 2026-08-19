@@ -1,0 +1,73 @@
+[build-system]
+requires = ["setuptools>=80", "setuptools-scm>=9.2"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "lexhint"
+dynamic = ["version"]
+description = "Compact lexical and dictionary-derived context hints for text normalization"
+readme = "README.md"
+requires-python = ">=3.10"
+license = "Apache-2.0"
+authors = [
+  { name = "Holger Nahrstaedt" },
+]
+keywords = ["nlp", "lexicon", "wiktionary", "word-segmentation", "text-normalization", "speech"]
+classifiers = [
+  "Development Status :: 3 - Alpha",
+  "Intended Audience :: Developers",
+  "Programming Language :: Python :: 3",
+  "Programming Language :: Python :: 3.10",
+  "Programming Language :: Python :: 3.11",
+  "Programming Language :: Python :: 3.12",
+  "Programming Language :: Python :: 3.13",
+  "Programming Language :: Python :: 3.14",
+  "Topic :: Text Processing :: Linguistic",
+]
+dependencies = []
+
+[project.optional-dependencies]
+dev = [
+  "build>=1",
+  "mypy>=1.11",
+  "pytest>=8",
+  "pytest-cov>=5",
+  "ruff>=0.16,<0.17",
+  "twine>=5",
+]
+
+[project.scripts]
+lexhint = "lexhint.cli:main"
+
+[project.urls]
+Homepage = "https://github.com/buchwandler/lexhint"
+Repository = "https://github.com/buchwandler/lexhint"
+
+[tool.setuptools]
+include-package-data = true
+
+[tool.setuptools.packages.find]
+where = ["."]
+include = ["lexhint*"]
+
+[tool.setuptools.package-data]
+lexhint = ["data/words/*.txt.gz", "data/dictionaries/*.sqlite3", "data/**/.gitkeep"]
+
+[tool.setuptools_scm]
+fallback_version = "0.1.0"
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+addopts = "-q"
+
+[tool.ruff]
+target-version = "py310"
+line-length = 100
+
+[tool.ruff.lint]
+select = ["E", "F", "I", "UP", "B", "SIM"]
+
+[tool.mypy]
+python_version = "3.10"
+strict = true
+packages = ["lexhint"]
