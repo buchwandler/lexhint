@@ -38,14 +38,23 @@ lexhint word de Haus
 Human-readable output is the default; add `--json` to any command for scripts.
 The runtime itself has no third-party Python dependencies.
 
-To add dictionary-derived context data, the built-in Kaikki source is used automatically:
+Dictionary operations fetch only the requested Kaikki word page by default and cache
+compact dictionary senses locally:
+
+```bash
+lexhint dictionary word compiler
+lexhint dictionary fetch scale house compiler
+```
+
+Use `--offline` to require cached data. The full Kaikki source remains available for
+maintainers and advanced offline users:
 
 ```bash
 lexhint dictionary build en
+lexhint setup en --dictionary
 ```
 
-The Kaikki source is large and is streamed rather than downloaded to a temporary copy.
-`lexhint setup en --dictionary` performs both setup steps in one command.
+The bulk source is large and is streamed rather than downloaded to a temporary copy.
 
 ## Layout
 
@@ -140,23 +149,25 @@ building does not require a FrequencyWords list. To build from a downloaded Kaik
 lexhint dictionary build en ~/Downloads/raw-wiktextract-data.jsonl.gz
 ```
 
-Or use the built-in official Kaikki source directly without keeping the multi-gigabyte
-download on disk:
+The lazy word path avoids the multi-gigabyte download entirely. For complete local
+coverage, use the built-in official Kaikki source directly:
 
 ```bash
 lexhint dictionary build en
 ```
 
 That source is very large. The builder reads it line-by-line and stores compact
-topic-bearing semantic senses used by lexhint's context-evidence API. Dictionary vocabulary
-is not restricted to the FrequencyWords common-word list; technical semantic cues such as
-"compiler" can therefore be retained. The resulting database defaults to:
+dictionary senses containing glosses and explicit semantic topics. Context scoring uses only
+the explicit topics. Dictionary vocabulary is not restricted to the FrequencyWords common-word
+list; technical semantic cues such as "compiler" can therefore be retained. The resulting
+database defaults to:
 
 ```text
 ~/.cache/lexhint/dictionaries/en.sqlite3
 ```
 
-The compact schema v2 index stores only:
+The schema v4 index stores compact sense rows plus partial-cache coverage metadata.
+Each row contains:
 
 ```text
 word
@@ -166,20 +177,22 @@ glosses
 topics
 ```
 
-It is deliberately a semantic hint index, not a full Wiktionary mirror. A sense is
-retained when entry-level or sense-level Wiktextract topics are present.
+It is deliberately not a full Wiktionary mirror. A sense is retained when it has a
+dictionary gloss or an explicit entry-level or sense-level Wiktextract topic.
 
 ## Dictionary API
 
 ```python
 from lexhint import Dictionary
 
-dictionary = Dictionary("en")
+dictionary = Dictionary("en", fetch_missing=True)
 
-print(dictionary.senses("scale"))
-print(dictionary.topics("scale"))
+print(dictionary.senses("scale"))  # fetches once, then works offline
 print(dictionary.topics("compiler"))
 ```
+
+The default `Dictionary("en")` is local-only. Use `fetch_missing=True` only when the
+application explicitly permits network access.
 
 Wiktextract provides `topics` per sense when Wiktionary supplies that semantic metadata.
 A word can therefore have several senses with different topics instead of being globally
@@ -235,8 +248,10 @@ CLI:
 
 ```bash
 lexhint dictionary word en compiler
+lexhint dictionary fetch scale house compiler
+lexhint --offline dictionary word en compiler
 lexhint context en music "The scale is Am." --target Am
-lexhint context en computing "The compiler is 8.3.2." --target 8.3.2
+lexhint --offline context en computing "The compiler is 8.3.2." --target 8.3.2
 ```
 
 # Integration boundary with spokenform

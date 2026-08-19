@@ -48,3 +48,14 @@ class DictionaryBuildStats:
     kept_entries: int
     words: int
     senses: int
+
+
+@dataclass(frozen=True, slots=True)
+class DictionaryFetchResult:
+    """Result of fetching or reusing one dictionary word page and its compact senses."""
+
+    word: str
+    status: str
+    senses: int
+    source_url: str
+    cached: bool

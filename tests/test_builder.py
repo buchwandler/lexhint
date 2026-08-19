@@ -47,6 +47,13 @@ def test_fixture_build_is_independent_of_wordlist(tmp_path: Path, monkeypatch) -
     with sqlite3.connect(path) as connection:
         assert connection.execute(
             "SELECT value FROM metadata WHERE key = 'schema_version'"
-        ).fetchone() == ("2",)
+        ).fetchone() == ("4",)
         columns = {row[1] for row in connection.execute("PRAGMA table_info(senses)")}
     assert columns == {"id", "word", "display_word", "pos", "glosses", "topics"}
+    with sqlite3.connect(path) as connection:
+        metadata = dict(connection.execute("SELECT key, value FROM metadata"))
+        assert metadata["coverage"] == "full"
+        assert metadata["source_kind"] == "bulk"
+        assert connection.execute(
+            "SELECT name FROM sqlite_master WHERE name = 'lookups'"
+        ).fetchone()

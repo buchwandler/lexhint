@@ -17,18 +17,25 @@ Its line number is the frequency rank.
 
 ## Wiktionary / Wiktextract / Kaikki
 
-`lexhint dictionary build` reads Wiktextract-compatible JSONL. The recommended
-source is the pre-extracted data published by Kaikki:
+`lexhint dictionary word` and `lexhint dictionary fetch` may lazily download one
+Kaikki single-word raw JSONL page at a time. Only the requested page is transferred;
+lexhint filters its requested `lang_code` and stores compact dictionary senses in a
+local schema-v4 SQLite partial cache. Successful empty and not-found lookups are recorded
+so they are not repeatedly requested. The `--offline` option disables all network access.
+
+`lexhint dictionary build` reads Wiktextract-compatible JSONL for complete offline
+coverage. The recommended source is the pre-extracted data published by Kaikki:
 
 - https://kaikki.org/dictionary/rawdata.html
 - current raw English Wiktextract download URL used in the MVP:
   https://kaikki.org/dictionary/raw-wiktextract-data.jsonl.gz
 - Wiktextract project: https://github.com/tatuylonen/wiktextract
 
-The builder streams the source, keeps entries whose `lang_code` matches the requested
-language, and stores compact topic-bearing semantic senses used by lexhint's
-context-evidence API. The FrequencyWords lexicon is a separate resource and is not used
-as a dictionary allowlist. Stored fields are:
+Both lazy and bulk paths use the same compact sense extraction policy. The builder streams
+the source, keeps entries whose `lang_code` matches the requested language, and stores a
+compact sense when it has a dictionary gloss or an explicit semantic topic. Context scoring
+uses only explicit semantic topics. The FrequencyWords lexicon is a separate resource and
+is not used as a dictionary allowlist. Stored fields are:
 
 - normalized word key
 - display spelling
@@ -36,7 +43,8 @@ as a dictionary allowlist. Stored fields are:
 - glosses
 - explicit topics
 
-Senses with only categories or tags and no explicit semantic topic are not stored.
+Categories, tags, examples, translations, forms, and other raw Wiktionary metadata are not
+stored.
 
 Wiktionary entry text is dual-licensed under CC BY-SA 4.0 and GFDL. If you vendor
 or redistribute a generated SQLite dictionary, review and comply with the applicable

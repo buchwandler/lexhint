@@ -4,6 +4,7 @@ from pathlib import Path
 import pytest
 
 from lexhint import Dictionary, DictionaryIncompatible, build_dictionary
+from lexhint.store import semantic_rows
 
 FIXTURE = Path(__file__).parent / "fixtures" / "kaikki-mini.jsonl"
 
@@ -18,7 +19,7 @@ def build(tmp_path: Path) -> Dictionary:
     assert stats.scanned_entries == 7
     assert stats.kept_entries == 5
     assert stats.words == 4
-    assert stats.senses == 7
+    assert stats.senses == 8
     return Dictionary.from_path(path, language="en")
 
 
@@ -34,11 +35,44 @@ def test_dictionary_parses_semantic_senses_and_topics(tmp_path: Path) -> None:
     assert not dictionary.contains("metadataonly")
 
 
-def test_topic_bearing_senses_only_and_duplicates_are_stored(tmp_path: Path) -> None:
+def test_gloss_bearing_senses_and_duplicates_are_stored(tmp_path: Path) -> None:
     dictionary = build(tmp_path)
     assert dictionary.senses("metadataonly") == ()
-    assert len(dictionary.senses("compiler")) == 1
+    assert dictionary.senses("compiler")[0].topics == ()
+    assert len(dictionary.senses("compiler")) == 2
 
+
+
+def love_entries() -> tuple[dict[str, object], ...]:
+    return (
+        {
+            "word": "love",
+            "lang_code": "en",
+            "pos": "noun",
+            "senses": [
+                {"glosses": ["strong affection"]},
+                {"glosses": ["a beloved person"]},
+                {"glosses": ["Zero, no score."], "topics": ["sports"]},
+            ],
+        },
+        {
+            "word": "love",
+            "lang_code": "en",
+            "pos": "verb",
+            "senses": [
+                {"glosses": ["to feel strong affection"]},
+                {"glosses": ["to like strongly"]},
+            ],
+        },
+    )
+
+
+def test_love_entries_keep_gloss_only_senses_and_topics() -> None:
+    rows = [row for entry in love_entries() for row in semantic_rows(entry, language="en")]
+
+    assert len(rows) == 5
+    assert sum(bool(row.topics) for row in rows) == 1
+    assert [row.pos for row in rows] == ["noun", "noun", "noun", "verb", "verb"]
 
 def test_schema_columns_are_compact(tmp_path: Path) -> None:
     path, _ = build_dictionary("en", FIXTURE, output=tmp_path / "en.sqlite3")
@@ -102,7 +136,7 @@ def test_schema_incompatibility_is_controlled(tmp_path: Path) -> None:
         connection.execute("CREATE TABLE metadata (key TEXT PRIMARY KEY, value TEXT NOT NULL)")
         connection.execute("INSERT INTO metadata VALUES ('schema_version', '1')")
         connection.execute("INSERT INTO metadata VALUES ('language', 'en')")
-    with pytest.raises(DictionaryIncompatible, match="schema 1; schema 2 is required"):
+    with pytest.raises(DictionaryIncompatible, match="schema 1; schema 4 is required"):
         Dictionary.from_path(path, language="en")
 
 
@@ -110,7 +144,7 @@ def test_wrong_language_is_incompatible(tmp_path: Path) -> None:
     path = tmp_path / "wrong-language.sqlite3"
     with sqlite3.connect(path) as connection:
         connection.execute("CREATE TABLE metadata (key TEXT PRIMARY KEY, value TEXT NOT NULL)")
-        connection.execute("INSERT INTO metadata VALUES ('schema_version', '2')")
+        connection.execute("INSERT INTO metadata VALUES ('schema_version', '4')")
         connection.execute("INSERT INTO metadata VALUES ('language', 'de')")
     with pytest.raises(DictionaryIncompatible, match="language 'en' was requested"):
         Dictionary.from_path(path, language="en")

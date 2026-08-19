@@ -8,7 +8,15 @@ except PackageNotFoundError:
     __version__ = "0+unknown"
 
 from .builder import build_dictionary, iter_wiktextract_entries
-from .dictionary import Dictionary, DictionaryIncompatible, DictionaryNotInstalled
+from .dictionary import (
+    Dictionary,
+    DictionaryFetchError,
+    DictionaryIncompatible,
+    DictionaryNotInstalled,
+    DictionaryOfflineError,
+    DictionaryWordNotFound,
+    fetch_dictionary_word,
+)
 from .download import (
     KAIKKI_RAW_URL,
     DownloadError,
@@ -16,7 +24,14 @@ from .download import (
     fetch_wordlist,
 )
 from .lexicon import Lexicon, LexiconNotInstalled
-from .models import ContextSupport, DictionaryBuildStats, Segment, Sense, TopicScore
+from .models import (
+    ContextSupport,
+    DictionaryBuildStats,
+    DictionaryFetchResult,
+    Segment,
+    Sense,
+    TopicScore,
+)
 
 __all__ = [
     "ContextSupport",
@@ -36,4 +51,9 @@ __all__ = [
     "cached_dictionary_path",
     "fetch_wordlist",
     "iter_wiktextract_entries",
+    "DictionaryFetchError",
+    "DictionaryFetchResult",
+    "DictionaryOfflineError",
+    "DictionaryWordNotFound",
+    "fetch_dictionary_word",
 ]

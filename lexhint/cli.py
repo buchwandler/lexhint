@@ -11,10 +11,17 @@ from typing import NoReturn
 
 from . import __version__
 from .builder import build_dictionary
-from .dictionary import Dictionary, DictionaryIncompatible, DictionaryNotInstalled
+from .dictionary import (
+    Dictionary,
+    DictionaryFetchError,
+    DictionaryIncompatible,
+    DictionaryNotInstalled,
+    DictionaryOfflineError,
+    fetch_dictionary_word,
+)
 from .download import KAIKKI_RAW_URL, SUPPORTED_LANGUAGES, DownloadError, fetch_wordlist
 from .lexicon import Lexicon, LexiconNotInstalled
-from .models import ContextSupport, DictionaryBuildStats, Segment, Sense
+from .models import ContextSupport, DictionaryBuildStats, DictionaryFetchResult, Segment, Sense
 
 _DEFAULT_LANGUAGE = "en"
 
@@ -97,6 +104,18 @@ def _language_and_value(
     raise ValueError(f"{label} expects WORD or LANGUAGE WORD")
 
 
+def _language_and_words(
+    values: Sequence[str], *, explicit_language: str | None
+) -> tuple[str, tuple[str, ...]]:
+    if not values:
+        raise ValueError("dictionary fetch expects at least one WORD")
+    if explicit_language is not None:
+        return _validate_language(explicit_language), tuple(values)
+    if len(values) > 1 and values[0].lower().split("-", 1)[0] in SUPPORTED_LANGUAGES:
+        return _validate_language(values[0]), tuple(values[1:])
+    return _default_language(), tuple(values)
+
+
 def _context_values(
     values: Sequence[str], *, explicit_language: str | None
 ) -> tuple[str, str, str]:
@@ -122,16 +141,18 @@ def _parser() -> argparse.ArgumentParser:
             "  lexhint word de Haus\n"
             "  lexhint segment chatgpt\n"
             "  lexhint dictionary build en\n"
+            "  lexhint dictionary fetch compiler\n"
             "  lexhint dictionary word compiler\n"
             "\n"
             "Use --json for stable machine-readable output. Set LEXHINT_LANGUAGE to change "
-            "the default language (en)."
+            "the default language (en). Use --offline to forbid dictionary network access."
         ),
         formatter_class=_HelpFormatter,
     )
     parser.add_argument("--version", action="version", version=f"lexhint {__version__}")
     parser.add_argument("--json", action="store_true", help="emit machine-readable JSON")
     parser.add_argument("--no-color", action="store_true", help="disable ANSI colors")
+    parser.add_argument("--offline", action="store_true", help="never fetch dictionary data")
     sub = parser.add_subparsers(dest="command", required=True, title="commands", metavar="COMMAND")
 
     setup = sub.add_parser(
@@ -156,9 +177,7 @@ def _parser() -> argparse.ArgumentParser:
     setup.add_argument("--force", action="store_true", help="re-download the word list")
 
     fetch = sub.add_parser(
-        "fetch",
-        help="download frequency word lists",
-        formatter_class=_HelpFormatter,
+        "fetch", help="download frequency word lists", formatter_class=_HelpFormatter
     )
     fetch.add_argument("languages", nargs="+", choices=sorted(SUPPORTED_LANGUAGES))
     fetch.add_argument("--force", action="store_true", help="re-download cached word lists")
@@ -187,7 +206,7 @@ def _parser() -> argparse.ArgumentParser:
 
     dictionary = sub.add_parser(
         "dictionary",
-        help="build and inspect dictionary indexes",
+        help="build, fetch, and inspect dictionary indexes",
         formatter_class=_HelpFormatter,
     )
     dictionary_sub = dictionary.add_subparsers(
@@ -204,17 +223,19 @@ def _parser() -> argparse.ArgumentParser:
         ),
         formatter_class=_HelpFormatter,
     )
-    build.add_argument(
-        "language",
-        nargs="?",
-        choices=sorted(SUPPORTED_LANGUAGES),
-        default=None,
-        help="language code (default: en)",
-    )
+    build.add_argument("language", nargs="?", choices=sorted(SUPPORTED_LANGUAGES), default=None)
     build.add_argument(
         "source", nargs="?", default=KAIKKI_RAW_URL, help="local JSONL(.gz) path or URL"
     )
     build.add_argument("--output", help="output SQLite path")
+
+    dictionary_fetch = dictionary_sub.add_parser(
+        "fetch", help="cache one or more Kaikki word pages", formatter_class=_HelpFormatter
+    )
+    dictionary_fetch.add_argument("values", nargs="+", metavar="WORD")
+    dictionary_fetch.add_argument("-l", "--language", choices=sorted(SUPPORTED_LANGUAGES))
+    dictionary_fetch.add_argument("--path", help="dictionary SQLite path")
+    dictionary_fetch.add_argument("--refresh", action="store_true", help="re-fetch cached words")
 
     inspect = dictionary_sub.add_parser(
         "word",
@@ -227,6 +248,7 @@ def _parser() -> argparse.ArgumentParser:
     )
     inspect.add_argument("-l", "--language", choices=sorted(SUPPORTED_LANGUAGES))
     inspect.add_argument("--path", help="dictionary SQLite path")
+    inspect.add_argument("--refresh", action="store_true", help="re-fetch the word page")
 
     context = sub.add_parser(
         "context",
@@ -238,22 +260,26 @@ def _parser() -> argparse.ArgumentParser:
     context.add_argument("-l", "--language", choices=sorted(SUPPORTED_LANGUAGES))
     context.add_argument("--target", required=True, help="literal target substring")
     context.add_argument("--path", help="dictionary SQLite path")
+    context.add_argument("--refresh", action="store_true", help="re-fetch context word pages")
 
     return parser
 
 
-def _extract_output_flags(argv: Sequence[str]) -> tuple[list[str], bool, bool]:
+def _extract_output_flags(argv: Sequence[str]) -> tuple[list[str], bool, bool, bool]:
     json_output = False
     no_color = False
+    offline = False
     cleaned: list[str] = []
     for value in argv:
         if value == "--json":
             json_output = True
         elif value == "--no-color":
             no_color = True
+        elif value == "--offline":
+            offline = True
         else:
             cleaned.append(value)
-    return cleaned, json_output, no_color
+    return cleaned, json_output, no_color, offline
 
 
 def _json(payload: object) -> None:
@@ -262,6 +288,14 @@ def _json(payload: object) -> None:
 
 def _human_fetch(language: str, path: Path, style: _Style) -> None:
     print(f"{style.green('✓')} {style.bold(language)} word list  {style.dim(path)}")
+
+
+def _human_dictionary_fetch(result: DictionaryFetchResult, style: _Style) -> None:
+    if result.status == "not_found":
+        print(f"{style.yellow('·')} {result.word}  not found")
+    else:
+        state = "cached" if result.cached else "fetched"
+        print(f"{style.green('✓')} {result.word}  {state}  {result.senses} dictionary senses")
 
 
 def _human_word(word: str, rank: int | None, style: _Style) -> None:
@@ -301,24 +335,21 @@ def _human_senses(word: str, senses: Sequence[Sense], style: _Style) -> None:
         return
     for index, sense in enumerate(senses, start=1):
         pos = sense.pos or "sense"
-        glosses = sense.glosses
-        topics = sense.topics
         print(f"  {style.dim(str(index) + '.')} {style.cyan(pos)}")
-        for gloss in glosses:
+        for gloss in sense.glosses:
             print(f"     {gloss}")
-        if topics:
-            print(f"     {style.dim('topics:')} {', '.join(topics)}")
+        if sense.topics:
+            print(f"     {style.dim('topics:')} {', '.join(sense.topics)}")
 
 
 def _human_context(topic: str, support: ContextSupport | None, style: _Style) -> None:
     if support is None:
         print(f"{style.bold(topic)}  {style.yellow('· no supporting evidence')}")
         return
-    score = support.score
-    cues = support.cues
-    print(f"{style.bold(topic)}  {style.green('✓ supported')}  {style.dim(f'score {score:.3f}')}")
-    if cues:
-        print(f"  {style.dim('cues:')} {', '.join(cues)}")
+    score = style.dim(f"score {support.score:.3f}")
+    print(f"{style.bold(topic)}  {style.green('✓ supported')}  {score}")
+    if support.cues:
+        print(f"  {style.dim('cues:')} {', '.join(support.cues)}")
 
 
 def _progress(stats: DictionaryBuildStats) -> None:
@@ -333,26 +364,17 @@ def _progress(stats: DictionaryBuildStats) -> None:
 
 
 def _build(
-    language: str,
-    source: str,
-    *,
-    output: str | None,
-    show_progress: bool,
+    language: str, source: str, *, output: str | None, show_progress: bool
 ) -> tuple[Path, DictionaryBuildStats]:
     callback = _progress if show_progress else None
     try:
-        return build_dictionary(
-            language,
-            source,
-            output=output,
-            progress=callback,
-        )
+        return build_dictionary(language, source, output=output, progress=callback)
     finally:
         if show_progress:
             print(file=sys.stderr)
 
 
-def _run(args: argparse.Namespace, *, json_output: bool, style: _Style) -> int:
+def _run(args: argparse.Namespace, *, json_output: bool, style: _Style, offline: bool) -> int:
     if args.command == "setup":
         language = args.language or _default_language()
         path = fetch_wordlist(language, force=args.force)
@@ -366,10 +388,7 @@ def _run(args: argparse.Namespace, *, json_output: bool, style: _Style) -> int:
             if not json_output:
                 print(f"{style.dim('→')} building dictionary from {args.source}")
             dictionary_path, stats = _build(
-                language,
-                args.source,
-                output=None,
-                show_progress=sys.stderr.isatty(),
+                language, args.source, output=None, show_progress=sys.stderr.isatty()
             )
             if json_output:
                 _json(
@@ -415,14 +434,7 @@ def _run(args: argparse.Namespace, *, json_output: bool, style: _Style) -> int:
         items = Lexicon(language).segment(text)
         if json_output:
             _json(
-                {
-                    "language": language,
-                    "text": text,
-                    "segments": [
-                        {"text": item.text, "known": item.known, "rank": item.rank}
-                        for item in items
-                    ],
-                }
+                {"language": language, "text": text, "segments": [asdict(item) for item in items]}
             )
         else:
             _human_segments(text, items, style)
@@ -431,13 +443,10 @@ def _run(args: argparse.Namespace, *, json_output: bool, style: _Style) -> int:
     if args.command == "dictionary" and args.dictionary_command == "build":
         language = args.language or _default_language()
         if not json_output:
-            print(style.bold(f"Building {language} dictionary"))
+            print(style.bold(f"Building {language}"))
             print(f"{style.dim('source:')} {args.source}")
         path, stats = _build(
-            language,
-            args.source,
-            output=args.output,
-            show_progress=sys.stderr.isatty(),
+            language, args.source, output=args.output, show_progress=sys.stderr.isatty()
         )
         if json_output:
             _json({"language": language, "path": str(path), **asdict(stats)})
@@ -445,26 +454,37 @@ def _run(args: argparse.Namespace, *, json_output: bool, style: _Style) -> int:
             _human_build(path, stats, style)
         return 0
 
+    if args.command == "dictionary" and args.dictionary_command == "fetch":
+        language, words = _language_and_words(args.values, explicit_language=args.language)
+        results: list[DictionaryFetchResult] = []
+        for word in words:
+            results.append(
+                fetch_dictionary_word(
+                    language,
+                    word,
+                    path=args.path,
+                    refresh=args.refresh,
+                    offline=offline,
+                )
+            )
+        if json_output:
+            _json({"language": language, "results": [asdict(result) for result in results]})
+        else:
+            for result in results:
+                _human_dictionary_fetch(result, style)
+        return 0
+
     if args.command == "dictionary" and args.dictionary_command == "word":
         language, word = _language_and_value(
             args.values, explicit_language=args.language, label="dictionary word"
         )
-        senses = Dictionary(language, path=args.path).senses(word)
+        dictionary = Dictionary(
+            language, path=args.path, fetch_missing=not offline, offline=offline
+        )
+        senses = dictionary.senses(word, refresh=args.refresh)
         if json_output:
             _json(
-                {
-                    "language": language,
-                    "word": word,
-                    "senses": [
-                        {
-                            "word": sense.word,
-                            "pos": sense.pos,
-                            "glosses": sense.glosses,
-                            "topics": sense.topics,
-                        }
-                        for sense in senses
-                    ],
-                }
+                {"language": language, "word": word, "senses": [asdict(sense) for sense in senses]}
             )
         else:
             _human_senses(word, senses, style)
@@ -472,10 +492,14 @@ def _run(args: argparse.Namespace, *, json_output: bool, style: _Style) -> int:
 
     if args.command == "context":
         language, topic, text = _context_values(args.values, explicit_language=args.language)
-        support = Dictionary(language, path=args.path).supports(
+        dictionary = Dictionary(
+            language, path=args.path, fetch_missing=not offline, offline=offline
+        )
+        support = dictionary.supports(
             text,
             target=_span(text, args.target),
             topic=topic,
+            refresh=args.refresh,
         )
         if json_output:
             _json(
@@ -497,8 +521,7 @@ def _run(args: argparse.Namespace, *, json_output: bool, style: _Style) -> int:
 
 def main(argv: Sequence[str] | None = None) -> int:
     raw_argv = list(sys.argv[1:] if argv is None else argv)
-    cleaned_argv, json_output, no_color = _extract_output_flags(raw_argv)
-
+    cleaned_argv, json_output, no_color, offline = _extract_output_flags(raw_argv)
     args = _parser().parse_args(cleaned_argv)
     color_enabled = (
         not no_color
@@ -509,11 +532,12 @@ def main(argv: Sequence[str] | None = None) -> int:
     style = _Style(color_enabled)
 
     try:
-        return _run(args, json_output=json_output, style=style)
+        return _run(args, json_output=json_output, style=style, offline=offline)
     except (
         LexiconNotInstalled,
         DictionaryIncompatible,
         DictionaryNotInstalled,
+        DictionaryFetchError,
         DownloadError,
         ValueError,
         OSError,
@@ -521,9 +545,12 @@ def main(argv: Sequence[str] | None = None) -> int:
         if isinstance(exc, LexiconNotInstalled):
             message = "no word list installed for the requested language"
             hint = "run 'lexhint setup <language>'"
+        elif isinstance(exc, DictionaryOfflineError):
+            message = str(exc)
+            hint = "run 'lexhint dictionary fetch <word>' without --offline"
         elif isinstance(exc, DictionaryNotInstalled):
-            message = "no dictionary index installed for the requested language"
-            hint = "run 'lexhint dictionary build <language>'"
+            message = str(exc)
+            hint = "run 'lexhint dictionary fetch <word>' or 'lexhint dictionary build <language>'"
         elif isinstance(exc, DictionaryIncompatible):
             message = str(exc)
             hint = "run 'lexhint dictionary build <language>'"

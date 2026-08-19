@@ -3,14 +3,31 @@ from __future__ import annotations
 import json
 import re
 import sqlite3
-import unicodedata
 from collections.abc import Iterable
 from importlib.resources import files
 from pathlib import Path
 
-from .builder import SCHEMA_VERSION
 from .download import cached_dictionary_path
-from .models import ContextSupport, Sense, TopicScore
+from .kaikki import (
+    DictionaryFetchError,
+    DictionaryWordNotFound,
+    fetch_word_entries,
+    kaikki_word_url,
+)
+from .models import ContextSupport, DictionaryFetchResult, Sense, TopicScore
+from .store import (
+    LEGACY_SCHEMA_VERSION,
+    SCHEMA_VERSION,
+    dictionary_coverage,
+    initialize_partial,
+    lookup_sense_count,
+    lookup_status,
+    metadata,
+    migrate_partial_v3_to_v4,
+    normalize_display_word,
+    normalize_word,
+    replace_word_rows,
+    )
 
 _WORD_RE = re.compile(r"[^\W\d_]+(?:[-'][^\W\d_]+)*", re.UNICODE)
 
@@ -23,12 +40,16 @@ class DictionaryIncompatible(RuntimeError):
     """Raised when a dictionary index does not match the runtime contract."""
 
 
+class DictionaryOfflineError(DictionaryFetchError):
+    """Raised when offline mode needs a word that is not cached."""
+
+
 def _normalize(value: str) -> str:
-    return unicodedata.normalize("NFC", value).casefold()
+    return normalize_word(value)
 
 
 def _display_normalize(value: str) -> str:
-    return unicodedata.normalize("NFC", value)
+    return normalize_display_word(value)
 
 
 def _loads_tuple(value: str) -> tuple[str, ...]:
@@ -36,17 +57,116 @@ def _loads_tuple(value: str) -> tuple[str, ...]:
     return tuple(str(item) for item in data)
 
 
-class Dictionary:
-    """Read-only compact dictionary index generated from Wiktextract/Kaikki JSONL."""
-
-    def __init__(self, language: str, *, path: str | Path | None = None) -> None:
-        self.language = language.lower().split("-", 1)[0]
-        self.path = Path(path) if path is not None else self._resolve_path()
-        if not self.path.is_file():
-            raise DictionaryNotInstalled(
-                f"no dictionary index installed for {self.language!r}; "
-                "run 'lexhint dictionary build ...'"
+def _runtime_metadata(path: Path) -> dict[str, str]:
+    with sqlite3.connect(path) as connection:
+        actual = metadata(connection)
+    if actual.get("schema_version") == LEGACY_SCHEMA_VERSION:
+        if actual.get("coverage") == "partial":
+            migrate_partial_v3_to_v4(path)
+            with sqlite3.connect(path) as connection:
+                actual = metadata(connection)
+        elif actual.get("coverage") == "full":
+            raise DictionaryIncompatible(
+                "schema 3 full dictionary indexes are incomplete under schema 4; "
+                "rebuild with 'lexhint dictionary build'"
             )
+    return actual
+
+
+def fetch_dictionary_word(
+    language: str,
+    word: str,
+    *,
+    path: str | Path | None = None,
+    refresh: bool = False,
+    offline: bool = False,
+    timeout: float = 30.0,
+) -> DictionaryFetchResult:
+    """Fetch one exact Kaikki word page into a schema-v4 partial cache."""
+    base_language = language.lower().split("-", 1)[0]
+    query = _display_normalize(word)
+    source_url = kaikki_word_url(query)
+    target = Path(path).expanduser() if path is not None else cached_dictionary_path(base_language)
+    if not target.exists():
+        if offline:
+            raise DictionaryOfflineError(f"dictionary data for {query!r} is not cached")
+        initialize_partial(target, base_language)
+
+    actual = _runtime_metadata(target)
+    if actual.get("schema_version") != SCHEMA_VERSION:
+        raise DictionaryIncompatible(
+            f"dictionary index for {base_language!r} uses schema "
+            f"{actual.get('schema_version', 'unknown')}; schema {SCHEMA_VERSION} is required"
+        )
+    if actual.get("language") != base_language:
+        raise DictionaryIncompatible(
+            f"dictionary index is for language {actual.get('language', 'unknown')!r}; "
+            f"language {base_language!r} was requested"
+        )
+
+    if actual.get("coverage") == "full":
+        return DictionaryFetchResult(
+            query, "covered", lookup_sense_count(target, query), source_url, True
+        )
+
+    previous = lookup_status(target, query)
+    if previous is not None and not refresh:
+        return DictionaryFetchResult(
+            query, "cached", lookup_sense_count(target, query), source_url, True
+        )
+    if offline:
+        raise DictionaryOfflineError(f"dictionary data for {query!r} is not cached")
+
+    try:
+        entries = fetch_word_entries(query, timeout=timeout)
+    except DictionaryWordNotFound:
+        replace_word_rows(
+            target,
+            language=base_language,
+            query=query,
+            source_url=source_url,
+            entries=(),
+            status="not_found",
+        )
+        return DictionaryFetchResult(query, "not_found", 0, source_url, False)
+
+    senses = replace_word_rows(
+        target,
+        language=base_language,
+        query=query,
+        source_url=source_url,
+        entries=entries,
+    )
+    return DictionaryFetchResult(query, "fetched", senses, source_url, False)
+
+
+class Dictionary:
+    """Read a compact dictionary index, optionally filling a partial cache."""
+
+    def __init__(
+        self,
+        language: str,
+        *,
+        path: str | Path | None = None,
+        fetch_missing: bool = False,
+        offline: bool = False,
+        timeout: float = 30.0,
+    ) -> None:
+        self.language = language.lower().split("-", 1)[0]
+        self.path = Path(path).expanduser() if path is not None else self._resolve_path()
+        self.fetch_missing = fetch_missing and not offline
+        self.offline = offline
+        self.timeout = timeout
+        if not self.path.is_file():
+            if offline:
+                raise DictionaryOfflineError(f"dictionary data for {self.language!r} is not cached")
+            if fetch_missing:
+                initialize_partial(self.path, self.language)
+            else:
+                raise DictionaryNotInstalled(
+                    f"no dictionary index installed for {self.language!r}; "
+                    "run 'lexhint dictionary build ...' or 'lexhint dictionary fetch ...'"
+                )
         self._validate_metadata()
 
     @classmethod
@@ -75,31 +195,53 @@ class Dictionary:
 
     def _validate_metadata(self) -> None:
         try:
-            with self._connect() as connection:
-                metadata = {
-                    str(row["key"]): str(row["value"])
-                    for row in connection.execute("SELECT key, value FROM metadata")
-                }
+            actual = _runtime_metadata(self.path)
         except sqlite3.DatabaseError as exc:
             raise DictionaryIncompatible(
                 f"dictionary index for {self.language!r} is not a valid lexhint index"
             ) from exc
 
-        actual_schema = metadata.get("schema_version")
+        actual_schema = actual.get("schema_version")
         if actual_schema != SCHEMA_VERSION:
             raise DictionaryIncompatible(
                 f"dictionary index for {self.language!r} uses schema "
                 f"{actual_schema or 'unknown'}; schema {SCHEMA_VERSION} is required"
             )
 
-        actual_language = metadata.get("language")
+        actual_language = actual.get("language")
         if actual_language != self.language:
             raise DictionaryIncompatible(
                 f"dictionary index is for language {actual_language or 'unknown'!r}; "
                 f"language {self.language!r} was requested"
             )
+        if actual.get("coverage") not in {"partial", "full"}:
+            raise DictionaryIncompatible("dictionary index has no valid coverage metadata")
 
-    def senses(self, word: str, *, all_case_variants: bool = False) -> tuple[Sense, ...]:
+    def _ensure_word(self, word: str, *, refresh: bool = False) -> None:
+        if dictionary_coverage(self.path) == "full":
+            return
+        query = _display_normalize(word)
+        if not refresh and lookup_status(self.path, query) is not None:
+            return
+        if self.offline:
+            raise DictionaryOfflineError(f"dictionary data for {query!r} is not cached")
+        if self.fetch_missing or refresh:
+            fetch_dictionary_word(
+                self.language,
+                query,
+                path=self.path,
+                refresh=refresh,
+                timeout=self.timeout,
+            )
+
+    def senses(
+        self,
+        word: str,
+        *,
+        all_case_variants: bool = False,
+        refresh: bool = False,
+    ) -> tuple[Sense, ...]:
+        self._ensure_word(word, refresh=refresh)
         normalized = _normalize(word)
         with self._connect() as connection:
             rows = connection.execute(
@@ -125,12 +267,7 @@ class Dictionary:
         )
 
     def contains(self, word: str) -> bool:
-        normalized = _normalize(word)
-        with self._connect() as connection:
-            row = connection.execute(
-                "SELECT 1 FROM senses WHERE word = ? LIMIT 1", (normalized,)
-            ).fetchone()
-        return row is not None
+        return bool(self.senses(word))
 
     def topics(self, word: str) -> tuple[str, ...]:
         values: set[str] = set()
@@ -138,8 +275,12 @@ class Dictionary:
             values.update(sense.topics)
         return tuple(sorted(values))
 
-    def _topics_for_words(self, words: Iterable[str]) -> dict[str, set[str]]:
+    def _topics_for_words(
+        self, words: Iterable[str], *, refresh: bool = False
+    ) -> dict[str, set[str]]:
         original_tokens = tuple(dict.fromkeys(word for word in words if word))
+        for token in original_tokens:
+            self._ensure_word(token, refresh=refresh)
         folded_keys = tuple(dict.fromkeys(_normalize(word) for word in original_tokens))
         if not folded_keys:
             return {}
@@ -195,6 +336,7 @@ class Dictionary:
         window: int = 6,
         decay: float = 0.7,
         limit: int | None = None,
+        refresh: bool = False,
     ) -> tuple[TopicScore, ...]:
         """Aggregate nearby dictionary topics around a source span.
 
@@ -213,7 +355,13 @@ class Dictionary:
         if not tokens:
             return ()
         target_indices = self._target_indices(tokens, target)
-        topics_by_word = self._topics_for_words(token for token, _, _ in tokens)
+        candidate_tokens = [
+            token
+            for index, (token, _, _) in enumerate(tokens)
+            if index not in target_indices
+            and min(abs(index - target_index) for target_index in target_indices) <= window
+        ]
+        topics_by_word = self._topics_for_words(candidate_tokens, refresh=refresh)
 
         scores: dict[str, float] = {}
         cues: dict[str, list[str]] = {}
@@ -248,10 +396,29 @@ class Dictionary:
         window: int = 6,
         decay: float = 0.7,
         threshold: float = 0.4,
+        refresh: bool = False,
     ) -> ContextSupport | None:
         """Return nearby dictionary evidence for a requested semantic topic."""
         wanted = _normalize(topic)
-        for score in self.topic_scores(text, target=target, window=window, decay=decay, limit=None):
+        for score in self.topic_scores(
+            text,
+            target=target,
+            window=window,
+            decay=decay,
+            limit=None,
+            refresh=refresh,
+        ):
             if _normalize(score.topic) == wanted and score.score >= threshold:
                 return ContextSupport(score.topic, score.score, score.cues)
         return None
+
+
+__all__ = [
+    "Dictionary",
+    "DictionaryFetchError",
+    "DictionaryIncompatible",
+    "DictionaryNotInstalled",
+    "DictionaryOfflineError",
+    "DictionaryWordNotFound",
+    "fetch_dictionary_word",
+]

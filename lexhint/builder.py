@@ -2,13 +2,11 @@ from __future__ import annotations
 
 import gzip
 import io
-import json
 import os
 import sqlite3
 import tempfile
-import unicodedata
 import urllib.request
-from collections.abc import Callable, Iterator, Mapping
+from collections.abc import Callable, Iterator
 from contextlib import contextmanager
 from pathlib import Path
 from typing import BinaryIO, TextIO
@@ -16,22 +14,16 @@ from urllib.parse import urlparse
 
 from .download import cached_dictionary_path
 from .models import DictionaryBuildStats
+from .store import (
+    SCHEMA_VERSION,
+    create_schema,
+    iter_jsonl_entries,
+    json_tuple,
+    semantic_rows,
+    set_metadata,
+)
 
-SCHEMA_VERSION = "2"
-
-
-def _normalize_word(value: str) -> str:
-    return unicodedata.normalize("NFC", value).casefold()
-
-
-def _strings(value: object) -> tuple[str, ...]:
-    if not isinstance(value, list):
-        return ()
-    result: list[str] = []
-    for item in value:
-        if isinstance(item, str) and item and item not in result:
-            result.append(item)
-    return tuple(result)
+__all__ = ["SCHEMA_VERSION", "build_dictionary", "iter_wiktextract_entries"]
 
 
 @contextmanager
@@ -70,45 +62,7 @@ def iter_wiktextract_entries(
 ) -> Iterator[dict[str, object]]:
     """Stream JSONL objects from a local path or HTTP(S) source."""
     with _text_source(source, timeout=timeout) as handle:
-        for line_number, line in enumerate(handle, start=1):
-            stripped = line.strip()
-            if not stripped:
-                continue
-            try:
-                value = json.loads(stripped)
-            except json.JSONDecodeError as exc:
-                raise ValueError(f"invalid JSONL at line {line_number}: {exc}") from exc
-            if isinstance(value, dict):
-                yield value
-
-
-def _create_schema(connection: sqlite3.Connection) -> None:
-    connection.executescript(
-        """
-        PRAGMA journal_mode=OFF;
-        PRAGMA synchronous=OFF;
-        PRAGMA temp_store=MEMORY;
-        CREATE TABLE metadata (
-            key TEXT PRIMARY KEY,
-            value TEXT NOT NULL
-        );
-        CREATE TABLE senses (
-            id INTEGER PRIMARY KEY,
-            word TEXT NOT NULL,
-            display_word TEXT NOT NULL,
-            pos TEXT NOT NULL,
-            glosses TEXT NOT NULL,
-            topics TEXT NOT NULL,
-            UNIQUE(word, display_word, pos, glosses, topics)
-        );
-        CREATE INDEX senses_word_idx ON senses(word);
-        CREATE INDEX senses_display_word_idx ON senses(display_word);
-        """
-    )
-
-
-def _json_tuple(values: tuple[str, ...]) -> str:
-    return json.dumps(values, ensure_ascii=False, separators=(",", ":"))
+        yield from iter_jsonl_entries(handle)
 
 
 def build_dictionary(
@@ -119,7 +73,7 @@ def build_dictionary(
     timeout: float = 60.0,
     progress: Callable[[DictionaryBuildStats], None] | None = None,
 ) -> tuple[Path, DictionaryBuildStats]:
-    """Build a compact semantic SQLite dictionary from Wiktextract JSONL."""
+    """Build a compact dictionary-sense SQLite index from Wiktextract JSONL."""
     base_language = language.lower().split("-", 1)[0]
     target = Path(output) if output is not None else cached_dictionary_path(base_language)
     target = target.expanduser()
@@ -138,60 +92,41 @@ def build_dictionary(
     try:
         connection = sqlite3.connect(tmp)
         try:
-            _create_schema(connection)
-            connection.executemany(
-                "INSERT INTO metadata(key, value) VALUES (?, ?)",
-                (
-                    ("schema_version", SCHEMA_VERSION),
-                    ("language", base_language),
-                    ("source", str(source)),
-                ),
+            create_schema(connection)
+            set_metadata(
+                connection,
+                {
+                    "schema_version": SCHEMA_VERSION,
+                    "language": base_language,
+                    "coverage": "full",
+                    "source_kind": "bulk",
+                    "source": str(source),
+                },
             )
 
             for entry in iter_wiktextract_entries(source, timeout=timeout):
                 scanned += 1
-                if str(entry.get("lang_code") or "").lower() != base_language:
-                    continue
-
-                display_word = str(entry.get("word") or "")
-                word = _normalize_word(display_word)
-                if not word:
-                    continue
-
-                pos = str(entry.get("pos") or "")
-                entry_topics = _strings(entry.get("topics"))
-                senses = entry.get("senses")
-                if not isinstance(senses, list):
-                    senses = []
-
                 entry_kept = False
-                for raw_sense in senses:
-                    if not isinstance(raw_sense, Mapping):
-                        continue
-                    glosses = _strings(raw_sense.get("glosses"))
-                    topics = tuple(dict.fromkeys(entry_topics + _strings(raw_sense.get("topics"))))
-                    if not topics:
-                        continue
-
+                for row in semantic_rows(entry, language=base_language):
                     cursor = connection.execute(
                         "INSERT OR IGNORE INTO senses("
                         "word, display_word, pos, glosses, topics"
                         ") VALUES (?, ?, ?, ?, ?)",
                         (
-                            word,
-                            display_word,
-                            pos,
-                            _json_tuple(glosses),
-                            _json_tuple(topics),
+                            row.word,
+                            row.display_word,
+                            row.pos,
+                            json_tuple(row.glosses),
+                            json_tuple(row.topics),
                         ),
                     )
                     if cursor.rowcount:
                         entry_kept = True
                         sense_count += 1
+                        seen_words.add(row.word)
 
                 if entry_kept:
                     kept_entries += 1
-                    seen_words.add(word)
 
                 if scanned % 5000 == 0:
                     connection.commit()
@@ -200,14 +135,14 @@ def build_dictionary(
                         DictionaryBuildStats(scanned, kept_entries, len(seen_words), sense_count)
                     )
 
-            connection.executemany(
-                "INSERT OR REPLACE INTO metadata(key, value) VALUES (?, ?)",
-                (
-                    ("scanned_entries", str(scanned)),
-                    ("kept_entries", str(kept_entries)),
-                    ("words", str(len(seen_words))),
-                    ("senses", str(sense_count)),
-                ),
+            set_metadata(
+                connection,
+                {
+                    "scanned_entries": str(scanned),
+                    "kept_entries": str(kept_entries),
+                    "words": str(len(seen_words)),
+                    "senses": str(sense_count),
+                },
             )
             connection.commit()
             if progress is not None:
