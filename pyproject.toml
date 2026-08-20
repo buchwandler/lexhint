@@ -61,6 +61,10 @@ fallback_version = "0+unknown"
 [tool.pytest.ini_options]
 testpaths = ["tests"]
 addopts = "-q"
+filterwarnings = [
+  "error::ResourceWarning",
+  "error::pytest.PytestUnraisableExceptionWarning",
+]
 
 [tool.ruff]
 target-version = "py310"

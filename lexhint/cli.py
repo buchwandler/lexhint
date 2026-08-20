@@ -6,10 +6,11 @@ import os
 import sys
 from collections.abc import Sequence
 from dataclasses import asdict
+from pathlib import Path
 from typing import NoReturn
 
 from . import __version__
-from .builder import build_dictionary
+from .builder import build_dictionary, project_artifact
 from .download import KAIKKI_RAW_URL, SUPPORTED_LANGUAGES
 from .lexicon import (
     Lexicon,
@@ -144,6 +145,16 @@ def _parser() -> argparse.ArgumentParser:
         action="store_true",
         help="refresh the cached automatic frequency source",
     )
+
+    project = dictionary_sub.add_parser(
+        "project", help="create a capability subset from an existing SQLite artifact"
+    )
+    project.add_argument("source", type=Path)
+    project.add_argument("--output", required=True)
+    project.add_argument(
+        "--capabilities", help="comma-separated capabilities: lexical,semantic,dictionary"
+    )
+    project.add_argument("--profile", choices=sorted(PROFILES))
 
     inspect = dictionary_sub.add_parser(
         "word",
@@ -300,6 +311,18 @@ def _run(args: argparse.Namespace, *, style: _Style, json_output: bool) -> int:
             )
         else:
             _context(domains, style)
+        return 0
+    if args.dictionary_command == "project":
+        path = project_artifact(
+            args.source,
+            output=args.output,
+            capabilities=args.capabilities,
+            profile=args.profile,
+        )
+        if json_output:
+            _json({"path": str(path)})
+        else:
+            print(f"Projected Lexhint database: {path}")
         return 0
     if args.dictionary_command == "build":
         language = args.language or _default_language()

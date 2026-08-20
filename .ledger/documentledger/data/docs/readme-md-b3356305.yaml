@@ -1,283 +1,125 @@
 schema: documentledger.doc_record.v4
 doc_path: README.md
 linked_sources:
+  - lexhint/builder.py
   - lexhint/cli.py
-  - lexhint/dictionary.py
   - lexhint/lexicon.py
+  - lexhint/models.py
 sections:
   - section_id: md:section:README.md::1-common-word-lexicon
     doc_path: README.md
     heading_path:
+      - lexhint
       - 1. Common-word lexicon
     heading_slug: 1-common-word-lexicon
     line_span:
-      - 89
-      - 147
-    section_hash: ede39a736f383d2bbb4cd109f51b96dcea6cbd950b7952e32bb10554c8e4a7f4
+      - 29
+      - 58
+    section_hash: ca1861051cbc22d0ace6f30a06ab95a79d4f271c3bd46c768b2b595a051bf11d
     summary: 1. Common-word lexicon
-    text:
-      "# 1. Common-word lexicon\n\nFetch a FrequencyWords top-50k list:\n\n```bash\n\
-      lexhint fetch en\nlexhint fetch de fr es it pt cs\n```\n\nDefault cache:\n\n```text\n\
-      ~/.cache/lexhint/words/<language>.txt.gz\n~/.cache/lexhint/words/<language>.metadata.json\n\
-      ```\n\nOverride the complete cache root with `LEXHINT_CACHE_DIR`.\n\nWord-list\
-      \ downloads use a pinned FrequencyWords revision. The metadata sidecar records\n\
-      the source revision, normalized content SHA-256, language, and word count, so\
-      \ a cache\ncan be checked for provenance and corruption before it is reused. Use\
-      \ `--force` when an\nexplicit refresh is wanted.\n\nPython:\n\n```python\nfrom\
-      \ lexhint import LexicalSegment, Lexicon\n\nlex = Lexicon(\"en\")\n\nassert lex.contains(\"\
-      chat\")\nprint(lex.rank(\"chat\"))\nprint(lex.segment(\"chatgpt\"))\n```\n\nWord\
-      \ lists load lazily. Pass `path` to use a specific gzip list, `auto_fetch=True`\
-      \ to\nopt into downloading a missing list, or use `Lexicon.from_words(words)`\
-      \ for an\nin-memory lexicon in tests and embedded applications.\n\nExpected segmentation\
-      \ shape:\n\n```python\n(\n    LexicalSegment(text=\"chat\", in_lexicon=True, frequency_rank=...),\n\
-      \    LexicalSegment(text=\"gpt\", in_lexicon=False, frequency_rank=None),\n)\n\
-      ```\n\n`in_lexicon` is lexical-resource evidence only. It is not a pronunciation\
-      \ or\ninterpretation decision. `Lexicon.segment()` accepts one compact identifier\
-      \ or domain\nlabel; the caller owns URL schemes, dots, paths, ports, and other\
-      \ URL syntax.\n\nCLI:\n\n```bash\nlexhint word chat\nlexhint segment chatgpt\n\
-      ```"
+    text: '## 1. Common-word lexicon
+
+
+      Open a local artifact with `Lexicon`:
+
+
+      ```python
+
+      from lexhint import Lexicon
+
+
+      lexicon = Lexicon.from_path("en.sqlite3")
+
+      info = lexicon.word("compiler")
+
+      print(info.known, info.frequency_rank)
+
+      print(lexicon.segment("compilerword"))
+
+      ```
+
+
+      Runtime access is local-only, deterministic, read-only, and never fetches missing
+      entries or mutates the database. `segment()` and semantic context operations require
+      full authoritative coverage.
+
+
+      The public runtime operations are:
+
+
+      ```python
+
+      lexicon.word("compiler")
+
+      lexicon.contains("compiler")
+
+      lexicon.segment("chatgpt")
+
+      lexicon.context_domains(text, target=(start, end))
+
+      lexicon.supports_domain(text, target=(start, end), domain="computing")
+
+      lexicon.entries("compiler")  # rich artifacts only
+
+      ```
+
+
+      Dictionary membership is authoritative. Frequency rank and count enrich existing
+      lexemes but never create corpus-only words. Case evidence is retained, so an uppercase-only
+      `GPT` entry does not validate lowercase `gpt`.
+
+
+      Semantic results are explainable `DomainEvidence` values containing score and
+      nearby `ContextCue` records. The target span is always excluded, and missing evidence
+      is not negative evidence.'
     links:
       - source_id: py:class:lexhint/lexicon.py::Lexicon
         source_path: lexhint/lexicon.py
         coverage: implementation-note
         impact: unknown
-        reason: The section documents the Lexicon API.
+        reason:
+          The common-word lexicon section documents the current Lexicon runtime
+          API.
         tracked_hashes:
-          body_hash: 307528a29678719db042592d3e57e48d661f65e030d2993e163bcbbb8bb88e88
+          body_hash: b0d05e0c6ea4ae5bda0bae2759ae4d33985dbcd7d6746049867005bff80f25bb
   - section_id: md:section:README.md::2-dictionary-derived-context
     doc_path: README.md
     heading_path:
+      - lexhint
       - 2. Dictionary-derived context
     heading_slug: 2-dictionary-derived-context
     line_span:
-      - 148
-      - 199
-    section_hash: aadc2f0f5aa016d19087486c23654e590b8b46ad20eaedd1161121dfca669638
+      - 129
+      - 130
+    section_hash: 0317727ad3d6849ef07e1d44e94ec41affdf4e13b35fbc20c20d23655b947f80
     summary: 2. Dictionary-derived context
-    text: '# 2. Dictionary-derived context
-
-
-      Instead of maintaining a file such as `en.json`, build a compact dictionary index
-      from
-
-      Wiktextract/Kaikki JSONL.
-
-
-      The Kaikki raw English-edition extraction contains many languages, so the builder
-      checks
-
-      `lang_code` and can produce indexes for `en`, `de`, `fr`, and other languages
-      from the
-
-      same source when those entries are present.
-
-
-      The common-word lexicon and semantic dictionary are independent resources. Dictionary
-
-      building does not require a FrequencyWords list. To build from a downloaded Kaikki
-      file:
-
-
-      ```bash
-
-      lexhint dictionary build en ~/Downloads/raw-wiktextract-data.jsonl.gz
-
-      ```
-
-
-      The lazy word path avoids the multi-gigabyte download entirely. For complete local
-
-      coverage, use the built-in official Kaikki source directly:
-
-
-      ```bash
-
-      lexhint dictionary build en
-
-      ```
-
-
-      That source is very large. The builder reads it line-by-line and stores compact
-
-      dictionary senses containing glosses and explicit semantic topics. Context scoring
-      uses only
-
-      the explicit topics. Dictionary vocabulary is not restricted to the FrequencyWords
-      common-word
-
-      list; technical semantic cues such as "compiler" can therefore be retained. The
-      resulting
-
-      database defaults to:
-
-
-      ```text
-
-      ~/.cache/lexhint/dictionaries/en.sqlite3
-
-      ```
-
-
-      The schema v4 index stores compact sense rows plus partial-cache coverage metadata.
-
-      Partial indexes are live, network-opt-in caches. Full indexes built from a local
-      source
-
-      are reproducible snapshots identified by their source SHA-256; a full index built
-      from a
-
-      remote URL records that it is live-full unless the caller supplies a separately
-      pinned
-
-      source. `Dictionary.from_path(path)` reads the language from index metadata, while
-
-      `Dictionary.from_path(path, language="en")` asserts it.
-
-      Each row contains:
-
-
-      ```text
-
-      word
-
-      display spelling
-
-      part of speech
-
-      glosses
-
-      topics
-
-      ```
-
-
-      It is deliberately not a full Wiktionary mirror. A sense is retained when it has
-      a
-
-      dictionary gloss or an explicit entry-level or sense-level Wiktextract topic.'
-    links:
-      - source_id: py:class:lexhint/dictionary.py::Dictionary
-        source_path: lexhint/dictionary.py
-        coverage: implementation-note
-        impact: unknown
-        reason: The section documents the Dictionary API and context operations.
-        tracked_hashes:
-          body_hash: e637cd459de0ee38368e3427913acf817504988dda365423111e22497d80608b
+    links: []
   - section_id: md:section:README.md::candidate-aware-context-evidence
     doc_path: README.md
     heading_path:
+      - lexhint
       - 2. Dictionary-derived context
       - Candidate-aware context evidence
     heading_slug: candidate-aware-context-evidence
     line_span:
-      - 228
-      - 292
-    section_hash: 40eb8e8a873b667cdf0c234ced56b84d8b75d8d9bf7db9d0dc2c23f3825271b8
+      - 131
+      - 132
+    section_hash: 5e8f8a3c7aac68f21764a66bc01e8682f1184132b8326c78cf82b0bc16e20fb1
     summary: Candidate-aware context evidence
-    text:
-      "## Candidate-aware context evidence\n\n`spokenform` already knows the interpretation\
-      \ it wants to test. `lexhint` only answers\nwhether nearby dictionary senses support\
-      \ its semantic topic.\n\n```python\nfrom lexhint import Dictionary\n\nlex = Dictionary(\"\
-      en\")\n\ntext = \"The scale is Am.\"\nstart = text.index(\"Am\")\n\nsupport =\
-      \ lex.supports(\n    text,\n    target=(start, start + len(\"Am\")),\n    topic=\"\
-      music\",\n)\n\nassert support is not None\nprint(support.cues)  # includes \"\
-      scale\" when its dictionary sense has topic=music\n```\n\nLikewise for software\
-      \ versions:\n\n```python\ntext = \"The compiler is 8.3.2.\"\nstart = text.index(\"\
-      8.3.2\")\n\nsupport = lex.supports(\n    text,\n    target=(start, start + len(\"\
-      8.3.2\")),\n    topic=\"computing\",\n)\n```\n\nThe target token itself is deliberately\
-      \ excluded from context evidence. A candidate\ncannot validate its own interpretation.\n\
-      \n`topic_scores()` returns `TopicEvidence` values. Each value includes structured\n\
-      `ContextCue` records with the cue text, source span, token distance, and decay\
-      \ weight.\nUse `window`, `decay`, and `limit` to control the diagnostic search;\
-      \ `supports()` also\naccepts a score `threshold`. An absent score is not negative\
-      \ evidence.\n\nFor diagnostics, inspect all nearby dictionary topics:\n\n```python\n\
-      for score in lex.topic_scores(text, target=(start, start + len(\"8.3.2\"))):\n\
-      \    print(score.topic, score.score)\n    print([\n        (cue.text, cue.start,\
-      \ cue.end, cue.distance, cue.weight)\n        for cue in score.cues\n    ])\n\
-      ```\n\nCLI:\n\n```bash\nlexhint dictionary word en compiler\nlexhint dictionary\
-      \ fetch scale house compiler\nlexhint --offline dictionary word en compiler\n\
-      lexhint context en music \"The scale is Am.\" --target Am\nlexhint --offline context\
-      \ en computing \"The compiler is 8.3.2.\" --target 8.3.2\n```"
-    links:
-      - source_id: py:class:lexhint/dictionary.py::Dictionary
-        source_path: lexhint/dictionary.py
-        coverage: implementation-note
-        impact: unknown
-        reason: Candidate-aware context evidence is implemented by Dictionary.supports.
-        tracked_hashes:
-          body_hash: e637cd459de0ee38368e3427913acf817504988dda365423111e22497d80608b
+    links: []
   - section_id: md:section:README.md::dictionary-api
     doc_path: README.md
     heading_path:
+      - lexhint
       - 2. Dictionary-derived context
       - Dictionary API
     heading_slug: dictionary-api
     line_span:
-      - 200
-      - 227
-    section_hash: 9f7104f98758a08f9efdb3ea57df6dad06bb2883d9f0c965192c5f9df5c8e8be
+      - 133
+      - 133
+    section_hash: 058b1ae0eb85a92b8e6fda1ba31d34236fb38c9d4b39206eb46d25aa51d87106
     summary: Dictionary API
-    text: '## Dictionary API
-
-
-      ```python
-
-      from lexhint import Dictionary
-
-
-      dictionary = Dictionary("en", fetch_missing=True)
-
-
-      print(dictionary.senses("scale"))  # fetches once, then works offline
-
-      print(dictionary.topics("compiler"))
-
-      ```
-
-
-      `Dictionary.from_path(path)` infers the language from index metadata. Supply
-
-      `language="en"` when the caller wants the index language asserted explicitly.
-      Use
-
-      `refresh=True` on `senses()` or the context methods to refresh a cached word when
-
-      network access is enabled.
-
-
-      The default `Dictionary("en")` is local-only. Use `fetch_missing=True` only when
-      the
-
-      application explicitly permits network access.
-
-
-      No topic score is negative evidence. It means that no positive evidence was found
-      in
-
-      the available dictionary coverage and annotations; a missing word, a partial cache,
-      or
-
-      sparse upstream topic labels can all produce no score. Use a local full snapshot
-      and
-
-      `offline=True` for deterministic benchmark or production runs.
-
-
-      Wiktextract provides `topics` per sense when Wiktionary supplies that semantic
-      metadata.
-
-      A word can therefore have several senses with different topics instead of being
-      globally
-
-      assigned to one manually maintained domain.'
-    links:
-      - source_id: py:class:lexhint/dictionary.py::Dictionary
-        source_path: lexhint/dictionary.py
-        coverage: implementation-note
-        impact: unknown
-        reason: The section documents the Dictionary API.
-        tracked_hashes:
-          body_hash: e637cd459de0ee38368e3427913acf817504988dda365423111e22497d80608b
+    links: []
   - section_id: md:section:README.md::quick-start
     doc_path: README.md
     heading_path:
@@ -285,106 +127,224 @@ sections:
       - Quick start
     heading_slug: quick-start
     line_span:
-      - 14
-      - 58
-    section_hash: e5c0fd8027eb89d496f061c160b7c28d99c98bc9d3ab3e3a9387848924d61040
+      - 15
+      - 28
+    section_hash: 8958fccd7ae41596a2aac70d25e7cbb87b38de491898339fb33604d75343e513
     summary: Quick start
     text: '## Quick start
 
 
-      Install for development:
+      After installing the package and an English artifact, run:
 
 
       ```bash
 
-      python -m pip install -e ".[dev]"
+      lexhint word compiler
 
-      ```
+      lexhint segment compilerword
 
-
-      Prepare the default English word list and try the CLI:
-
-
-      ```bash
-
-      lexhint setup
-
-      lexhint word house
-
-      lexhint segment chatgpt
-
-      ```
-
-
-      English is the CLI default. Use an explicit language when needed:
-
-
-      ```bash
-
-      lexhint setup de
-
-      lexhint word de Haus
-
-      # or: LEXHINT_LANGUAGE=de lexhint word Haus
-
-      ```
-
-
-      Human-readable output is the default; add `--json` to any command for scripts.
-
-      The runtime itself has no third-party Python dependencies.
-
-
-      Dictionary operations fetch only the requested Kaikki word page by default and
-      cache
-
-      compact dictionary senses locally:
-
-
-      ```bash
+      lexhint context "The compiler is 8.3.2." --target 16:21
 
       lexhint dictionary word compiler
 
-      lexhint dictionary fetch scale house compiler
+      lexhint dictionary status
 
       ```
 
 
-      Use `--offline` to require cached data. The full Kaikki source remains available
-      for
+      For a small local artifact without FrequencyWords enrichment, build from the repository
+      fixture with `lexhint dictionary build en --source tests/fixtures/kaikki-mini.jsonl
+      --output /tmp/lexhint-en.sqlite3 --no-frequency` and pass `--path /tmp/lexhint-en.sqlite3`
+      to the query commands.'
+    links:
+      - source_id: py:function:lexhint/cli.py::main
+        source_path: lexhint/cli.py
+        coverage: implementation-note
+        impact: unknown
+        reason: Quick-start commands use the current CLI entry point.
+        tracked_hashes:
+          body_hash: 12d366c7c1193012f3801f026d78e7f33a733e90ace462f51d84c93b94ea745a
+  - section_id: md:section:README.md::build-an-artifact
+    doc_path: README.md
+    heading_path:
+      - lexhint
+      - Build an artifact
+    heading_slug: build-an-artifact
+    line_span:
+      - 59
+      - 81
+    section_hash: c06816006cd36a0770372902329bda4eb58cddb4d0c95f7943ee87d177f79905
+    summary: Build an artifact
+    text: "## Build an artifact
 
-      maintainers and advanced offline users:
+
+      The default build creates a full `lexical,semantic,dictionary` artifact and automatically
+      acquires the pinned full FrequencyWords source:
 
 
       ```bash
 
       lexhint dictionary build en
 
-      lexhint setup en --dictionary
+      ```
+
+
+      Use a local or remote dictionary source and explicit build policies when needed:
+
+
+      ```bash
+
+      lexhint dictionary build en --source ./raw-wiktextract-data.jsonl.gz
+
+      lexhint dictionary build en --capabilities lexical,semantic --no-frequency
+
+      lexhint dictionary build en --profile runtime
+
+      lexhint dictionary build en --frequency-source ./en_full.txt
+
+      lexhint dictionary build en --refresh-frequency
+
+      lexhint --offline dictionary build en --source ./raw-wiktextract-data.jsonl.gz
 
       ```
 
 
-      The bulk source is large and is streamed rather than downloaded to a temporary
-      copy.'
+      Capabilities are canonicalized in the order `lexical,semantic,dictionary`. `semantic`
+      and `dictionary` require `lexical`. Profiles are shortcuts: `runtime` means `lexical,semantic`,
+      and `rich` means `lexical,semantic,dictionary`.
+
+
+      Frequency enrichment is independent of capabilities. Use `--no-frequency` for
+      a valid lexical artifact without corpus data. Automatic sources are cached under
+      `~/.cache/lexhint/sources/frequencywords/<revision>/`, or an equivalent XDG/`LEXHINT_CACHE_DIR`
+      location. Builds record source URLs, revisions, hashes, schema, capabilities,
+      and builder metadata. Build configuration and progress are written to stderr,
+      while the final result, including JSON, is written to stdout."
+    links:
+      - source_id: py:function:lexhint/builder.py::build_dictionary
+        source_path: lexhint/builder.py
+        coverage: implementation-note
+        impact: unknown
+        reason: Artifact construction is implemented by build_dictionary.
+        tracked_hashes:
+          body_hash: 8c5ba30bafcada1083bc76a5ed8cb7575ffc54d63a05af3235c281046abcaa2f
+  - section_id: md:section:README.md::cli-queries
+    doc_path: README.md
+    heading_path:
+      - lexhint
+      - CLI queries
+    heading_slug: cli-queries
+    line_span:
+      - 82
+      - 107
+    section_hash: 1df481ab22ddc8e25fd4ee26f964c186e5f44893264a97a83068768eca37415c
+    summary: CLI queries
+    text: '## CLI queries
+
+
+      ```bash
+
+      lexhint word compiler
+
+      lexhint segment chatgpt
+
+      lexhint context "The compiler is 8.3.2." --target 16:21
+
+      lexhint dictionary word compiler
+
+      lexhint dictionary status
+
+      ```
+
+
+      Dictionary word output has three human-readable detail levels. The default `standard`
+      view shows all senses with compact metadata. Use `compact` for a deliberately
+      short shell view, or `full` for every field retained by the local Lexhint dictionary
+      model:
+
+
+      ```bash
+
+      lexhint dictionary word love
+
+      lexhint dictionary word love --detail compact
+
+      lexhint dictionary word love --detail full
+
+      lexhint dictionary word love --detail full --hide examples,tags
+
+      lexhint dictionary word love --detail compact --show examples
+
+      lexhint dictionary word love --pos noun,verb --exclude-pos proper_noun
+
+      lexhint --json dictionary word love --pos noun
+
+      ```
+
+
+      The `--show` and `--hide` options accept repeatable comma-separated fields. Canonical
+      fields are `etymology`, `pronunciations`, `forms`, `tags`, `topics`, `examples`,
+      `synonyms`, and `antonyms`; the `all`, `entry`, `sense`, and `relations` groups
+      are also supported. `--width` controls human output from 40 through 240 columns.
+
+
+      Use `--json` for stable, complete machine-readable output. POS selection applies
+      to JSON entries, while `--detail`, `--show`, `--hide`, and `--width` are human-only
+      options. `dictionary status` reports current SQL row counts, capabilities, provenance,
+      size, and build metadata without rebuilding. Use `--path` as an advanced override
+      when inspecting a specific artifact. Rich dictionary lookup reports a controlled
+      capability error for compact runtime artifacts.'
     links:
       - source_id: py:function:lexhint/cli.py::main
         source_path: lexhint/cli.py
         coverage: implementation-note
         impact: unknown
-        reason: Quick-start commands are implemented by the CLI entry point.
+        reason: CLI queries are implemented by the CLI entry point.
         tracked_hashes:
-          body_hash: 52fcb3cfab37738091207d5165bc9561217ed6d7569f9dc36f3c4afc285dd653
-      - source_id: py:class:lexhint/dictionary.py::Dictionary
-        source_path: lexhint/dictionary.py
+          body_hash: 12d366c7c1193012f3801f026d78e7f33a733e90ace462f51d84c93b94ea745a
+  - section_id: md:section:README.md::runtime
+    doc_path: README.md
+    heading_path:
+      - lexhint
+      - Runtime
+    heading_slug: runtime
+    line_span:
+      - 29
+      - 58
+    section_hash: f81ccc54ad4cdaf337151049adba0cec1f604f52cc8eb5b5b2322587aaec8125
+    summary: Runtime
+    links:
+      - source_id: py:class:lexhint/lexicon.py::Lexicon
+        source_path: lexhint/lexicon.py
         coverage: implementation-note
         impact: unknown
-        reason: Quick-start dictionary operations use the Dictionary API.
+        reason: Runtime API is provided by Lexicon.
         tracked_hashes:
-          body_hash: e637cd459de0ee38368e3427913acf817504988dda365423111e22497d80608b
+          body_hash: b0d05e0c6ea4ae5bda0bae2759ae4d33985dbcd7d6746049867005bff80f25bb
+      - source_id: py:method:lexhint/lexicon.py::Lexicon.from_path
+        source_path: lexhint/lexicon.py
+        coverage: implementation-note
+        impact: unknown
+        reason: Runtime artifacts are opened through Lexicon.from_path.
+        tracked_hashes:
+          body_hash: 9a837e2793208bbea7540a151f36c4ff1d1cc357b0e5cba4311ea456d806c8b5
+      - source_id: py:class:lexhint/models.py::ContextCue
+        source_path: lexhint/models.py
+        coverage: implementation-note
+        impact: unknown
+        reason: Runtime semantic results expose ContextCue records.
+        tracked_hashes:
+          body_hash: 786c95786d560f11d1a6284e1ce27dcc04338e7d9eb874d8760e3a7dd4e995ca
+      - source_id: py:class:lexhint/models.py::DomainEvidence
+        source_path: lexhint/models.py
+        coverage: implementation-note
+        impact: unknown
+        reason: Runtime semantic results use DomainEvidence.
+        tracked_hashes:
+          body_hash: 1dc0aad42bdbfe83aabf752b982e24fe6d2651425af7082c8f21e7b27e348b00
 last_fresh_scan_version: 3
 last_fresh_hash: 545b6ca33698dbba1625e1a1141c38109496301166502fbde743c24a1023c4e5
 notes:
   Updated Markdown API and architecture documentation for the current Lexicon,
   Dictionary, context-evidence, and snapshot behavior.
-version: 14
+version: 32

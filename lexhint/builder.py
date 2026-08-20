@@ -35,6 +35,7 @@ __all__ = [
     "BuildPlan",
     "build_dictionary",
     "iter_wiktextract_entries",
+    "project_artifact",
     "prepare_build_plan",
 ]
 
@@ -377,4 +378,111 @@ def build_dictionary(
         tmp.replace(target)
     finally:
         tmp.unlink(missing_ok=True)
+        if resolved_frequency is not None and resolved_frequency.temporary:
+            resolved_frequency.path.unlink(missing_ok=True)
     return target, final_stats
+
+
+def project_artifact(
+    source: str | Path,
+    *,
+    output: str | Path,
+    capabilities: str | tuple[str, ...] | None = None,
+    profile: str | None = None,
+) -> Path:
+    """Create a fresh capability subset artifact from a full Lexhint artifact."""
+    from .lexicon import Lexicon
+
+    source_path = Path(source).expanduser().resolve()
+    output_path = Path(output).expanduser()
+    if not source_path.is_file():
+        raise FileNotFoundError(source_path)
+    if output_path.exists() and output_path.resolve() == source_path:
+        raise ValueError("projection output must differ from source artifact")
+
+    source_lexicon = Lexicon.from_path(source_path)
+    if source_lexicon.metadata.get("coverage") != "full":
+        raise ValueError("projection requires a full-coverage source artifact")
+    selection = normalize_capabilities(capabilities, profile=profile)
+    source_capabilities = source_lexicon.capabilities
+    if not set(selection.capabilities).issubset(source_capabilities):
+        raise ValueError("projection capabilities must be a subset of source capabilities")
+
+    digest = hashlib.sha256()
+    with source_path.open("rb") as handle:
+        for chunk in iter(lambda: handle.read(1024 * 1024), b""):
+            digest.update(chunk)
+    output_path.parent.mkdir(parents=True, exist_ok=True)
+    fd, temporary_name = tempfile.mkstemp(
+        prefix="lexhint-project-", suffix=".sqlite3", dir=output_path.parent
+    )
+    os.close(fd)
+    temporary = Path(temporary_name)
+    source_connection = source_lexicon._connect()
+    target_connection: sqlite3.Connection | None = None
+    try:
+        target_connection = sqlite3.connect(temporary)
+        create_schema(target_connection, selection.capabilities)
+        target_connection.executemany(
+            "INSERT INTO lexemes("
+            "word, entry_count, has_lowercase, has_titlecase, has_uppercase, "
+            "corpus_count, corpus_rank) VALUES (?, ?, ?, ?, ?, ?, ?)",
+            source_connection.execute(
+                "SELECT word, entry_count, has_lowercase, has_titlecase, has_uppercase, "
+                "corpus_count, corpus_rank FROM lexemes"
+            ).fetchall(),
+        )
+        if "semantic" in selection.capabilities:
+            target_connection.executemany(
+                "INSERT INTO lexeme_domains(word, domain, weight, source_topics) "
+                "VALUES (?, ?, ?, ?)",
+                source_connection.execute(
+                    "SELECT word, domain, weight, source_topics FROM lexeme_domains"
+                ).fetchall(),
+            )
+        if "dictionary" in selection.capabilities:
+            for table, columns in (
+                (
+                    "entries",
+                    "id, word, display_word, pos, entry_index, etymology, forms, pronunciations",
+                ),
+                (
+                    "senses",
+                    "id, entry_id, sense_index, glosses, topics, tags, examples, "
+                    "synonyms, antonyms",
+                ),
+                ("sense_topics", "entry_id, sense_id, topic"),
+            ):
+                placeholders = ", ".join("?" for _ in columns.split(", "))
+                target_connection.executemany(
+                    f"INSERT INTO {table}({columns}) VALUES ({placeholders})",
+                    source_connection.execute(f"SELECT {columns} FROM {table}").fetchall(),
+                )
+        now = datetime.now(timezone.utc).isoformat()
+        metadata = dict(source_lexicon.metadata)
+        metadata.update(
+            {
+                "profile": selection.profile,
+                "dictionary_profile": selection.profile,
+                "capabilities": ",".join(selection.capabilities),
+                "created_at": now,
+                "built_at": now,
+                "projected_from_sha256": digest.hexdigest(),
+                "projected_from_capabilities": ",".join(source_capabilities),
+                "projected_from_profile": source_lexicon.metadata.get("profile", ""),
+            }
+        )
+        set_metadata(target_connection, metadata)
+        target_connection.execute("ANALYZE")
+        target_connection.commit()
+        if target_connection.execute("PRAGMA quick_check").fetchone() != ("ok",):
+            raise sqlite3.DatabaseError("projected artifact failed PRAGMA quick_check")
+    finally:
+        source_connection.close()
+        if target_connection is not None:
+            target_connection.close()
+    try:
+        temporary.replace(output_path)
+    finally:
+        temporary.unlink(missing_ok=True)
+    return output_path

@@ -5,3 +5,10 @@ include RELEASING.md
 include lexhint/py.typed
 recursive-include lexhint/data *.txt.gz *.sqlite3 .gitkeep
 recursive-include tests/fixtures *.jsonl
+
+prune .ledger
+prune .repairledger
+prune .github
+exclude 01_todo.md
+exclude plan.md
+exclude repairledger.toml

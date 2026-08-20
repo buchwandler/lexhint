@@ -7,6 +7,7 @@ try:
 except PackageNotFoundError:
     __version__ = "0+unknown"
 
+from .builder import project_artifact
 from .lexicon import (
     Lexicon,
     LexiconCapabilityError,
@@ -34,6 +35,7 @@ __all__ = [
     "Example",
     "Form",
     "LexicalSegment",
+    "project_artifact",
     "Lexicon",
     "LexiconCapabilityError",
     "LexiconCoverageError",

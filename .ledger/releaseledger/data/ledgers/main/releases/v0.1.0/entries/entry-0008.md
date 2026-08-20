@@ -3,13 +3,11 @@ schema_version: 2
 object_type: release_entry
 versioning:
   schema_version: 1
-  revision: 1
+  revision: 2
 entry_id: entry-0008
 release_version: v0.1.0
-kind: added
-summary:
-  Lazy on-demand dictionary fetching with fetch_missing=True and --offline
-  CLI flag
+kind: removed
+summary: Removed lazy runtime dictionary fetching and per-word artifact population
 status: accepted
 audience: null
 scopes: []

@@ -3,13 +3,15 @@ schema_version: 2
 object_type: release
 versioning:
   schema_version: 1
-  revision: 14
+  revision: 16
 version: v0.1.0
-status: released
+status: canceled
 title: Release v0.1.0
-released_at: "2026-08-20"
+released_at: null
 previous_version: null
-cancel_reason: null
+cancel_reason:
+  Recorded as released before actual publication; replacing with an unreleased
+  candidate.
 superseded_by: null
 changelog_file: null
 boundary_ref: null

@@ -1,4 +1,5 @@
 import sqlite3
+from contextlib import closing
 
 import pytest
 
@@ -21,15 +22,17 @@ def test_frequency_parser_rejects_invalid_or_negative_counts() -> None:
 
 
 def test_enrichment_does_not_create_corpus_only_lexemes() -> None:
-    connection = sqlite3.connect(":memory:")
-    connection.execute(
-        "CREATE TABLE lexemes (word TEXT PRIMARY KEY, corpus_count INTEGER, corpus_rank INTEGER)"
-    )
-    connection.execute("INSERT INTO lexemes VALUES ('known', NULL, NULL)")
-    stats = enrich_frequency(
-        connection,
-        iter_frequency_rows(["known 10\n", "corpusonly 20\n"]),
-    )
-    assert stats.rows == 2
-    assert stats.matched_lexemes == 1
-    assert connection.execute("SELECT * FROM lexemes").fetchall() == [("known", 10, 1)]
+    with closing(sqlite3.connect(":memory:")) as connection:
+        connection.execute(
+            "CREATE TABLE lexemes ("
+            "word TEXT PRIMARY KEY, corpus_count INTEGER, corpus_rank INTEGER"
+            ")"
+        )
+        connection.execute("INSERT INTO lexemes VALUES ('known', NULL, NULL)")
+        stats = enrich_frequency(
+            connection,
+            iter_frequency_rows(["known 10\n", "corpusonly 20\n"]),
+        )
+        assert stats.rows == 2
+        assert stats.matched_lexemes == 1
+        assert connection.execute("SELECT * FROM lexemes").fetchall() == [("known", 10, 1)]

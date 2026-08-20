@@ -21,7 +21,7 @@ jobs:
           python -m pip install --upgrade pip
           python -m pip install -e ".[dev]"
       - name: Generate coverage report
-        run: python -m pytest --cov=lexhint --cov-branch --cov-report=term-missing --cov-report=xml
+        run: python -m pytest --cov=lexhint --cov-branch --cov-report=term-missing --cov-report=xml --cov-fail-under=80
       - name: Upload coverage to Codecov
         uses: codecov/codecov-action@v5
         with:

@@ -7,10 +7,26 @@ Lexhint does not normalize or speak text. Word boundaries, acronyms, URLs, numbe
 ## Install
 
 ```bash
-python -m pip install -e ".[dev]"
+python -m pip install lexhint
 ```
 
-## Runtime
+Lexhint supports Python 3.10 through 3.14. The Python package is code-only and does not include a complete language SQLite artifact. Install a prebuilt artifact from the [lexhint-datasets repository](https://github.com/buchwandler/lexhint-datasets), or build one locally as shown below. Keep dataset downloads and their licensing and provenance separate from the Python package.
+
+## Quick start
+
+After installing the package and an English artifact, run:
+
+```bash
+lexhint word compiler
+lexhint segment compilerword
+lexhint context "The compiler is 8.3.2." --target 16:21
+lexhint dictionary word compiler
+lexhint dictionary status
+```
+
+For a small local artifact without FrequencyWords enrichment, build from the repository fixture with `lexhint dictionary build en --source tests/fixtures/kaikki-mini.jsonl --output /tmp/lexhint-en.sqlite3 --no-frequency` and pass `--path /tmp/lexhint-en.sqlite3` to the query commands.
+
+## 1. Common-word lexicon
 
 Open a local artifact with `Lexicon`:
 
@@ -97,7 +113,12 @@ Lexhint does not implement Spokenform integration, dataset publication, URL pars
 
 ## Development
 
+Contributor setup uses an editable installation with development tools:
+
 ```bash
+git clone https://github.com/buchwandler/lexhint.git
+cd lexhint
+python -m pip install -e ".[dev]"
 pytest -q
 ruff check .
 mypy lexhint

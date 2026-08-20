@@ -20,6 +20,7 @@ class ResolvedFrequencySource:
     revision: str
     source_url: str
     sha256: str
+    temporary: bool = False
 
 
 def _sidecar_path(path: Path) -> Path:
@@ -95,7 +96,7 @@ def resolve_frequency_source(
                 _download(source_value, local, timeout=timeout)
                 digest = _sha256(local)
                 return ResolvedFrequencySource(
-                    local, "custom", "custom", "custom", source_value, digest
+                    local, "custom", "custom", "custom", source_value, digest, True
                 )
             except Exception:
                 local.unlink(missing_ok=True)

@@ -19,9 +19,6 @@ class WordEvidence:
     frequency_count: int | None = None
 
 
-WordInfo = WordEvidence
-
-
 class SemanticDomain(str, Enum):
     COMPUTING = "computing"
     COMMUNICATIONS = "communications"
@@ -85,13 +82,6 @@ class ContextCue:
 @dataclass(frozen=True, slots=True)
 class DomainEvidence:
     domain: SemanticDomain
-    score: float
-    cues: tuple[ContextCue, ...]
-
-
-@dataclass(frozen=True, slots=True)
-class TopicEvidence:
-    topic: str
     score: float
     cues: tuple[ContextCue, ...]
 

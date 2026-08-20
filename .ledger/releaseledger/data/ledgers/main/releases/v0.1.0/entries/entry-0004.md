@@ -3,13 +3,13 @@ schema_version: 2
 object_type: release_entry
 versioning:
   schema_version: 1
-  revision: 1
+  revision: 3
 entry_id: entry-0004
 release_version: v0.1.0
 kind: added
 summary:
-  Candidate-aware context evidence with topic_scores and supports for semantic
-  topic matching
+  Added stable semantic-domain evidence that explains context cues while excluding
+  the target span
 status: accepted
 audience: null
 scopes: []

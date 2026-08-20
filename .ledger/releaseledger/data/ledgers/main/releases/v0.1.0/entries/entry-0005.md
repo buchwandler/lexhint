@@ -3,11 +3,13 @@ schema_version: 2
 object_type: release_entry
 versioning:
   schema_version: 1
-  revision: 1
+  revision: 2
 entry_id: entry-0005
 release_version: v0.1.0
-kind: added
-summary: Vendoring tools for offline word lists and dictionary indexes
+kind: removed
+summary:
+  Removed standalone word-list vendoring in favor of dictionary-derived lexical
+  membership
 status: accepted
 audience: null
 scopes: []

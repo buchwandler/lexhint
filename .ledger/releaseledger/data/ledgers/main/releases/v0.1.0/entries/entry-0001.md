@@ -3,11 +3,13 @@ schema_version: 2
 object_type: release_entry
 versioning:
   schema_version: 1
-  revision: 1
+  revision: 4
 entry_id: entry-0001
 release_version: v0.1.0
 kind: added
-summary: CLI with word, segment, dictionary, context, setup, and fetch commands
+summary:
+  Added CLI commands for lookup, segmentation, context evidence, artifact builds,
+  dictionary inspection, and status
 status: accepted
 audience: null
 scopes: []

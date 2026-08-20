@@ -3,11 +3,13 @@ schema_version: 2
 object_type: release_entry
 versioning:
   schema_version: 1
-  revision: 1
+  revision: 3
 entry_id: entry-0010
 release_version: v0.1.0
 kind: quality
-summary: CI workflows for tests, coverage, pre-commit, and PyPI publishing
+summary:
+  Improved CI and publication checks for tests, static analysis, documentation,
+  distributions, and wheel smoke tests
 status: accepted
 audience: null
 scopes: []

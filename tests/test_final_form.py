@@ -3,6 +3,7 @@ from __future__ import annotations
 import hashlib
 import json
 import sqlite3
+from contextlib import closing
 from pathlib import Path
 
 import pytest
@@ -66,8 +67,9 @@ def test_runtime_word_segmentation_and_rich_lookup_are_local(tmp_path: Path) -> 
 
 def test_partial_coverage_is_rejected(tmp_path: Path) -> None:
     lexicon = build(tmp_path)
-    with sqlite3.connect(lexicon.path) as connection:
+    with closing(sqlite3.connect(lexicon.path)) as connection:
         connection.execute("UPDATE metadata SET value='partial' WHERE key='coverage'")
+        connection.commit()
     with pytest.raises(LexiconCoverageError):
         Lexicon.from_path(lexicon.path).segment("compilerword")
 
@@ -88,7 +90,7 @@ def test_capabilities_are_conditional_and_canonical(tmp_path: Path) -> None:
         lexicon.entries("compiler")
     with pytest.raises(LexiconCapabilityError):
         lexicon.context_domains("The compiler is 8.3.2.", target=(16, 21))
-    with sqlite3.connect(path) as connection:
+    with closing(sqlite3.connect(path)) as connection:
         tables = {
             row[0]
             for row in connection.execute("SELECT name FROM sqlite_master WHERE type='table'")
@@ -130,7 +132,7 @@ def test_frequency_enriches_existing_lexemes_only(tmp_path: Path) -> None:
 
 def test_schema_and_language_errors_are_controlled(tmp_path: Path) -> None:
     path = tmp_path / "bad.sqlite3"
-    with sqlite3.connect(path) as connection:
+    with closing(sqlite3.connect(path)) as connection:
         connection.execute("CREATE TABLE metadata (key TEXT PRIMARY KEY, value TEXT NOT NULL)")
         connection.execute("INSERT INTO metadata VALUES ('schema_version', '1')")
         connection.execute("INSERT INTO metadata VALUES ('language', 'en')")

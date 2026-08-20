@@ -20,7 +20,6 @@ from .models import (
     Pronunciation,
     SemanticDomain,
     Sense,
-    TopicEvidence,
     WordEvidence,
 )
 from .store import SCHEMA_VERSION, normalize_display_word, normalize_word
@@ -172,9 +171,6 @@ class Lexicon:
         if row is None:
             return WordEvidence(word, False)
         return WordEvidence(word, True, row["corpus_rank"], row["corpus_count"])
-
-    def word_info(self, word: str) -> WordEvidence:
-        return self.word(word)
 
     def contains(self, word: str) -> bool:
         return self.word(word).known
@@ -335,13 +331,10 @@ class Lexicon:
                 rows = exact or rows
             return tuple(self._entry(connection, row) for row in rows)
 
-    def lookup(self, word: str, *, all_case_variants: bool = False) -> tuple[DictionaryEntry, ...]:
-        return self.entries(word, all_case_variants=all_case_variants)
-
     def senses(self, word: str, *, all_case_variants: bool = False) -> tuple[Sense, ...]:
         return tuple(
             sense
-            for entry in self.lookup(word, all_case_variants=all_case_variants)
+            for entry in self.entries(word, all_case_variants=all_case_variants)
             for sense in entry.senses
         )
 
@@ -451,56 +444,6 @@ class Lexicon:
                 item
                 for item in self.context_domains(text, target=target, window=window, decay=decay)
                 if item.domain == wanted and item.score >= threshold
-            ),
-            None,
-        )
-
-    def topic_scores(
-        self,
-        text: str,
-        *,
-        target: tuple[int, int],
-        window: int = 6,
-        decay: float = 0.7,
-        limit: int | None = None,
-    ) -> tuple[TopicEvidence, ...]:
-        self._require("dictionary")
-        tokens = [(m.group(0), m.start(), m.end()) for m in _WORD_RE.finditer(text)]
-        target_indices = self._target_indices(tokens, target)
-        scores: dict[str, float] = {}
-        cues: dict[str, list[ContextCue]] = {}
-        for i, (token, start, end) in enumerate(tokens):
-            if i in target_indices:
-                continue
-            distance = min(abs(i - target_i) for target_i in target_indices)
-            if distance > window:
-                continue
-            for topic in self.topics(token):
-                weight = decay**distance
-                scores[topic] = scores.get(topic, 0.0) + weight
-                cues.setdefault(topic, []).append(ContextCue(token, start, end, distance, weight))
-        ranked = [
-            TopicEvidence(topic, score, tuple(cues[topic])) for topic, score in scores.items()
-        ]
-        ranked.sort(key=lambda item: (-item.score, item.topic))
-        return tuple(ranked[:limit] if limit is not None else ranked)
-
-    def supports(
-        self,
-        text: str,
-        *,
-        target: tuple[int, int],
-        topic: str,
-        window: int = 6,
-        decay: float = 0.7,
-        threshold: float = 0.4,
-    ) -> TopicEvidence | None:
-        wanted = normalize_word(topic)
-        return next(
-            (
-                item
-                for item in self.topic_scores(text, target=target, window=window, decay=decay)
-                if normalize_word(item.topic) == wanted and item.score >= threshold
             ),
             None,
         )
