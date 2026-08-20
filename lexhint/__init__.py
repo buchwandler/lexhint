@@ -14,17 +14,30 @@ from .dictionary import (
     DictionaryOfflineError,
 )
 from .lexicon import Lexicon, LexiconNotInstalled
-from .models import ContextCue, LexicalSegment, Sense, TopicEvidence
+from .models import (
+    ContextCue,
+    DictionaryEntry,
+    Example,
+    Form,
+    LexicalSegment,
+    Pronunciation,
+    Sense,
+    TopicEvidence,
+)
 
 __all__ = [
     "ContextCue",
     "Dictionary",
+    "DictionaryEntry",
     "DictionaryIncompatible",
     "DictionaryNotInstalled",
     "DictionaryOfflineError",
+    "Example",
+    "Form",
     "Lexicon",
     "LexiconNotInstalled",
     "LexicalSegment",
+    "Pronunciation",
     "Sense",
     "TopicEvidence",
     "__version__",

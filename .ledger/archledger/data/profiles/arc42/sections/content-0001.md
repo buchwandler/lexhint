@@ -7,7 +7,7 @@ section: introduction_and_goals
 title: Introduction and Goals
 order: 10
 status: accepted
-version: 3
+version: 5
 body_format: markdown
 ---
 
@@ -17,7 +17,7 @@ body_format: markdown
 
 - Determine common-word membership and frequency rank for supported languages.
 - Segment compact identifiers and domain labels into known words and unknown runs.
-- Extract compact dictionary senses and explicit semantic topics from Wiktextract/Kaikki data.
+- Provide grouped curated dictionary entries, rich senses, and explicit semantic topics from Wiktextract/Kaikki data.
 - Provide candidate-aware context evidence while excluding the candidate token itself.
 - Support both lazy per-word acquisition and complete streamed dictionary builds.
 - Expose human-readable CLI output and stable JSON output for automation.

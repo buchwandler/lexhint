@@ -19,8 +19,8 @@ Its line number is the frequency rank.
 
 `lexhint dictionary word` and `lexhint dictionary fetch` may lazily download one
 Kaikki single-word raw JSONL page at a time. Only the requested page is transferred;
-lexhint filters its requested `lang_code` and stores compact dictionary senses in a
-local schema-v4 SQLite partial cache. Successful empty and not-found lookups are recorded
+lexhint filters its requested `lang_code` and stores curated rich dictionary entries in a
+local schema-v5 SQLite partial cache. Successful empty and not-found lookups are recorded
 so they are not repeatedly requested. The `--offline` option disables all network access.
 
 `lexhint dictionary build` reads Wiktextract-compatible JSONL for complete offline
@@ -31,20 +31,22 @@ coverage. The recommended source is the pre-extracted data published by Kaikki:
   https://kaikki.org/dictionary/raw-wiktextract-data.jsonl.gz
 - Wiktextract project: https://github.com/tatuylonen/wiktextract
 
-Both lazy and bulk paths use the same compact sense extraction policy. The builder streams
-the source, keeps entries whose `lang_code` matches the requested language, and stores a
-compact sense when it has a dictionary gloss or an explicit semantic topic. Context scoring
-uses only explicit semantic topics. The FrequencyWords lexicon is a separate resource and
-is not used as a dictionary allowlist. Stored fields are:
+Both lazy and bulk paths use the same curated rich extraction policy. The builder streams
+the source, keeps entries whose `lang_code` matches the requested language, and preserves
+source entry and sense order. Stored fields are:
 
-- normalized word key
-- display spelling
-- part of speech
-- glosses
-- explicit topics
+- normalized word key and display spelling
+- part of speech and compact etymology text
+- forms and pronunciations
+- sense glosses and explicit topics
+- usage/grammar tags
+- examples with optional translations
+- basic synonyms and antonyms
 
-Categories, tags, examples, translations, forms, and other raw Wiktionary metadata are not
-stored.
+Context scoring uses only the normalized topic index, not the rich JSON payloads. The
+FrequencyWords lexicon is a separate resource and is not used as a dictionary allowlist.
+Categories, translations beyond examples, templates, raw source metadata, and maintenance
+fields are not part of the curated public model.
 
 Wiktionary entry text is dual-licensed under CC BY-SA 4.0 and GFDL. If you vendor
 or redistribute a generated SQLite dictionary, review and comply with the applicable

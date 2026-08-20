@@ -155,7 +155,7 @@ def test_schema_v3_partial_cache_is_invalidated(tmp_path: Path) -> None:
 
     with closing(sqlite3.connect(path)) as connection:
         metadata = dict(connection.execute("SELECT key, value FROM metadata"))
-        assert metadata["schema_version"] == "4"
+        assert metadata["schema_version"] == "5"
         assert connection.execute("SELECT COUNT(*) FROM senses").fetchone() == (0,)
         assert connection.execute("SELECT COUNT(*) FROM lookups").fetchone() == (0,)
     assert dictionary.senses("love") == ()

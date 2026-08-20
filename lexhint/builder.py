@@ -15,13 +15,13 @@ from typing import BinaryIO, TextIO
 from urllib.parse import urlparse
 
 from .download import cached_dictionary_path, package_version, user_agent
+from .extract import dictionary_entries
 from .models import DictionaryBuildStats
 from .store import (
     SCHEMA_VERSION,
     create_schema,
+    insert_dictionary_entries,
     iter_jsonl_entries,
-    json_tuple,
-    semantic_rows,
     set_metadata,
 )
 
@@ -44,10 +44,7 @@ def _binary_source(source: str | Path, *, timeout: float) -> Iterator[BinaryIO]:
     value = str(source)
     parsed = urlparse(value)
     if parsed.scheme in {"http", "https"}:
-        request = urllib.request.Request(
-            value,
-            headers={"User-Agent": user_agent()},
-        )
+        request = urllib.request.Request(value, headers={"User-Agent": user_agent()})
         with urllib.request.urlopen(request, timeout=timeout) as response:
             yield response
         return
@@ -86,7 +83,7 @@ def build_dictionary(
     timeout: float = 60.0,
     progress: Callable[[DictionaryBuildStats], None] | None = None,
 ) -> tuple[Path, DictionaryBuildStats]:
-    """Build a compact dictionary-sense SQLite index from Wiktextract JSONL."""
+    """Build a rich dictionary SQLite index from Wiktextract JSONL."""
     base_language = language.lower().split("-", 1)[0]
     target = Path(output) if output is not None else cached_dictionary_path(base_language)
     target = target.expanduser()
@@ -116,6 +113,7 @@ def build_dictionary(
                 connection,
                 {
                     "schema_version": SCHEMA_VERSION,
+                    "dictionary_profile": "rich",
                     "language": base_language,
                     "coverage": "full",
                     "source_kind": "bulk",
@@ -129,29 +127,16 @@ def build_dictionary(
                 },
             )
 
-            for entry in iter_wiktextract_entries(source, timeout=timeout):
+            for raw_entry in iter_wiktextract_entries(source, timeout=timeout):
                 scanned += 1
-                entry_kept = False
-                for row in semantic_rows(entry, language=base_language):
-                    cursor = connection.execute(
-                        "INSERT OR IGNORE INTO senses("
-                        "word, display_word, pos, glosses, topics"
-                        ") VALUES (?, ?, ?, ?, ?)",
-                        (
-                            row.word,
-                            row.display_word,
-                            row.pos,
-                            json_tuple(row.glosses),
-                            json_tuple(row.topics),
-                        ),
+                entries = tuple(dictionary_entries(raw_entry, language=base_language))
+                if entries:
+                    entry_count, inserted_senses, words = insert_dictionary_entries(
+                        connection, entries
                     )
-                    if cursor.rowcount:
-                        entry_kept = True
-                        sense_count += 1
-                        seen_words.add(row.word)
-
-                if entry_kept:
-                    kept_entries += 1
+                    kept_entries += entry_count
+                    sense_count += inserted_senses
+                    seen_words.update(words)
 
                 if scanned % 5000 == 0:
                     connection.commit()

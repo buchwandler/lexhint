@@ -42,14 +42,18 @@ def test_fixture_build_is_independent_of_wordlist(tmp_path: Path, monkeypatch) -
     path, stats = build_dictionary("en", FIXTURE)
     assert path.exists()
     assert stats.kept_entries == 5
+    assert stats.senses == 9
     assert not (tmp_path / "empty-cache" / "words" / "en.txt.gz").exists()
 
     with closing(sqlite3.connect(path)) as connection:
         assert connection.execute(
             "SELECT value FROM metadata WHERE key = 'schema_version'"
-        ).fetchone() == ("4",)
-        columns = {row[1] for row in connection.execute("PRAGMA table_info(senses)")}
-    assert columns == {"id", "word", "display_word", "pos", "glosses", "topics"}
+        ).fetchone() == ("5",)
+        tables = {
+            row[0]
+            for row in connection.execute("SELECT name FROM sqlite_master WHERE type = 'table'")
+        }
+    assert {"entries", "senses", "sense_topics", "lookups"} <= tables
     with closing(sqlite3.connect(path)) as connection:
         metadata = dict(connection.execute("SELECT key, value FROM metadata"))
         assert metadata["coverage"] == "full"
@@ -57,7 +61,8 @@ def test_fixture_build_is_independent_of_wordlist(tmp_path: Path, monkeypatch) -
         assert metadata["source_mode"] == "reproducible-full"
         assert metadata["snapshot_id"].startswith("sha256:")
         assert len(metadata["source_sha256"]) == 64
-        assert metadata["extractor_schema_version"] == "4"
+        assert metadata["dictionary_profile"] == "rich"
+        assert metadata["extractor_schema_version"] == "5"
         assert connection.execute(
             "SELECT name FROM sqlite_master WHERE name = 'lookups'"
         ).fetchone()

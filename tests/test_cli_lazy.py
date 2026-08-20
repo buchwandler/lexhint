@@ -121,11 +121,22 @@ def test_dictionary_word_json_keeps_empty_topics(
     payload = json.loads(capsys.readouterr().out)
     assert payload["language"] == "en"
     assert payload["word"] == "love"
-    assert payload["senses"] == [
+    assert payload["entries"] == [
         {
             "word": "love",
             "pos": "noun",
-            "glosses": ["strong affection"],
-            "topics": [],
+            "senses": [
+                {
+                    "glosses": ["strong affection"],
+                    "topics": [],
+                    "tags": [],
+                    "examples": [],
+                    "synonyms": [],
+                    "antonyms": [],
+                }
+            ],
+            "forms": [],
+            "pronunciations": [],
+            "etymology": None,
         }
     ]

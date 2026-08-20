@@ -1,6 +1,6 @@
 ---
 title: "Architecture Documentation"
-version: 4
+version: 6
 generator: "archledger 0.4.0"
 arc42_template_version: "9.0-EN"
 ---
@@ -17,7 +17,7 @@ Generated from archledger records. Do not edit this generated file directly.
 
 - Determine common-word membership and frequency rank for supported languages.
 - Segment compact identifiers and domain labels into known words and unknown runs.
-- Extract compact dictionary senses and explicit semantic topics from Wiktextract/Kaikki data.
+- Provide grouped curated dictionary entries, rich senses, and explicit semantic topics from Wiktextract/Kaikki data.
 - Provide candidate-aware context evidence while excluding the candidate token itself.
 - Support both lazy per-word acquisition and complete streamed dictionary builds.
 - Expose human-readable CLI output and stable JSON output for automation.
@@ -58,7 +58,7 @@ The architecture is constrained by the public package contract and by the nature
 - The package uses a flat `lexhint/` source layout and setuptools with dynamic `setuptools-scm` versioning.
 - FrequencyWords and Wiktionary/Wiktextract/Kaikki are external resources. They are downloaded or built separately, pinned or hashed when reproducibility matters, and are not assumed to be bundled.
 - Runtime caches are user-local and can be relocated with `LEXHINT_CACHE_DIR` or `XDG_CACHE_HOME`.
-- Dictionary data is stored in a compact schema-v4 SQLite index, not as a full Wiktionary mirror.
+- Dictionary data is stored in a curated hierarchical schema-v5 SQLite index, not as a full Wiktionary mirror.
 - External dictionary text and generated data carry attribution and license obligations documented in `DATA_SOURCES.md`.
 - The library must remain useful offline when the required local word list or dictionary coverage is available.
 - Git-less source archives use a non-release version fallback and must not masquerade as a published release.
@@ -73,8 +73,9 @@ The architecture is constrained by the public package contract and by the nature
 
 ```text
 FrequencyWords ──> common-word evidence ─┐
-                                         ├─> lexhint ──> evidence objects ──> spokenform
-Wiktionary/Kaikki ─> senses and topics ──┘
+                                         ├─> lexhint ──> dictionary API ──> consumer
+Wiktionary/Kaikki ─> rich entries ───────┘
+                         └─> indexed topics ──> context evidence
 ```
 
 The consumer decides how evidence affects pronunciation. For example, `lexhint` can report that `chat` is known and `gpt` is an unknown run, or that nearby `compiler` evidence supports a `computing` interpretation. It does not implement `Am -> A minor`, version pronunciation, URL symbol names, or other speech policy.
@@ -84,7 +85,7 @@ The consumer decides how evidence affects pronunciation. For example, `lexhint` 
 - Inputs are FrequencyWords text files and Wiktextract-compatible JSONL, either local or remote.
 - The CLI and Python API read resources through the cache layer.
 - The application process owns in-memory lexical data and read-only SQLite dictionary access.
-- Lazy dictionary lookups request only exact Kaikki word pages and persist compact results.
+- Lazy dictionary lookups request only exact Kaikki word pages and persist curated rich entries.
 - Full builds stream the bulk JSONL source line by line into SQLite.
 - Outputs are dataclasses, tuples, CLI text, or stable JSON. No service endpoint or daemon is required.
 
@@ -105,7 +106,7 @@ The solution is organized around a small, explicit evidence pipeline.
 1. Keep common-word lexicon evidence independent from semantic dictionary evidence. Technical dictionary cues must not be limited by a 50k frequency list.
 2. Normalize Unicode to NFC and use case-folded lookup keys while retaining display spelling for dictionary results.
 3. Load word lists lazily and use dynamic programming for compact-label segmentation. Unknown characters are merged into runs, and obscure two-letter matches are rejected to preserve initialisms. URL syntax remains the caller's responsibility.
-4. Keep dictionary indexes compact. Store normalized word keys, display spelling, part of speech, glosses, and explicit topics only.
+4. Keep dictionary indexes curated. Store ordered entries and rich high-value lexical fields, while indexing topics separately for context scoring.
 5. Make partial dictionary coverage incremental. Cache successful empty and not-found lookups and fetch only missing nearby context words when network access is explicitly allowed. Distinguish live partial caches from reproducible full snapshots.
 6. Exclude the target span from topic scoring so a candidate cannot validate itself. Score nearby explicit topics with a bounded token window and distance decay.
 7. Use a streaming bulk builder for complete offline coverage and atomic replacement of the resulting SQLite file.
@@ -121,8 +122,9 @@ The package is a set of focused Python modules with the CLI as the outer adapter
 
 - `lexhint.cli` parses commands, resolves languages and flags, formats human output, and emits stable JSON.
 - `lexhint.lexicon.Lexicon` resolves an explicit, vendored, or cached gzip word list, loads it lazily, provides membership and rank, and segments compact text. Inline words are supported for isolated consumers and tests.
-- `lexhint.dictionary.Dictionary` validates schema and language metadata, reads senses, and computes soft `TopicEvidence` with structured `ContextCue` values. `from_path()` can infer the language from a self-describing index.
-- `lexhint.store` defines schema-v4 SQLite storage, normalization, semantic row extraction, lookup state, and partial-cache updates.
+- `lexhint.dictionary.Dictionary` validates schema and language metadata, reads grouped entries, and computes soft `TopicEvidence` with structured `ContextCue` values. `from_path()` can infer the language from a self-describing index.
+- `lexhint.extract` converts Kaikki mappings into the curated immutable entry model shared by lazy and bulk ingestion.
+- `lexhint.store` defines schema-v5 SQLite storage, rich entry persistence, normalized topic indexing, lookup state, and partial-cache updates.
 - `lexhint.kaikki` builds exact-word Kaikki URLs and streams JSONL responses for lazy fetches.
 - `lexhint.builder` streams local or remote bulk JSONL and writes a complete SQLite index.
 - `lexhint.download` defines supported languages, upstream URLs, cache paths, and atomic word-list downloads.
@@ -143,14 +145,14 @@ The public package exports only the principal runtime `Lexicon`, `Dictionary`, e
 
 ## Lazy dictionary context
 
-1. `Dictionary` opens or initializes a schema-v4 partial SQLite cache, or opens a full index, and validates language and coverage metadata. `from_path()` can infer the language from that metadata.
+1. `Dictionary` opens or initializes a schema-v5 partial SQLite cache, or opens a full index, and validates language and coverage metadata. `from_path()` can infer the language from that metadata.
 2. Context tokenization finds nearby word tokens and identifies the target token by overlap or nearest span.
 3. The target token is excluded. Missing nearby words are fetched individually only when `fetch_missing` is enabled and offline mode is not active; `refresh` explicitly revisits cached words.
 4. Stored explicit topics are aggregated with distance decay into structured cues. `topic_scores` supports bounded windows and result limits, while `supports` returns `TopicEvidence` only when the requested topic reaches the threshold. Missing evidence is not negative evidence.
 
 ## Bulk dictionary build
 
-The builder reads a local path or HTTP(S) source through a text stream, filters entries by `lang_code`, retains senses with glosses or topics, commits incrementally, records source identity/hash and build statistics, labels local full indexes with a SHA-256 snapshot and remote full indexes as live, runs `ANALYZE`, and atomically replaces the target database.
+The builder reads a local path or HTTP(S) source through a text stream, filters entries by `lang_code`, converts entries with the shared curated extractor, commits incrementally, records source identity/hash and build statistics, labels local full indexes with a SHA-256 snapshot and remote full indexes as live, runs `ANALYZE`, and atomically replaces the target database.
 
 <!-- archledger: no accepted records for this section yet -->
 
@@ -178,7 +180,7 @@ Unicode NFC normalization is used for stored display values and case folding for
 
 ### Data lifecycle and caching
 
-Word lists are immutable normalized gzip files with a JSON provenance sidecar containing the pinned source revision, normalized SHA-256, and word count. Partial dictionaries maintain lookup status and timestamps so empty and not-found results are not repeatedly requested; their metadata identifies them as live partial caches. Full coverage is authoritative and does not trigger lazy fetches; local full indexes record a reproducible source snapshot identity. Schema compatibility is checked at runtime; partial schema-v3 caches are invalidated, while full incompatible indexes require a rebuild.
+Word lists are immutable normalized gzip files with a JSON provenance sidecar containing the pinned source revision, normalized SHA-256, and word count. Partial dictionaries maintain lookup status and timestamps so empty and not-found results are not repeatedly requested; their metadata identifies them as live partial caches. Full coverage is authoritative and does not trigger lazy fetches; local full indexes record a reproducible source snapshot identity. Schema-v5 compatibility is checked at runtime; older partial caches are invalidated, while full incompatible indexes require a rebuild.
 
 ### Errors and offline behavior
 
@@ -199,7 +201,7 @@ Tests cover segmentation, parsing, schema behavior, lazy fetching, target exclus
 The current architecture records these decisions.
 
 - **Separate lexical and semantic resources.** Frequency rank answers common-word questions; dictionary senses answer semantic-context questions. Combining them would discard useful technical vocabulary.
-- **Use compact SQLite rather than hand-maintained context JSON.** SQLite supports incremental word caching, indexed lookup, metadata validation, and complete offline indexes without mirroring raw Wiktionary data.
+- **Use curated hierarchical SQLite rather than hand-maintained context JSON.** SQLite supports incremental word caching, grouped rich lookup, indexed topics, metadata validation, and complete offline indexes without mirroring raw Wiktionary data.
 - **Use lazy fetch by default in the Python API.** Normal local reads do not unexpectedly access the network. Explicit CLI operations or `fetch_missing=True` opt into acquisition.
 - **Distinguish live data from reproducible snapshots.** Partial/live caches and remote full builds remain useful for interactive work; local full indexes carry a source hash and are the reproducible deployment/benchmark boundary.
 - **Keep the runtime API narrow.** Build and download infrastructure remains available from advanced modules without becoming accidental top-level package contracts.
@@ -248,12 +250,13 @@ The current architecture records these decisions.
 
 - **Lexicon:** A frequency-ranked list used for common-word membership and identifier segmentation.
 - **LexicalSegment:** An immutable result identifying a compact-label span, with `in_lexicon` evidence and an optional frequency rank. It does not decide pronunciation.
-- **Dictionary sense:** A compact word entry containing display spelling, part of speech, glosses, and explicit topics.
+- **Dictionary entry:** An ordered headword/POS record containing optional forms, pronunciations, etymology, and grouped senses.
+- **Dictionary sense:** A curated sense containing glosses, topics, usage tags, examples, and basic relations.
 - **Topic:** Semantic metadata supplied by Wiktextract/Kaikki and used as context evidence.
 - **Context cue:** A nearby source token with span, distance, and decay weight contributing to a topic score.
 - **Topic evidence:** Soft diagnostic topic score and structured cue list showing that nearby non-target words support a requested interpretation. No evidence is not negative evidence.
-- **Partial coverage:** A live schema-v4 dictionary containing only explicitly looked-up word pages and their lookup statuses.
-- **Full coverage:** A schema-v4 dictionary built from a complete compatible JSONL source. It is authoritative for local reads; local source builds record a reproducible snapshot hash.
+- **Partial coverage:** A live schema-v5 dictionary containing only explicitly looked-up word pages and their lookup statuses.
+- **Full coverage:** A schema-v5 dictionary built from a complete compatible JSONL source. It is authoritative for local reads; local source builds record a reproducible snapshot hash.
 - **Target span:** The source character interval whose candidate interpretation is being evaluated. It is excluded from context evidence.
 - **Kaikki:** The upstream publication used for exact-word and bulk Wiktextract-derived dictionary data.
 - **FrequencyWords:** The upstream 50k frequency lists used to provide common-word ranks.

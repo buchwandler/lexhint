@@ -1,13 +1,18 @@
+[![PyPI - Version](https://img.shields.io/pypi/v/lexhint)](https://pypi.org/project/lexhint/)
+![PyPI - Python Version](https://img.shields.io/pypi/pyversions/lexhint)
+![PyPI - Downloads](https://img.shields.io/pypi/dm/lexhint)
+[![codecov](https://codecov.io/gh/buchwandler/lexhint/graph/badge.svg?token=53idb7ZCY1)](https://codecov.io/gh/buchwandler/lexhint)
+
 # lexhint
 
 `lexhint` provides compact lexical and dictionary-derived semantic evidence for
 text-normalization and speech frontends such as `spokenform`.
 
-It does **not** verbalize text itself. Its two jobs are:
+It does **not** verbalize text itself. Its three related capabilities are:
 
 1. determine whether text is a common word and split compact identifiers/domain labels;
-2. extract semantic topics from a real dictionary and use nearby dictionary senses as
-   context evidence for a candidate interpretation.
+2. provide lightweight grouped dictionary lookup backed by curated Wiktionary data;
+3. derive semantic context evidence from dictionary topics for a candidate interpretation.
 
 There are no hand-maintained per-language context JSON files.
 
@@ -39,7 +44,7 @@ Human-readable output is the default; add `--json` to any command for scripts.
 The runtime itself has no third-party Python dependencies.
 
 Dictionary operations fetch only the requested Kaikki word page by default and cache
-compact dictionary senses locally:
+curated rich dictionary entries locally:
 
 ```bash
 lexhint dictionary word compiler
@@ -147,7 +152,7 @@ lexhint segment chatgpt
 
 # 2. Dictionary-derived context
 
-Instead of maintaining a file such as `en.json`, build a compact dictionary index from
+Instead of maintaining a file such as `en.json`, build a curated rich dictionary index from
 Wiktextract/Kaikki JSONL.
 
 The Kaikki raw English-edition extraction contains many languages, so the builder checks
@@ -168,34 +173,45 @@ coverage, use the built-in official Kaikki source directly:
 lexhint dictionary build en
 ```
 
-That source is very large. The builder reads it line-by-line and stores compact
-dictionary senses containing glosses and explicit semantic topics. Context scoring uses only
-the explicit topics. Dictionary vocabulary is not restricted to the FrequencyWords common-word
-list; technical semantic cues such as "compiler" can therefore be retained. The resulting
-database defaults to:
+That source is very large. The builder reads it line-by-line and stores grouped dictionary
+entries containing definitions, usage labels, examples, forms, pronunciations, basic relations,
+and explicit semantic topics. Context scoring uses only the topic index. Dictionary vocabulary
+is not restricted to the FrequencyWords common-word list; technical semantic cues such as
+"compiler" can therefore be retained. The resulting database defaults to:
 
 ```text
 ~/.cache/lexhint/dictionaries/en.sqlite3
 ```
 
-The schema v4 index stores compact sense rows plus partial-cache coverage metadata.
-Partial indexes are live, network-opt-in caches. Full indexes built from a local source
-are reproducible snapshots identified by their source SHA-256; a full index built from a
-remote URL records that it is live-full unless the caller supplies a separately pinned
-source. `Dictionary.from_path(path)` reads the language from index metadata, while
-`Dictionary.from_path(path, language="en")` asserts it.
-Each row contains:
+The schema v5 index stores ordered entries and senses, compact JSON lexical payloads, an indexed
+topic table, and partial-cache coverage metadata. Partial indexes are live, network-opt-in
+caches. Full indexes built from a local source are reproducible snapshots identified by their
+source SHA-256; a full index built from a remote URL records that it is live-full unless the
+caller supplies a separately pinned source. `Dictionary.from_path(path)` reads the language from
+index metadata, while `Dictionary.from_path(path, language="en")` asserts it.
+
+Each entry contains:
 
 ```text
-word
 display spelling
 part of speech
-glosses
-topics
+optional etymology
+forms and pronunciations
+ordered senses
 ```
 
-It is deliberately not a full Wiktionary mirror. A sense is retained when it has a
-dictionary gloss or an explicit entry-level or sense-level Wiktextract topic.
+Each sense can contain:
+
+```text
+glosses
+topics
+usage/grammar tags
+examples
+synonyms and antonyms
+```
+
+It is deliberately not a full Wiktionary mirror. Categories, translations, templates, and
+other source-specific maintenance metadata are not part of the curated public model.
 
 ## Dictionary API
 
@@ -204,13 +220,14 @@ from lexhint import Dictionary
 
 dictionary = Dictionary("en", fetch_missing=True)
 
-print(dictionary.senses("scale"))  # fetches once, then works offline
+print(dictionary.lookup("scale"))  # fetches once, then works offline
+print(dictionary.senses("scale"))  # convenience flattening of lookup()
 print(dictionary.topics("compiler"))
 ```
 
 `Dictionary.from_path(path)` infers the language from index metadata. Supply
 `language="en"` when the caller wants the index language asserted explicitly. Use
-`refresh=True` on `senses()` or the context methods to refresh a cached word when
+`refresh=True` on `lookup()`, `senses()`, or the context methods to refresh a cached word when
 network access is enabled.
 
 The default `Dictionary("en")` is local-only. Use `fetch_missing=True` only when the

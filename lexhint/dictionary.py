@@ -3,21 +3,32 @@ from __future__ import annotations
 import json
 import re
 import sqlite3
-from collections.abc import Iterable
+from collections.abc import Iterable, Mapping
 from contextlib import closing
 from importlib.resources import files
 from pathlib import Path
 
 from .download import cached_dictionary_path
+from .extract import dictionary_entries
 from .kaikki import (
     DictionaryFetchError,
     DictionaryWordNotFound,
     fetch_word_entries,
     kaikki_word_url,
 )
-from .models import ContextCue, DictionaryFetchResult, Sense, TopicEvidence
+from .models import (
+    ContextCue,
+    DictionaryEntry,
+    DictionaryFetchResult,
+    Example,
+    Form,
+    Pronunciation,
+    Sense,
+    TopicEvidence,
+)
 from .store import (
     LEGACY_SCHEMA_VERSION,
+    OLDER_LEGACY_SCHEMA_VERSION,
     SCHEMA_VERSION,
     dictionary_coverage,
     initialize_partial,
@@ -27,14 +38,14 @@ from .store import (
     migrate_partial_v3_to_v4,
     normalize_display_word,
     normalize_word,
-    replace_word_rows,
+    replace_word_entries,
 )
 
 _WORD_RE = re.compile(r"[^\W\d_]+(?:[-'][^\W\d_]+)*", re.UNICODE)
 
 
 class DictionaryNotInstalled(FileNotFoundError):
-    """Raised when a compact dictionary index is not locally available."""
+    """Raised when a dictionary index is not locally available."""
 
 
 class DictionaryIncompatible(RuntimeError):
@@ -53,23 +64,64 @@ def _display_normalize(value: str) -> str:
     return normalize_display_word(value)
 
 
+def _loads(value: str) -> object:
+    return json.loads(value)
+
+
 def _loads_tuple(value: str) -> tuple[str, ...]:
-    data = json.loads(value)
-    return tuple(str(item) for item in data)
+    data = _loads(value)
+    return tuple(str(item) for item in data) if isinstance(data, list) else ()
+
+
+def _loads_examples(value: str) -> tuple[Example, ...]:
+    data = _loads(value)
+    if not isinstance(data, list):
+        return ()
+    return tuple(
+        Example(str(item["text"]), item.get("translation"))
+        for item in data
+        if isinstance(item, Mapping) and isinstance(item.get("text"), str)
+    )
+
+
+def _loads_forms(value: str) -> tuple[Form, ...]:
+    data = _loads(value)
+    if not isinstance(data, list):
+        return ()
+    return tuple(
+        Form(str(item["form"]), tuple(str(tag) for tag in item.get("tags", ())))
+        for item in data
+        if isinstance(item, Mapping) and isinstance(item.get("form"), str)
+    )
+
+
+def _loads_pronunciations(value: str) -> tuple[Pronunciation, ...]:
+    data = _loads(value)
+    if not isinstance(data, list):
+        return ()
+    return tuple(
+        Pronunciation(
+            ipa=item.get("ipa") if isinstance(item.get("ipa"), str) else None,
+            audio=item.get("audio") if isinstance(item.get("audio"), str) else None,
+            tags=tuple(str(tag) for tag in item.get("tags", ())),
+        )
+        for item in data
+        if isinstance(item, Mapping)
+    )
 
 
 def _runtime_metadata(path: Path) -> dict[str, str]:
     with closing(sqlite3.connect(path)) as connection:
         actual = metadata(connection)
-    if actual.get("schema_version") == LEGACY_SCHEMA_VERSION:
+    if actual.get("schema_version") in {LEGACY_SCHEMA_VERSION, OLDER_LEGACY_SCHEMA_VERSION}:
         if actual.get("coverage") == "partial":
             migrate_partial_v3_to_v4(path)
             with closing(sqlite3.connect(path)) as connection:
                 actual = metadata(connection)
         elif actual.get("coverage") == "full":
             raise DictionaryIncompatible(
-                "schema 3 full dictionary indexes are incomplete under schema 4; "
-                "rebuild with 'lexhint dictionary build'"
+                f"schema {actual.get('schema_version')} full dictionary indexes are incomplete "
+                "under schema 5; rebuild with 'lexhint dictionary build'"
             )
     return actual
 
@@ -83,7 +135,7 @@ def fetch_dictionary_word(
     offline: bool = False,
     timeout: float = 30.0,
 ) -> DictionaryFetchResult:
-    """Fetch one exact Kaikki word page into a schema-v4 partial cache."""
+    """Fetch one exact Kaikki word page into a schema-v5 partial cache."""
     base_language = language.lower().split("-", 1)[0]
     query = _display_normalize(word)
     source_url = kaikki_word_url(query)
@@ -119,9 +171,9 @@ def fetch_dictionary_word(
         raise DictionaryOfflineError(f"dictionary data for {query!r} is not cached")
 
     try:
-        entries = fetch_word_entries(query, timeout=timeout)
+        raw_entries = fetch_word_entries(query, timeout=timeout)
     except DictionaryWordNotFound:
-        replace_word_rows(
+        replace_word_entries(
             target,
             language=base_language,
             query=query,
@@ -131,7 +183,12 @@ def fetch_dictionary_word(
         )
         return DictionaryFetchResult(query, "not_found", 0, source_url, False)
 
-    senses = replace_word_rows(
+    entries = tuple(
+        parsed
+        for raw_entry in raw_entries
+        for parsed in dictionary_entries(raw_entry, language=base_language)
+    )
+    senses = replace_word_entries(
         target,
         language=base_language,
         query=query,
@@ -142,7 +199,7 @@ def fetch_dictionary_word(
 
 
 class Dictionary:
-    """Read a compact dictionary index, optionally filling a partial cache."""
+    """Read a curated rich dictionary index, optionally filling a partial cache."""
 
     def __init__(
         self,
@@ -172,12 +229,7 @@ class Dictionary:
 
     @classmethod
     def from_path(cls, path: str | Path, *, language: str | None = None) -> Dictionary:
-        """Open an index, inferring its language unless one is asserted.
-
-        A supplied language is checked against the index metadata.  Omitting it
-        is useful for a portable dictionary snapshot because the index remains
-        self-describing instead of requiring the misleading ``"und"`` default.
-        """
+        """Open an index, inferring its language unless one is asserted."""
         target = Path(path).expanduser()
         try:
             actual = _runtime_metadata(target)
@@ -250,6 +302,58 @@ class Dictionary:
                 timeout=self.timeout,
             )
 
+    def _entry_rows(self, word: str, *, all_case_variants: bool = False) -> list[sqlite3.Row]:
+        normalized = _normalize(word)
+        with closing(self._connect()) as connection:
+            rows = connection.execute(
+                "SELECT * FROM entries WHERE word = ? ORDER BY id", (normalized,)
+            ).fetchall()
+        if not all_case_variants:
+            display_word = _display_normalize(word)
+            exact = [
+                row for row in rows if _display_normalize(str(row["display_word"])) == display_word
+            ]
+            rows = exact or rows
+        return rows
+
+    def _entry(self, connection: sqlite3.Connection, row: sqlite3.Row) -> DictionaryEntry:
+        senses = connection.execute(
+            "SELECT glosses, topics, tags, examples, synonyms, antonyms "
+            "FROM senses WHERE entry_id = ? ORDER BY sense_index",
+            (row["id"],),
+        ).fetchall()
+        return DictionaryEntry(
+            word=str(row["display_word"]),
+            pos=str(row["pos"]),
+            senses=tuple(
+                Sense(
+                    glosses=_loads_tuple(str(sense["glosses"])),
+                    topics=_loads_tuple(str(sense["topics"])),
+                    tags=_loads_tuple(str(sense["tags"])),
+                    examples=_loads_examples(str(sense["examples"])),
+                    synonyms=_loads_tuple(str(sense["synonyms"])),
+                    antonyms=_loads_tuple(str(sense["antonyms"])),
+                )
+                for sense in senses
+            ),
+            forms=_loads_forms(str(row["forms"])),
+            pronunciations=_loads_pronunciations(str(row["pronunciations"])),
+            etymology=str(row["etymology"]) or None,
+        )
+
+    def lookup(
+        self,
+        word: str,
+        *,
+        all_case_variants: bool = False,
+        refresh: bool = False,
+    ) -> tuple[DictionaryEntry, ...]:
+        """Return ordered rich entries for an exact word lookup."""
+        self._ensure_word(word, refresh=refresh)
+        rows = self._entry_rows(word, all_case_variants=all_case_variants)
+        with closing(self._connect()) as connection:
+            return tuple(self._entry(connection, row) for row in rows)
+
     def senses(
         self,
         word: str,
@@ -257,39 +361,18 @@ class Dictionary:
         all_case_variants: bool = False,
         refresh: bool = False,
     ) -> tuple[Sense, ...]:
-        self._ensure_word(word, refresh=refresh)
-        normalized = _normalize(word)
-        with closing(self._connect()) as connection:
-            rows = connection.execute(
-                "SELECT display_word, pos, glosses, topics FROM senses WHERE word = ? ORDER BY id",
-                (normalized,),
-            ).fetchall()
-
-        if not all_case_variants:
-            display_word = _display_normalize(word)
-            exact = [
-                row for row in rows if _display_normalize(str(row["display_word"])) == display_word
-            ]
-            rows = exact or rows
-
+        """Return the ordered senses derived from lookup()."""
         return tuple(
-            Sense(
-                word=str(row["display_word"]),
-                pos=str(row["pos"]),
-                glosses=_loads_tuple(str(row["glosses"])),
-                topics=_loads_tuple(str(row["topics"])),
-            )
-            for row in rows
+            sense
+            for entry in self.lookup(word, all_case_variants=all_case_variants, refresh=refresh)
+            for sense in entry.senses
         )
 
     def contains(self, word: str) -> bool:
-        return bool(self.senses(word))
+        return bool(self.lookup(word))
 
     def topics(self, word: str) -> tuple[str, ...]:
-        values: set[str] = set()
-        for sense in self.senses(word):
-            values.update(sense.topics)
-        return tuple(sorted(values))
+        return tuple(sorted(self._topics_for_words((word,))[word]))
 
     def _topics_for_words(
         self, words: Iterable[str], *, refresh: bool = False
@@ -307,7 +390,9 @@ class Dictionary:
                 chunk = folded_keys[offset : offset + 500]
                 placeholders = ",".join("?" for _ in chunk)
                 rows = connection.execute(
-                    f"SELECT word, display_word, topics FROM senses WHERE word IN ({placeholders})",  # noqa: S608
+                    "SELECT e.word, e.display_word, st.topic "
+                    "FROM entries AS e JOIN sense_topics AS st ON st.entry_id = e.id "
+                    f"WHERE e.word IN ({placeholders})",  # noqa: S608
                     chunk,
                 ).fetchall()
                 for row in rows:
@@ -321,10 +406,7 @@ class Dictionary:
                 row for row in rows if _display_normalize(str(row["display_word"])) == display_word
             ]
             selected = exact or rows
-            values: set[str] = set()
-            for row in selected:
-                values.update(_loads_tuple(str(row["topics"])))
-            result[token] = values
+            result[token] = {str(row["topic"]) for row in selected}
         return result
 
     @staticmethod
@@ -354,13 +436,7 @@ class Dictionary:
         limit: int | None = None,
         refresh: bool = False,
     ) -> tuple[TopicEvidence, ...]:
-        """Aggregate nearby dictionary topics around a source span.
-
-        The target token itself is excluded so a candidate cannot validate itself.
-        This is soft, diagnostic context evidence, not general-purpose word-sense
-        disambiguation.  Missing evidence is not negative evidence: a partial
-        cache or sparse upstream topic annotation can simply have no result.
-        """
+        """Aggregate nearby dictionary topics around a source span."""
         if window < 0:
             raise ValueError("window must be >= 0")
         if not 0.0 < decay <= 1.0:

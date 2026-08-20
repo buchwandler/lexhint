@@ -23,9 +23,9 @@ from .download import KAIKKI_RAW_URL, SUPPORTED_LANGUAGES, DownloadError, fetch_
 from .lexicon import Lexicon, LexiconNotInstalled
 from .models import (
     DictionaryBuildStats,
+    DictionaryEntry,
     DictionaryFetchResult,
     LexicalSegment,
-    Sense,
     TopicEvidence,
 )
 
@@ -222,9 +222,9 @@ def _parser() -> argparse.ArgumentParser:
 
     build = dictionary_sub.add_parser(
         "build",
-        help="build a compact dictionary index",
+        help="build a rich dictionary index",
         description=(
-            "Stream a Wiktextract/Kaikki JSONL source into a compact SQLite index. "
+            "Stream a Wiktextract/Kaikki JSONL source into a curated SQLite index. "
             "This full-build path is intended for advanced users and maintainers because "
             "the default source is very large."
         ),
@@ -251,7 +251,7 @@ def _parser() -> argparse.ArgumentParser:
 
     inspect = dictionary_sub.add_parser(
         "word",
-        help="show compact senses for one word",
+        help="show grouped dictionary entries for one word",
         usage="lexhint dictionary word [--language LANG] [LANGUAGE] WORD",
         formatter_class=_HelpFormatter,
     )
@@ -340,18 +340,43 @@ def _human_build(path: Path, stats: DictionaryBuildStats, style: _Style) -> None
     )
 
 
-def _human_senses(word: str, senses: Sequence[Sense], style: _Style) -> None:
+def _human_entries(word: str, entries: Sequence[DictionaryEntry], style: _Style) -> None:
     print(style.bold(word))
-    if not senses:
-        print(f"  {style.yellow('· no dictionary senses found')}")
+    if not entries:
+        print(f"  {style.yellow('· no dictionary entries found')}")
         return
-    for index, sense in enumerate(senses, start=1):
-        pos = sense.pos or "sense"
-        print(f"  {style.dim(str(index) + '.')} {style.cyan(pos)}")
-        for gloss in sense.glosses:
-            print(f"     {gloss}")
-        if sense.topics:
-            print(f"     {style.dim('topics:')} {', '.join(sense.topics)}")
+    sense_number = 0
+    for entry in entries:
+        print(f"  {style.cyan(entry.pos or 'entry')}")
+        if entry.etymology:
+            print(f"     {style.dim('etymology:')} {entry.etymology}")
+        for sense in entry.senses:
+            sense_number += 1
+            print(f"     {style.dim(str(sense_number) + '.')} ")
+            for gloss in sense.glosses:
+                print(f"        {gloss}")
+            if sense.tags:
+                print(f"        {style.dim('tags:')} {', '.join(sense.tags)}")
+            if sense.topics:
+                print(f"        {style.dim('topics:')} {', '.join(sense.topics)}")
+            for example in sense.examples:
+                print(f"        {style.dim('example:')} {example.text}")
+            if sense.synonyms:
+                print(f"        {style.dim('synonyms:')} {', '.join(sense.synonyms)}")
+            if sense.antonyms:
+                print(f"        {style.dim('antonyms:')} {', '.join(sense.antonyms)}")
+        if entry.forms:
+            print(f"     {style.dim('forms:')} {', '.join(form.form for form in entry.forms)}")
+        if entry.pronunciations:
+            for pronunciation in entry.pronunciations:
+                values = []
+                if pronunciation.ipa:
+                    values.append(pronunciation.ipa)
+                if pronunciation.audio:
+                    values.append(pronunciation.audio)
+                if pronunciation.tags:
+                    values.append(f"[{', '.join(pronunciation.tags)}]")
+                print(f"     {style.dim('pronunciation:')} {' '.join(values)}")
 
 
 def _human_context(topic: str, support: TopicEvidence | None, style: _Style) -> None:
@@ -493,13 +518,17 @@ def _run(args: argparse.Namespace, *, json_output: bool, style: _Style, offline:
         dictionary = Dictionary(
             language, path=args.path, fetch_missing=not offline, offline=offline
         )
-        senses = dictionary.senses(word, refresh=args.refresh)
+        entries = dictionary.lookup(word, refresh=args.refresh)
         if json_output:
             _json(
-                {"language": language, "word": word, "senses": [asdict(sense) for sense in senses]}
+                {
+                    "language": language,
+                    "word": word,
+                    "entries": [asdict(entry) for entry in entries],
+                }
             )
         else:
-            _human_senses(word, senses, style)
+            _human_entries(word, entries, style)
         return 0
 
     if args.command == "context":

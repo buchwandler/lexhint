@@ -62,7 +62,7 @@ def test_dictionary_build_source_defaults_to_kaikki() -> None:
     assert not hasattr(args, "auto_fetch_wordlist")
 
 
-def test_dictionary_json_uses_schema_v2_shape(
+def test_dictionary_json_uses_rich_entry_shape(
     tmp_path: Path, capsys: pytest.CaptureFixture[str]
 ) -> None:
     output = tmp_path / "en.sqlite3"
@@ -70,8 +70,23 @@ def test_dictionary_json_uses_schema_v2_shape(
     capsys.readouterr()
     assert cli.main(["--json", "dictionary", "word", "en", "compiler", "--path", str(output)]) == 0
     payload = json.loads(capsys.readouterr().out)
-    assert payload["senses"]
-    assert set(payload["senses"][0]) == {"word", "pos", "glosses", "topics"}
+    assert payload["entries"]
+    assert set(payload["entries"][0]) == {
+        "word",
+        "pos",
+        "senses",
+        "forms",
+        "pronunciations",
+        "etymology",
+    }
+    assert set(payload["entries"][0]["senses"][0]) == {
+        "glosses",
+        "topics",
+        "tags",
+        "examples",
+        "synonyms",
+        "antonyms",
+    }
 
 
 def test_missing_wordlist_is_runtime_error(

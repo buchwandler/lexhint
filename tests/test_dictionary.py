@@ -4,9 +4,10 @@ from pathlib import Path
 
 import pytest
 
-from lexhint import Dictionary, DictionaryIncompatible
+from lexhint import Dictionary, DictionaryEntry, DictionaryIncompatible
 from lexhint.builder import build_dictionary
-from lexhint.store import semantic_rows
+from lexhint.models import Sense
+from lexhint.store import create_schema, semantic_rows, set_metadata
 
 FIXTURE = Path(__file__).parent / "fixtures" / "kaikki-mini.jsonl"
 
@@ -21,66 +22,64 @@ def build(tmp_path: Path) -> Dictionary:
     assert stats.scanned_entries == 7
     assert stats.kept_entries == 5
     assert stats.words == 4
-    assert stats.senses == 8
+    assert stats.senses == 9
     return Dictionary.from_path(path)
 
 
-def test_dictionary_parses_semantic_senses_and_topics(tmp_path: Path) -> None:
+def test_dictionary_lookup_groups_ordered_rich_entries(tmp_path: Path) -> None:
     dictionary = build(tmp_path)
-    senses = dictionary.senses("scale")
-    assert len(senses) == 2
-    assert "music" in dictionary.topics("scale")
-    assert "metrology" in dictionary.topics("scale")
-    assert dictionary.senses("compiler")
-    assert "computing" in dictionary.topics("compiler")
+    entries = dictionary.lookup("scale")
+    assert entries == (
+        DictionaryEntry(
+            "scale",
+            "noun",
+            (
+                Sense(("A graduated measure.",), ("metrology",)),
+                Sense(("A series of musical notes ordered by pitch.",), ("music",)),
+            ),
+        ),
+    )
+    assert len(dictionary.lookup("compiler")[0].senses) == 3
+    assert dictionary.senses("compiler")[1].topics == ("computing",)
+    assert dictionary.topics("compiler") == ("computing",)
     assert dictionary.contains("banana")
     assert not dictionary.contains("metadataonly")
 
 
-def test_gloss_bearing_senses_and_duplicates_are_stored(tmp_path: Path) -> None:
-    dictionary = build(tmp_path)
-    assert dictionary.senses("metadataonly") == ()
-    assert dictionary.senses("compiler")[0].topics == ()
-    assert len(dictionary.senses("compiler")) == 2
-
-
-def love_entries() -> tuple[dict[str, object], ...]:
-    return (
-        {
-            "word": "love",
-            "lang_code": "en",
-            "pos": "noun",
-            "senses": [
-                {"glosses": ["strong affection"]},
-                {"glosses": ["a beloved person"]},
-                {"glosses": ["Zero, no score."], "topics": ["sports"]},
-            ],
-        },
-        {
-            "word": "love",
-            "lang_code": "en",
-            "pos": "verb",
-            "senses": [
-                {"glosses": ["to feel strong affection"]},
-                {"glosses": ["to like strongly"]},
-            ],
-        },
-    )
-
-
-def test_love_entries_keep_gloss_only_senses_and_topics() -> None:
-    rows = [row for entry in love_entries() for row in semantic_rows(entry, language="en")]
-
-    assert len(rows) == 5
-    assert sum(bool(row.topics) for row in rows) == 1
-    assert [row.pos for row in rows] == ["noun", "noun", "noun", "verb", "verb"]
-
-
-def test_schema_columns_are_compact(tmp_path: Path) -> None:
+def test_schema_v5_has_hierarchical_rich_tables(tmp_path: Path) -> None:
     path, _ = build_dictionary("en", FIXTURE, output=tmp_path / "en.sqlite3")
     with closing(sqlite3.connect(path)) as connection:
-        columns = {row[1] for row in connection.execute("PRAGMA table_info(senses)")}
-    assert columns == {"id", "word", "display_word", "pos", "glosses", "topics"}
+        entry_columns = {row[1] for row in connection.execute("PRAGMA table_info(entries)")}
+        sense_columns = {row[1] for row in connection.execute("PRAGMA table_info(senses)")}
+        tables = {
+            row[0]
+            for row in connection.execute("SELECT name FROM sqlite_master WHERE type = 'table'")
+        }
+        metadata = dict(connection.execute("SELECT key, value FROM metadata"))
+    assert entry_columns == {
+        "id",
+        "word",
+        "display_word",
+        "pos",
+        "entry_index",
+        "etymology",
+        "forms",
+        "pronunciations",
+    }
+    assert sense_columns == {
+        "id",
+        "entry_id",
+        "sense_index",
+        "glosses",
+        "topics",
+        "tags",
+        "examples",
+        "synonyms",
+        "antonyms",
+    }
+    assert {"entries", "senses", "sense_topics", "lookups"} <= tables
+    assert metadata["schema_version"] == "5"
+    assert metadata["dictionary_profile"] == "rich"
 
 
 def test_case_preference_is_consistent(tmp_path: Path) -> None:
@@ -88,7 +87,7 @@ def test_case_preference_is_consistent(tmp_path: Path) -> None:
     assert dictionary.topics("house") == ("housing", "music")
     assert dictionary.topics("House") == ("politics",)
     assert dictionary.topics("HOUSE") == ("housing", "music", "politics")
-    assert {sense.word for sense in dictionary.senses("house", all_case_variants=True)} == {
+    assert {entry.word for entry in dictionary.lookup("house", all_case_variants=True)} == {
         "house",
         "House",
     }
@@ -114,8 +113,7 @@ def test_software_context_is_dictionary_derived(tmp_path: Path) -> None:
 def test_context_does_not_leak_proper_name_topics(tmp_path: Path) -> None:
     dictionary = build(tmp_path)
     text = "The house track is Am."
-    scores = dictionary.topic_scores(text, target=span(text, "Am"))
-    topics = {score.topic for score in scores}
+    topics = {score.topic for score in dictionary.topic_scores(text, target=span(text, "Am"))}
     assert "music" in topics
     assert "politics" not in topics
 
@@ -139,16 +137,15 @@ def test_schema_incompatibility_is_controlled(tmp_path: Path) -> None:
         connection.execute("INSERT INTO metadata VALUES ('schema_version', '1')")
         connection.execute("INSERT INTO metadata VALUES ('language', 'en')")
         connection.commit()
-    with pytest.raises(DictionaryIncompatible, match="schema 1; schema 4 is required"):
+    with pytest.raises(DictionaryIncompatible, match="schema 1; schema 5 is required"):
         Dictionary.from_path(path, language="en")
 
 
 def test_wrong_language_is_incompatible(tmp_path: Path) -> None:
     path = tmp_path / "wrong-language.sqlite3"
     with closing(sqlite3.connect(path)) as connection:
-        connection.execute("CREATE TABLE metadata (key TEXT PRIMARY KEY, value TEXT NOT NULL)")
-        connection.execute("INSERT INTO metadata VALUES ('schema_version', '4')")
-        connection.execute("INSERT INTO metadata VALUES ('language', 'de')")
+        create_schema(connection)
+        set_metadata(connection, {"schema_version": "5", "language": "de", "coverage": "full"})
         connection.commit()
     with pytest.raises(DictionaryIncompatible, match="language 'en' was requested"):
         Dictionary.from_path(path, language="en")
@@ -157,3 +154,18 @@ def test_wrong_language_is_incompatible(tmp_path: Path) -> None:
 def test_from_path_can_assert_the_inferred_language(tmp_path: Path) -> None:
     path, _ = build_dictionary("en", FIXTURE, output=tmp_path / "en.sqlite3")
     assert Dictionary.from_path(path, language="en").language == "en"
+
+
+def test_semantic_projection_keeps_duplicate_and_gloss_only_senses() -> None:
+    entry = {
+        "word": "love",
+        "lang_code": "en",
+        "pos": "noun",
+        "senses": [
+            {"glosses": ["strong affection"]},
+            {"glosses": ["Zero, no score."], "topics": ["sports"]},
+        ],
+    }
+    rows = tuple(semantic_rows(entry, language="en"))
+    assert rows[0].glosses == ("strong affection",)
+    assert rows[1].topics == ("sports",)
