@@ -2,6 +2,7 @@ from __future__ import annotations
 
 import argparse
 import shutil
+import sqlite3
 from pathlib import Path
 
 from lexhint.download import cached_dictionary_path
@@ -17,6 +18,10 @@ def main() -> int:
         source = cached_dictionary_path(language)
         if not source.exists():
             raise SystemExit(f"dictionary not built: {source}")
+        with sqlite3.connect(source) as connection:
+            metadata = dict(connection.execute("SELECT key, value FROM metadata"))
+        if metadata.get("schema_version") != "6" or metadata.get("coverage") != "full":
+            raise SystemExit(f"dictionary is not a full schema-6 dataset: {source}")
         target = destination / f"{language}.sqlite3"
         shutil.copy2(source, target)
         print(target)

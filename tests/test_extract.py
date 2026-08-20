@@ -2,48 +2,50 @@ from lexhint.extract import dictionary_entries
 from lexhint.models import DictionaryEntry, Example, Form, Pronunciation, Sense
 
 
-def test_extracts_curated_rich_entry_in_source_order() -> None:
+def test_extracts_ipa_pronunciations_and_ignores_audio_only_rows() -> None:
     raw = {
-        "word": "love",
+        "word": "compiler",
         "lang_code": "en",
         "pos": "noun",
-        "topics": ["emotion"],
-        "etymology_text": "From Middle English.",
-        "forms": [{"form": "loves", "tags": ["plural"]}],
-        "sounds": [{"ipa": "/lʌv/", "audio": "Love.ogg", "tags": ["US"]}],
+        "topics": ["computing"],
+        "etymology_text": "From compile.",
+        "forms": [{"form": "compilers", "tags": ["plural"]}],
+        "sounds": [
+            {"ipa": "/kəmˈpaɪlə/", "tags": ["UK"]},
+            {"audio": "LL-Q1860 (eng)-Vealhurl-compiler.wav", "tags": ["Southern-England"]},
+            {"ipa": "/kəmˈpaɪlɚ/", "tags": ["US"]},
+            {"tags": ["audio-only"]},
+            {"ipa": "/kəmˈpaɪlə/", "tags": ["UK"]},
+        ],
         "senses": [
             {
-                "glosses": ["A strong feeling of affection."],
-                "tags": ["uncountable"],
-                "examples": [{"text": "Their love grew.", "translation": "Liebe."}],
-                "synonyms": [{"word": "affection"}],
-                "antonyms": [{"word": "hate"}],
-            },
-            {"glosses": ["Zero score in tennis."], "topics": ["sports"]},
+                "glosses": ["A program that translates source code."],
+                "tags": ["countable"],
+                "examples": [{"text": "The compiler ran.", "translation": "Der Compiler lief."}],
+                "synonyms": [{"word": "translator"}],
+            }
         ],
-        "categories": ["maintenance noise"],
     }
 
-    entries = tuple(dictionary_entries(raw, language="en"))
-
-    assert entries == (
+    assert tuple(dictionary_entries(raw, language="en")) == (
         DictionaryEntry(
-            word="love",
+            word="compiler",
             pos="noun",
             senses=(
                 Sense(
-                    glosses=("A strong feeling of affection.",),
-                    topics=("emotion",),
-                    tags=("uncountable",),
-                    examples=(Example("Their love grew.", "Liebe."),),
-                    synonyms=("affection",),
-                    antonyms=("hate",),
+                    glosses=("A program that translates source code.",),
+                    topics=("computing",),
+                    tags=("countable",),
+                    examples=(Example("The compiler ran.", "Der Compiler lief."),),
+                    synonyms=("translator",),
                 ),
-                Sense(glosses=("Zero score in tennis.",), topics=("emotion", "sports")),
             ),
-            forms=(Form("loves", ("plural",)),),
-            pronunciations=(Pronunciation("/lʌv/", "Love.ogg", ("US",)),),
-            etymology="From Middle English.",
+            forms=(Form("compilers", ("plural",)),),
+            pronunciations=(
+                Pronunciation("/kəmˈpaɪlə/", ("UK",)),
+                Pronunciation("/kəmˈpaɪlɚ/", ("US",)),
+            ),
+            etymology="From compile.",
         ),
     )
 

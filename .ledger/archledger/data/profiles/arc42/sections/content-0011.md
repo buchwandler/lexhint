@@ -7,10 +7,9 @@ section: risks_and_technical_debt
 title: Risks and Technical Debt
 order: 110
 status: accepted
-version: 4
+version: 5
 body_format: markdown
 ---
-
 - **Upstream availability and format drift.** FrequencyWords and Kaikki are external services. URL, JSONL, or source-shape changes can prevent acquisition. Validation and controlled download errors reduce silent corruption, but source compatibility still needs monitoring.
 - **External data licensing.** Generated dictionary indexes inherit obligations from Wiktionary, Wiktextract, Kaikki, and source corpora. Redistribution must follow `DATA_SOURCES.md`; the architecture intentionally does not hide this risk.
 - **Heuristic segmentation.** Dynamic-programming scores and the two-letter guard are practical heuristics, not linguistic analysis. New languages or identifier styles may require tuning and more representative evaluation data.

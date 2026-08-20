@@ -13,20 +13,21 @@ from . import __version__
 from .builder import build_dictionary
 from .dictionary import (
     Dictionary,
+    DictionaryCoverageError,
     DictionaryFetchError,
     DictionaryIncompatible,
     DictionaryNotInstalled,
     DictionaryOfflineError,
     fetch_dictionary_word,
 )
-from .download import KAIKKI_RAW_URL, SUPPORTED_LANGUAGES, DownloadError, fetch_wordlist
-from .lexicon import Lexicon, LexiconNotInstalled
+from .download import KAIKKI_RAW_URL, SUPPORTED_LANGUAGES, DownloadError
 from .models import (
     DictionaryBuildStats,
     DictionaryEntry,
     DictionaryFetchResult,
     LexicalSegment,
     TopicEvidence,
+    WordInfo,
 )
 
 _DEFAULT_LANGUAGE = "en"
@@ -163,12 +164,9 @@ def _parser() -> argparse.ArgumentParser:
 
     setup = sub.add_parser(
         "setup",
-        help="prepare lexhint for a language",
-        description="Fetch the word list needed for normal lexhint use.",
-        epilog=(
-            "Add --dictionary to also build the compact Wiktionary-derived dictionary. "
-            "This is an advanced operation: the default Kaikki source is very large and "
-            "is streamed line-by-line by the builder."
+        help="prepare a dictionary dataset for a language",
+        description=(
+            "Build or install the SQLite dictionary dataset used by normal lexhint commands."
         ),
         formatter_class=_HelpFormatter,
     )
@@ -179,15 +177,8 @@ def _parser() -> argparse.ArgumentParser:
         default=None,
         help="language code (default: en)",
     )
-    setup.add_argument("--dictionary", action="store_true", help="also build the dictionary index")
     setup.add_argument("--source", default=KAIKKI_RAW_URL, help="dictionary JSONL path or URL")
-    setup.add_argument("--force", action="store_true", help="re-download the word list")
-
-    fetch = sub.add_parser(
-        "fetch", help="download frequency word lists", formatter_class=_HelpFormatter
-    )
-    fetch.add_argument("languages", nargs="+", choices=sorted(SUPPORTED_LANGUAGES))
-    fetch.add_argument("--force", action="store_true", help="re-download cached word lists")
+    setup.add_argument("--frequency-source", help="optional local FrequencyWords full file")
 
     word = sub.add_parser(
         "word",
@@ -230,8 +221,8 @@ def _parser() -> argparse.ArgumentParser:
         ),
         epilog=(
             "The source defaults to the official Kaikki raw Wiktextract URL and is "
-            "streamed without requiring the FrequencyWords word list. Use dictionary fetch "
-            "for a lightweight per-word cache instead."
+            "streamed without requiring corpus enrichment. Use --frequency-source to "
+            "embed a pinned FrequencyWords full file."
         ),
         formatter_class=_HelpFormatter,
     )
@@ -240,6 +231,7 @@ def _parser() -> argparse.ArgumentParser:
         "source", nargs="?", default=KAIKKI_RAW_URL, help="local JSONL(.gz) path or URL"
     )
     build.add_argument("--output", help="output SQLite path")
+    build.add_argument("--frequency-source", help="optional local FrequencyWords full file")
 
     dictionary_fetch = dictionary_sub.add_parser(
         "fetch", help="cache one or more Kaikki word pages", formatter_class=_HelpFormatter
@@ -298,8 +290,8 @@ def _json(payload: object) -> None:
     print(json.dumps(payload, ensure_ascii=False))
 
 
-def _human_fetch(language: str, path: Path, style: _Style) -> None:
-    print(f"{style.green('✓')} {style.bold(language)} word list  {style.dim(path)}")
+def _human_dictionary_ready(language: str, path: Path, style: _Style) -> None:
+    print(f"{style.green('✓')} {style.bold(language)} dictionary ready  {style.dim(path)}")
 
 
 def _human_dictionary_fetch(result: DictionaryFetchResult, style: _Style) -> None:
@@ -310,11 +302,17 @@ def _human_dictionary_fetch(result: DictionaryFetchResult, style: _Style) -> Non
         print(f"{style.green('✓')} {result.word}  {state}  {result.senses} dictionary senses")
 
 
-def _human_word(word: str, rank: int | None, style: _Style) -> None:
-    if rank is None:
-        print(f"{style.bold(word)}  {style.yellow('· unknown')}")
+def _human_word(info: WordInfo, style: _Style) -> None:
+    if not info.known:
+        print(f"{style.bold(info.word)}  {style.yellow('· unknown')}")
         return
-    print(f"{style.bold(word)}  {style.green('✓ known')}  {style.dim(f'rank #{rank:,}')}")
+    if info.frequency_rank is None:
+        print(f"{style.bold(info.word)}  {style.green('✓ known')}  corpus frequency unavailable")
+        return
+    print(
+        f"{style.bold(info.word)}  {style.green('✓ known')}  "
+        f"{style.dim(f'rank #{info.frequency_rank:,}')}"
+    )
 
 
 def _human_segments(text: str, items: Sequence[LexicalSegment], style: _Style) -> None:
@@ -322,7 +320,7 @@ def _human_segments(text: str, items: Sequence[LexicalSegment], style: _Style) -
     width = max((len(item.text) for item in items), default=0)
     for item in items:
         value = item.text
-        known = item.in_lexicon
+        known = item.known
         rank = item.frequency_rank
         status_text = "✓ known" if known else "· unknown"
         status = style.green(status_text) if known else style.yellow(status_text)
@@ -335,9 +333,11 @@ def _human_build(path: Path, stats: DictionaryBuildStats, style: _Style) -> None
     print(f"{style.green('✓')} dictionary ready  {style.dim(path)}")
     print(
         "  "
-        f"{stats.words:,} words · {stats.senses:,} senses · "
+        f"{stats.words:,} lexemes · {stats.senses:,} senses · "
         f"{stats.scanned_entries:,} entries scanned"
     )
+    if stats.frequency_matches:
+        print(f"  {stats.frequency_matches:,} corpus-ranked lexemes")
 
 
 def _human_entries(word: str, entries: Sequence[DictionaryEntry], style: _Style) -> None:
@@ -372,8 +372,6 @@ def _human_entries(word: str, entries: Sequence[DictionaryEntry], style: _Style)
                 values = []
                 if pronunciation.ipa:
                     values.append(pronunciation.ipa)
-                if pronunciation.audio:
-                    values.append(pronunciation.audio)
                 if pronunciation.tags:
                     values.append(f"[{', '.join(pronunciation.tags)}]")
                 print(f"     {style.dim('pronunciation:')} {' '.join(values)}")
@@ -401,11 +399,22 @@ def _progress(stats: DictionaryBuildStats) -> None:
 
 
 def _build(
-    language: str, source: str, *, output: str | None, show_progress: bool
+    language: str,
+    source: str,
+    *,
+    output: str | None,
+    frequency_source: str | None = None,
+    show_progress: bool,
 ) -> tuple[Path, DictionaryBuildStats]:
     callback = _progress if show_progress else None
     try:
-        return build_dictionary(language, source, output=output, progress=callback)
+        return build_dictionary(
+            language,
+            source,
+            output=output,
+            frequency_source=frequency_source,
+            progress=callback,
+        )
     finally:
         if show_progress:
             print(file=sys.stderr)
@@ -414,61 +423,49 @@ def _build(
 def _run(args: argparse.Namespace, *, json_output: bool, style: _Style, offline: bool) -> int:
     if args.command == "setup":
         language = args.language or _default_language()
-        path = fetch_wordlist(language, force=args.force)
-        if json_output and not args.dictionary:
-            _json({"language": language, "wordlist": str(path)})
-            return 0
         if not json_output:
             print(style.bold(f"Setting up {language}"))
-            _human_fetch(language, path, style)
-        if args.dictionary:
-            if not json_output:
-                print(f"{style.dim('→')} building dictionary from {args.source}")
-            dictionary_path, stats = _build(
-                language, args.source, output=None, show_progress=sys.stderr.isatty()
-            )
-            if json_output:
-                _json(
-                    {
-                        "language": language,
-                        "wordlist": str(path),
-                        "dictionary": str(dictionary_path),
-                        **asdict(stats),
-                    }
-                )
-            else:
-                _human_build(dictionary_path, stats, style)
-        elif not json_output:
-            print(f"\n{style.green('Ready.')} Try: {style.bold('lexhint word house')}")
-        return 0
-
-    if args.command == "fetch":
-        payload: list[dict[str, str]] = []
-        for language in args.languages:
-            path = fetch_wordlist(language, force=args.force)
-            payload.append({"language": language, "path": str(path)})
-            if not json_output:
-                _human_fetch(language, path, style)
+            print(f"{style.dim('→')} building dictionary from {args.source}")
+        dictionary_path, stats = _build(
+            language,
+            args.source,
+            output=None,
+            frequency_source=args.frequency_source,
+            show_progress=sys.stderr.isatty(),
+        )
         if json_output:
-            _json(payload)
+            _json({"language": language, "dictionary": str(dictionary_path), **asdict(stats)})
+        else:
+            _human_build(dictionary_path, stats, style)
+            print(f"\n{style.green('Ready.')}")
         return 0
 
     if args.command == "word":
         language, word = _language_and_value(
             args.values, explicit_language=args.language, label="word"
         )
-        rank = Lexicon(language).rank(word)
+        dictionary = Dictionary(language, fetch_missing=not offline, offline=offline)
+        info = dictionary.word_info(word)
         if json_output:
-            _json({"language": language, "word": word, "known": rank is not None, "rank": rank})
+            _json(
+                {
+                    "language": language,
+                    "word": word,
+                    "known": info.known,
+                    "frequency_rank": info.frequency_rank,
+                    "frequency_count": info.frequency_count,
+                }
+            )
         else:
-            _human_word(word, rank, style)
+            _human_word(info, style)
         return 0
 
     if args.command == "segment":
         language, text = _language_and_value(
             args.values, explicit_language=args.language, label="segment"
         )
-        items = Lexicon(language).segment(text)
+        dictionary = Dictionary(language, fetch_missing=False, offline=offline)
+        items = dictionary.segment(text)
         if json_output:
             _json(
                 {"language": language, "text": text, "segments": [asdict(item) for item in items]}
@@ -483,7 +480,11 @@ def _run(args: argparse.Namespace, *, json_output: bool, style: _Style, offline:
             print(style.bold(f"Building {language}"))
             print(f"{style.dim('source:')} {args.source}")
         path, stats = _build(
-            language, args.source, output=args.output, show_progress=sys.stderr.isatty()
+            language,
+            args.source,
+            output=args.output,
+            frequency_source=args.frequency_source,
+            show_progress=sys.stderr.isatty(),
         )
         if json_output:
             _json({"language": language, "path": str(path), **asdict(stats)})
@@ -578,7 +579,7 @@ def main(argv: Sequence[str] | None = None) -> int:
     try:
         return _run(args, json_output=json_output, style=style, offline=offline)
     except (
-        LexiconNotInstalled,
+        DictionaryCoverageError,
         DictionaryIncompatible,
         DictionaryNotInstalled,
         DictionaryFetchError,
@@ -586,15 +587,15 @@ def main(argv: Sequence[str] | None = None) -> int:
         ValueError,
         OSError,
     ) as exc:
-        if isinstance(exc, LexiconNotInstalled):
-            message = "no word list installed for the requested language"
-            hint = "run 'lexhint setup <language>'"
+        if isinstance(exc, DictionaryCoverageError):
+            message = str(exc)
+            hint = "run 'lexhint dictionary build <language>'"
         elif isinstance(exc, DictionaryOfflineError):
             message = str(exc)
             hint = "run 'lexhint dictionary fetch <word>' without --offline"
         elif isinstance(exc, DictionaryNotInstalled):
             message = str(exc)
-            hint = "run 'lexhint dictionary fetch <word>' or 'lexhint dictionary build <language>'"
+            hint = "run 'lexhint setup <language>' or 'lexhint dictionary build <language>'"
         elif isinstance(exc, DictionaryIncompatible):
             message = str(exc)
             hint = "run 'lexhint dictionary build <language>'"

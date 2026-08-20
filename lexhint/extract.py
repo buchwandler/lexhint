@@ -89,14 +89,11 @@ def _pronunciations(value: object) -> tuple[Pronunciation, ...]:
     for item in value:
         if not isinstance(item, Mapping):
             continue
-        pronunciation = Pronunciation(
-            ipa=_text(item.get("ipa")),
-            audio=_text(item.get("audio")),
-            tags=_strings(item.get("tags")),
-        )
-        if (
-            pronunciation.ipa or pronunciation.audio or pronunciation.tags
-        ) and pronunciation not in result:
+        ipa = _text(item.get("ipa"))
+        if ipa is None:
+            continue
+        pronunciation = Pronunciation(ipa=ipa, tags=_strings(item.get("tags")))
+        if pronunciation not in result:
             result.append(pronunciation)
     return tuple(result)
 

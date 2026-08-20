@@ -62,4 +62,6 @@ def test_cli_human_output_includes_rich_sections(
     assert "Their love grew over time." in output
     assert "/lʌv/" in output
     assert "loves" in output
+    assert "Love.ogg" not in output
+    assert ".wav" not in output
     assert "affection" in output

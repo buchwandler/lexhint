@@ -4,7 +4,7 @@
 
 It provides:
 
-- common-word membership and frequency ranks;
+- dictionary membership with optional build-time corpus frequency ranks;
 - segmentation of compact identifiers and domain labels;
 - compact dictionary senses and semantic topics;
 - candidate-aware context evidence for downstream speech applications.
@@ -19,7 +19,7 @@ Install the package with its development dependencies:
 python -m pip install -e ".[dev]"
 ```
 
-Prepare the default English word list and try the CLI:
+Prepare the schema-6 English dictionary dataset and try the CLI:
 
 ```bash
 lexhint setup

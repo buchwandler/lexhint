@@ -7,10 +7,9 @@ section: cross_cutting_concepts
 title: Cross-cutting Concepts
 order: 80
 status: accepted
-version: 5
+version: 6
 body_format: markdown
 ---
-
 ### Normalization and identity
 
 Unicode NFC normalization is used for stored display values and case folding for lookup keys. Dictionary rows retain display spelling so case-sensitive variants can be preferred without changing lookup identity.

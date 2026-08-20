@@ -91,64 +91,35 @@ The bootstrap ZIP configures `0.1.0` as the `setuptools-scm` fallback version be
 metadata is not part of a normal ZIP archive. Installed runtime version lookup uses
 `importlib.metadata`, so no generated version module is kept in the source tree.
 
-# 1. Common-word lexicon
+# 1. Dictionary lexical data
 
-Fetch a FrequencyWords top-50k list:
+All runtime lexical operations use the installed SQLite dictionary dataset. Dictionary membership and corpus commonness are separate: a known word may have no corpus statistic.
 
 ```bash
-lexhint fetch en
-lexhint fetch de fr es it pt cs
+lexhint setup
+lexhint word compiler
+lexhint segment compilerword
 ```
 
-Default cache:
+The runtime artifact is:
 
 ```text
-~/.cache/lexhint/words/<language>.txt.gz
-~/.cache/lexhint/words/<language>.metadata.json
+~/.cache/lexhint/dictionaries/<language>.sqlite3
 ```
-
-Override the complete cache root with `LEXHINT_CACHE_DIR`.
-
-Word-list downloads use a pinned FrequencyWords revision. The metadata sidecar records
-the source revision, normalized content SHA-256, language, and word count, so a cache
-can be checked for provenance and corruption before it is reused. Use `--force` when an
-explicit refresh is wanted.
 
 Python:
 
 ```python
-from lexhint import LexicalSegment, Lexicon
+from lexhint import Dictionary
 
-lex = Lexicon("en")
-
-assert lex.contains("chat")
-print(lex.rank("chat"))
-print(lex.segment("chatgpt"))
+dictionary = Dictionary("en")
+info = dictionary.word_info("compiler")
+assert info.known
+print(info.frequency_rank, info.frequency_count)
+print(dictionary.segment("compilerword"))
 ```
 
-Word lists load lazily. Pass `path` to use a specific gzip list, `auto_fetch=True` to
-opt into downloading a missing list, or use `Lexicon.from_words(words)` for an
-in-memory lexicon in tests and embedded applications.
-
-Expected segmentation shape:
-
-```python
-(
-    LexicalSegment(text="chat", in_lexicon=True, frequency_rank=...),
-    LexicalSegment(text="gpt", in_lexicon=False, frequency_rank=None),
-)
-```
-
-`in_lexicon` is lexical-resource evidence only. It is not a pronunciation or
-interpretation decision. `Lexicon.segment()` accepts one compact identifier or domain
-label; the caller owns URL schemes, dots, paths, ports, and other URL syntax.
-
-CLI:
-
-```bash
-lexhint word chat
-lexhint segment chatgpt
-```
+Segmentation requires a full-coverage dictionary dataset. `LexicalSegment.known` reports dictionary membership; frequency rank is optional corpus evidence. URL syntax remains the caller's responsibility.
 
 # 2. Dictionary-derived context
 
@@ -159,35 +130,20 @@ The Kaikki raw English-edition extraction contains many languages, so the builde
 `lang_code` and can produce indexes for `en`, `de`, `fr`, and other languages from the
 same source when those entries are present.
 
-The common-word lexicon and semantic dictionary are independent resources. Dictionary
-building does not require a FrequencyWords list. To build from a downloaded Kaikki file:
+The dictionary dataset can be enriched at build time with a pinned FrequencyWords full file. The corpus source provides rank and count evidence only; it does not add lexemes.
 
 ```bash
-lexhint dictionary build en ~/Downloads/raw-wiktextract-data.jsonl.gz
+lexhint dictionary build en ~/Downloads/raw-wiktextract-data.jsonl.gz \
+    --frequency-source ~/Downloads/en_full.txt
 ```
 
-The lazy word path avoids the multi-gigabyte download entirely. For complete local
-coverage, use the built-in official Kaikki source directly:
-
-```bash
-lexhint dictionary build en
-```
-
-That source is very large. The builder reads it line-by-line and stores grouped dictionary
-entries containing definitions, usage labels, examples, forms, pronunciations, basic relations,
-and explicit semantic topics. Context scoring uses only the topic index. Dictionary vocabulary
-is not restricted to the FrequencyWords common-word list; technical semantic cues such as
-"compiler" can therefore be retained. The resulting database defaults to:
+The builder reads sources line-by-line and stores grouped dictionary entries containing definitions, usage labels, examples, forms, IPA pronunciations, basic relations, semantic topics, canonical lexemes, case flags, and optional corpus statistics. The resulting database defaults to:
 
 ```text
 ~/.cache/lexhint/dictionaries/en.sqlite3
 ```
 
-The schema v5 index stores ordered entries and senses, compact JSON lexical payloads, an indexed
-topic table, and partial-cache coverage metadata. Partial indexes are live, network-opt-in
-caches. Full indexes built from a local source are reproducible snapshots identified by their
-source SHA-256; a full index built from a remote URL records that it is live-full unless the
-caller supplies a separately pinned source. `Dictionary.from_path(path)` reads the language from
+Schema-6 indexes store the rich hierarchy, lexeme membership table, corpus provenance, and coverage metadata. Partial indexes support exact lazy lookup but are not sufficient for reliable segmentation. Full local indexes record source hashes; composite snapshot identity covers both dictionary and frequency inputs.
 index metadata, while `Dictionary.from_path(path, language="en")` asserts it.
 
 Each entry contains:
@@ -291,10 +247,7 @@ For diagnostics, inspect all nearby dictionary topics:
 ```python
 for score in lex.topic_scores(text, target=(start, start + len("8.3.2"))):
     print(score.topic, score.score)
-    print([
-        (cue.text, cue.start, cue.end, cue.distance, cue.weight)
-        for cue in score.cues
-    ])
+    print([(cue.text, cue.start, cue.end, cue.distance, cue.weight) for cue in score.cues])
 ```
 
 CLI:
@@ -312,10 +265,9 @@ lexhint --offline context en computing "The compiler is 8.3.2." --target 8.3.2
 The intended flow is:
 
 ```text
-FrequencyWords ──> lexical evidence ─┐
-                                     ├─> lexhint ──> evidence ──> spokenform
-Wiktionary ──────> sense/topic data ─┘
-```
+Wiktextract/Kaikki ─┐
+                    ├─> schema-6 SQLite dictionary ──> lexhint ──> spokenform
+FrequencyWords ─────┘       (build-time enrichment)
 
 Examples:
 
@@ -338,20 +290,13 @@ names, or other speech policy. Those remain in the speech/text-normalization lay
 
 # Vendoring data for an offline wheel
 
-Word lists:
-
-```bash
-python tools/vendor_wordlists.py en de
-```
-
 Dictionary indexes:
 
 ```bash
 python tools/vendor_dictionary.py en
 ```
 
-Review `DATA_SOURCES.md` before redistributing external data. Generated dictionary and
-word-list files have data-license obligations independent of the Apache-2.0-licensed Python code.
+Review `DATA_SOURCES.md` before redistributing external dictionary or frequency data. Generated dataset files have data-license obligations independent of the Apache-2.0-licensed Python code.
 
 # Tests
 

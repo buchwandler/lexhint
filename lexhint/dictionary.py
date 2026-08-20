@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import json
+import math
 import re
 import sqlite3
 from collections.abc import Iterable, Mapping
@@ -22,13 +23,16 @@ from .models import (
     DictionaryFetchResult,
     Example,
     Form,
+    LexicalSegment,
     Pronunciation,
     Sense,
     TopicEvidence,
+    WordInfo,
 )
 from .store import (
     LEGACY_SCHEMA_VERSION,
     OLDER_LEGACY_SCHEMA_VERSION,
+    OLDEST_LEGACY_SCHEMA_VERSION,
     SCHEMA_VERSION,
     dictionary_coverage,
     initialize_partial,
@@ -54,6 +58,10 @@ class DictionaryIncompatible(RuntimeError):
 
 class DictionaryOfflineError(DictionaryFetchError):
     """Raised when offline mode needs a word that is not cached."""
+
+
+class DictionaryCoverageError(RuntimeError):
+    """Raised when an operation requires a complete lexical dataset."""
 
 
 def _normalize(value: str) -> str:
@@ -101,19 +109,22 @@ def _loads_pronunciations(value: str) -> tuple[Pronunciation, ...]:
         return ()
     return tuple(
         Pronunciation(
-            ipa=item.get("ipa") if isinstance(item.get("ipa"), str) else None,
-            audio=item.get("audio") if isinstance(item.get("audio"), str) else None,
+            ipa=item["ipa"],
             tags=tuple(str(tag) for tag in item.get("tags", ())),
         )
         for item in data
-        if isinstance(item, Mapping)
+        if isinstance(item, Mapping) and isinstance(item.get("ipa"), str) and item["ipa"]
     )
 
 
 def _runtime_metadata(path: Path) -> dict[str, str]:
     with closing(sqlite3.connect(path)) as connection:
         actual = metadata(connection)
-    if actual.get("schema_version") in {LEGACY_SCHEMA_VERSION, OLDER_LEGACY_SCHEMA_VERSION}:
+    if actual.get("schema_version") in {
+        LEGACY_SCHEMA_VERSION,
+        OLDER_LEGACY_SCHEMA_VERSION,
+        OLDEST_LEGACY_SCHEMA_VERSION,
+    }:
         if actual.get("coverage") == "partial":
             migrate_partial_v3_to_v4(path)
             with closing(sqlite3.connect(path)) as connection:
@@ -121,7 +132,7 @@ def _runtime_metadata(path: Path) -> dict[str, str]:
         elif actual.get("coverage") == "full":
             raise DictionaryIncompatible(
                 f"schema {actual.get('schema_version')} full dictionary indexes are incomplete "
-                "under schema 5; rebuild with 'lexhint dictionary build'"
+                "under schema 6; rebuild with 'lexhint dictionary build'"
             )
     return actual
 
@@ -135,7 +146,7 @@ def fetch_dictionary_word(
     offline: bool = False,
     timeout: float = 30.0,
 ) -> DictionaryFetchResult:
-    """Fetch one exact Kaikki word page into a schema-v5 partial cache."""
+    """Fetch one exact Kaikki word page into a schema-6 partial cache."""
     base_language = language.lower().split("-", 1)[0]
     query = _display_normalize(word)
     source_url = kaikki_word_url(query)
@@ -368,8 +379,98 @@ class Dictionary:
             for sense in entry.senses
         )
 
+    @property
+    def has_frequency_data(self) -> bool:
+        with closing(sqlite3.connect(self.path)) as connection:
+            return metadata(connection).get("frequency_source") not in {None, "", "none"}
+
+    def word_info(self, word: str) -> WordInfo:
+        self._ensure_word(word)
+        normalized = _normalize(word)
+        with closing(self._connect()) as connection:
+            row = connection.execute(
+                "SELECT corpus_count, corpus_rank FROM lexemes WHERE word = ?",
+                (normalized,),
+            ).fetchone()
+        if row is None:
+            return WordInfo(word, False)
+        return WordInfo(word, True, row["corpus_rank"], row["corpus_count"])
+
     def contains(self, word: str) -> bool:
-        return bool(self.lookup(word))
+        return self.word_info(word).known
+
+    def _lexeme_candidates(self, values: set[str]) -> dict[str, sqlite3.Row]:
+        result: dict[str, sqlite3.Row] = {}
+        candidates = tuple(values)
+        with closing(self._connect()) as connection:
+            for offset in range(0, len(candidates), 500):
+                chunk = candidates[offset : offset + 500]
+                placeholders = ",".join("?" for _ in chunk)
+                rows = connection.execute(
+                    "SELECT word, corpus_count, corpus_rank, has_lowercase, "
+                    "has_titlecase, has_uppercase FROM lexemes "
+                    f"WHERE word IN ({placeholders})",  # noqa: S608
+                    chunk,
+                ).fetchall()
+                result.update({str(row["word"]): row for row in rows})
+        return result
+
+    def segment(self, text: str, *, max_word_length: int = 32) -> tuple[LexicalSegment, ...]:
+        """Split a compact label using dictionary lexemes and corpus weighting."""
+        if dictionary_coverage(self.path) != "full":
+            raise DictionaryCoverageError(
+                "segment requires an installed dictionary dataset with full lexical coverage"
+            )
+        value = _normalize(text)
+        if not value:
+            return ()
+        candidates = {
+            value[start:end]
+            for end in range(1, len(value) + 1)
+            for start in range(max(0, end - max_word_length), end - 1)
+        }
+        lexemes = self._lexeme_candidates(candidates)
+        n = len(value)
+        best = [-math.inf] * (n + 1)
+        previous: list[tuple[int, bool, int | None] | None] = [None] * (n + 1)
+        best[0] = 0.0
+        for end in range(1, n + 1):
+            unknown_score = best[end - 1] - 5.0
+            if unknown_score > best[end]:
+                best[end] = unknown_score
+                previous[end] = (end - 1, False, None)
+            start_min = max(0, end - max_word_length)
+            for start in range(start_min, end - 1):
+                candidate = value[start:end]
+                info = lexemes.get(candidate)
+                if info is None:
+                    continue
+                length = end - start
+                rank = info["corpus_rank"]
+                if length == 2 and (rank is None or rank > 2_000):
+                    continue
+                if value.islower() and not info["has_lowercase"]:
+                    continue
+                frequency_penalty = math.log10(rank + 9) if rank is not None else 7.0
+                score = best[start] + (length * 6.0) - frequency_penalty
+                if score > best[end]:
+                    best[end] = score
+                    previous[end] = (start, True, rank)
+        raw: list[LexicalSegment] = []
+        cursor = n
+        while cursor > 0:
+            step = previous[cursor] or (cursor - 1, False, None)
+            start, known, rank = step
+            raw.append(LexicalSegment(value[start:cursor], known, rank))
+            cursor = start
+        raw.reverse()
+        merged: list[LexicalSegment] = []
+        for item in raw:
+            if not item.known and merged and not merged[-1].known:
+                merged[-1] = LexicalSegment(merged[-1].text + item.text, False)
+            else:
+                merged.append(item)
+        return tuple(merged)
 
     def topics(self, word: str) -> tuple[str, ...]:
         return tuple(sorted(self._topics_for_words((word,))[word]))
@@ -510,6 +611,7 @@ class Dictionary:
 
 
 __all__ = [
+    "DictionaryCoverageError",
     "Dictionary",
     "DictionaryFetchError",
     "DictionaryIncompatible",

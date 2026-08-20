@@ -46,7 +46,7 @@ def test_dictionary_lookup_groups_ordered_rich_entries(tmp_path: Path) -> None:
     assert not dictionary.contains("metadataonly")
 
 
-def test_schema_v5_has_hierarchical_rich_tables(tmp_path: Path) -> None:
+def test_schema_v6_has_hierarchical_rich_tables(tmp_path: Path) -> None:
     path, _ = build_dictionary("en", FIXTURE, output=tmp_path / "en.sqlite3")
     with closing(sqlite3.connect(path)) as connection:
         entry_columns = {row[1] for row in connection.execute("PRAGMA table_info(entries)")}
@@ -78,7 +78,7 @@ def test_schema_v5_has_hierarchical_rich_tables(tmp_path: Path) -> None:
         "antonyms",
     }
     assert {"entries", "senses", "sense_topics", "lookups"} <= tables
-    assert metadata["schema_version"] == "5"
+    assert metadata["schema_version"] == "6"
     assert metadata["dictionary_profile"] == "rich"
 
 
@@ -137,7 +137,7 @@ def test_schema_incompatibility_is_controlled(tmp_path: Path) -> None:
         connection.execute("INSERT INTO metadata VALUES ('schema_version', '1')")
         connection.execute("INSERT INTO metadata VALUES ('language', 'en')")
         connection.commit()
-    with pytest.raises(DictionaryIncompatible, match="schema 1; schema 5 is required"):
+    with pytest.raises(DictionaryIncompatible, match="schema 1; schema 6 is required"):
         Dictionary.from_path(path, language="en")
 
 
@@ -145,7 +145,7 @@ def test_wrong_language_is_incompatible(tmp_path: Path) -> None:
     path = tmp_path / "wrong-language.sqlite3"
     with closing(sqlite3.connect(path)) as connection:
         create_schema(connection)
-        set_metadata(connection, {"schema_version": "5", "language": "de", "coverage": "full"})
+        set_metadata(connection, {"schema_version": "6", "language": "de", "coverage": "full"})
         connection.commit()
     with pytest.raises(DictionaryIncompatible, match="language 'en' was requested"):
         Dictionary.from_path(path, language="en")

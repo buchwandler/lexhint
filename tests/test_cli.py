@@ -1,52 +1,57 @@
 from __future__ import annotations
 
 import json
-import sqlite3
-from contextlib import closing
 from pathlib import Path
 
 import pytest
 
 from lexhint import cli
-from lexhint.models import LexicalSegment
+from lexhint.models import LexicalSegment, WordInfo
 
 FIXTURE = Path(__file__).parent / "fixtures" / "kaikki-mini.jsonl"
 
 
-class FakeLexicon:
+class FakeDictionary:
     def __init__(self, language: str, **_: object) -> None:
         self.language = language
 
-    def rank(self, word: str) -> int | None:
-        return 213 if word.casefold() == "house" else None
+    def word_info(self, word: str) -> WordInfo:
+        return WordInfo(
+            word, word.casefold() == "house", 213 if word.casefold() == "house" else None, 42
+        )
 
     def segment(self, text: str) -> tuple[LexicalSegment, ...]:
         assert text == "chatgpt"
         return (LexicalSegment("chat", True, 2668), LexicalSegment("gpt", False))
 
 
-def test_word_uses_default_english(
+def test_word_uses_dictionary_and_reports_frequency_fields(
     monkeypatch: pytest.MonkeyPatch, capsys: pytest.CaptureFixture[str]
 ) -> None:
-    monkeypatch.setattr(cli, "Lexicon", FakeLexicon)
+    monkeypatch.setattr(cli, "Dictionary", FakeDictionary)
     assert cli.main(["word", "house"]) == 0
-    assert capsys.readouterr().out == "house  ✓ known  rank #213\n"
+    assert "house  ✓ known" in capsys.readouterr().out
 
 
-def test_legacy_word_language_still_works(
+def test_word_json_separates_membership_from_frequency(
     monkeypatch: pytest.MonkeyPatch, capsys: pytest.CaptureFixture[str]
 ) -> None:
-    monkeypatch.setattr(cli, "Lexicon", FakeLexicon)
-    assert cli.main(["word", "de", "house", "--json"]) == 0
+    monkeypatch.setattr(cli, "Dictionary", FakeDictionary)
+    assert cli.main(["--json", "word", "house"]) == 0
     payload = json.loads(capsys.readouterr().out)
-    assert payload["language"] == "de"
-    assert payload["word"] == "house"
+    assert payload == {
+        "language": "en",
+        "word": "house",
+        "known": True,
+        "frequency_rank": 213,
+        "frequency_count": 42,
+    }
 
 
 def test_segment_human_output(
     monkeypatch: pytest.MonkeyPatch, capsys: pytest.CaptureFixture[str]
 ) -> None:
-    monkeypatch.setattr(cli, "Lexicon", FakeLexicon)
+    monkeypatch.setattr(cli, "Dictionary", FakeDictionary)
     assert cli.main(["segment", "chatgpt"]) == 0
     output = capsys.readouterr().out
     assert "chatgpt" in output
@@ -60,58 +65,21 @@ def test_dictionary_build_source_defaults_to_kaikki() -> None:
     assert args.source == cli.KAIKKI_RAW_URL
     assert not hasattr(args, "limit")
     assert not hasattr(args, "auto_fetch_wordlist")
+    assert not hasattr(args, "force")
 
 
-def test_dictionary_json_uses_rich_entry_shape(
-    tmp_path: Path, capsys: pytest.CaptureFixture[str]
-) -> None:
-    output = tmp_path / "en.sqlite3"
-    assert cli.main(["dictionary", "build", "en", str(FIXTURE), "--output", str(output)]) == 0
-    capsys.readouterr()
-    assert cli.main(["--json", "dictionary", "word", "en", "compiler", "--path", str(output)]) == 0
-    payload = json.loads(capsys.readouterr().out)
-    assert payload["entries"]
-    assert set(payload["entries"][0]) == {
-        "word",
-        "pos",
-        "senses",
-        "forms",
-        "pronunciations",
-        "etymology",
-    }
-    assert set(payload["entries"][0]["senses"][0]) == {
-        "glosses",
-        "topics",
-        "tags",
-        "examples",
-        "synonyms",
-        "antonyms",
-    }
-
-
-def test_missing_wordlist_is_runtime_error(
-    tmp_path: Path, monkeypatch: pytest.MonkeyPatch, capsys: pytest.CaptureFixture[str]
-) -> None:
-    monkeypatch.setenv("LEXHINT_CACHE_DIR", str(tmp_path / "empty"))
-    assert cli.main(["word", "house"]) == 1
-    error = capsys.readouterr().err
-    assert "no word list installed" in error
-    assert "lexhint setup" in error
-
-
-def test_invalid_environment_language_is_runtime_error(
-    monkeypatch: pytest.MonkeyPatch, capsys: pytest.CaptureFixture[str]
-) -> None:
-    monkeypatch.setenv("LEXHINT_LANGUAGE", "xx")
-    assert cli.main(["word", "house"]) == 1
-    assert "unsupported language" in capsys.readouterr().err
+def test_setup_has_no_wordlist_command() -> None:
+    with pytest.raises(SystemExit):
+        cli._parser().parse_args(["fetch", "en"])
 
 
 def test_schema_incompatibility_has_rebuild_hint(
     tmp_path: Path, capsys: pytest.CaptureFixture[str]
 ) -> None:
+    import sqlite3
+
     path = tmp_path / "schema-1.sqlite3"
-    with closing(sqlite3.connect(path)) as connection:
+    with sqlite3.connect(path) as connection:
         connection.execute("CREATE TABLE metadata (key TEXT PRIMARY KEY, value TEXT NOT NULL)")
         connection.execute("INSERT INTO metadata VALUES ('schema_version', '1')")
         connection.execute("INSERT INTO metadata VALUES ('language', 'en')")

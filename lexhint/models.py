@@ -5,14 +5,10 @@ from dataclasses import dataclass
 
 @dataclass(frozen=True, slots=True)
 class LexicalSegment:
-    """One segment of a compact label.
-
-    ``in_lexicon`` is lexical-resource evidence only.  It does not decide
-    whether the segment is a word, acronym, brand, name, or pronunciation.
-    """
+    """One segment of a compact label."""
 
     text: str
-    in_lexicon: bool
+    known: bool
     frequency_rank: int | None = None
 
 
@@ -25,6 +21,16 @@ class Example:
 
 
 @dataclass(frozen=True, slots=True)
+class WordInfo:
+    """Dictionary membership and optional corpus frequency evidence."""
+
+    word: str
+    known: bool
+    frequency_rank: int | None = None
+    frequency_count: int | None = None
+
+
+@dataclass(frozen=True, slots=True)
 class Form:
     """An inflected or alternate form of a dictionary entry."""
 
@@ -34,10 +40,9 @@ class Form:
 
 @dataclass(frozen=True, slots=True)
 class Pronunciation:
-    """A pronunciation variant supplied by the source dictionary."""
+    """An IPA pronunciation variant supplied by the source dictionary."""
 
-    ipa: str | None = None
-    audio: str | None = None
+    ipa: str
     tags: tuple[str, ...] = ()
 
 
@@ -93,6 +98,9 @@ class DictionaryBuildStats:
     kept_entries: int
     words: int
     senses: int
+    frequency_rows: int = 0
+    frequency_matches: int = 0
+    frequency_total_tokens: int = 0
 
 
 @dataclass(frozen=True, slots=True)

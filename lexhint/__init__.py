@@ -9,11 +9,11 @@ except PackageNotFoundError:
 
 from .dictionary import (
     Dictionary,
+    DictionaryCoverageError,
     DictionaryIncompatible,
     DictionaryNotInstalled,
     DictionaryOfflineError,
 )
-from .lexicon import Lexicon, LexiconNotInstalled
 from .models import (
     ContextCue,
     DictionaryEntry,
@@ -23,22 +23,23 @@ from .models import (
     Pronunciation,
     Sense,
     TopicEvidence,
+    WordInfo,
 )
 
 __all__ = [
     "ContextCue",
     "Dictionary",
+    "DictionaryCoverageError",
     "DictionaryEntry",
     "DictionaryIncompatible",
     "DictionaryNotInstalled",
     "DictionaryOfflineError",
     "Example",
     "Form",
-    "Lexicon",
-    "LexiconNotInstalled",
     "LexicalSegment",
     "Pronunciation",
     "Sense",
     "TopicEvidence",
+    "WordInfo",
     "__version__",
 ]

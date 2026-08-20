@@ -7,10 +7,9 @@ section: quality_requirements
 title: Quality Requirements
 order: 100
 status: accepted
-version: 5
+version: 6
 body_format: markdown
 ---
-
 | Quality attribute | Architectural response                                                                                                 | Observable scenario                                                                     |
 | ----------------- | ---------------------------------------------------------------------------------------------------------------------- | --------------------------------------------------------------------------------------- |
 | Correctness       | NFC and case-folded keys, display-aware dictionary selection, explicit language filtering, and target exclusion        | A candidate token is never used as its own context cue; unrelated context fails closed. |

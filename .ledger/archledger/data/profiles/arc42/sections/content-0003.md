@@ -7,10 +7,9 @@ section: context_and_scope
 title: Context and Scope
 order: 30
 status: accepted
-version: 4
+version: 5
 body_format: markdown
 ---
-
 `lexhint` sits between lexical resources and a speech or text-normalization consumer.
 
 ## Business context

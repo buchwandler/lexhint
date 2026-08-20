@@ -51,7 +51,7 @@ where = ["."]
 include = ["lexhint*"]
 
 [tool.setuptools.package-data]
-lexhint = ["py.typed", "data/words/*.txt.gz", "data/dictionaries/*.sqlite3", "data/**/.gitkeep"]
+lexhint = ["py.typed", "data/dictionaries/*.sqlite3", "data/**/.gitkeep"]
 
 [tool.setuptools_scm]
 # A Git-less source archive must never silently identify itself as a released

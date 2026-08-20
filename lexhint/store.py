@@ -11,9 +11,10 @@ from pathlib import Path
 
 from .models import DictionaryEntry, Example, Form, Pronunciation
 
-SCHEMA_VERSION = "5"
-LEGACY_SCHEMA_VERSION = "4"
-OLDER_LEGACY_SCHEMA_VERSION = "3"
+SCHEMA_VERSION = "6"
+LEGACY_SCHEMA_VERSION = "5"
+OLDER_LEGACY_SCHEMA_VERSION = "4"
+OLDEST_LEGACY_SCHEMA_VERSION = "3"
 
 
 @dataclass(frozen=True, slots=True)
@@ -81,9 +82,20 @@ def _json_forms(values: tuple[Form, ...]) -> str:
 
 def _json_pronunciations(values: tuple[Pronunciation, ...]) -> str:
     return json.dumps(
-        [{"ipa": value.ipa, "audio": value.audio, "tags": value.tags} for value in values],
+        [{"ipa": value.ipa, "tags": value.tags} for value in values],
         ensure_ascii=False,
         separators=(",", ":"),
+    )
+
+
+def _case_flags(display_word: str) -> tuple[bool, bool, bool]:
+    cased = [character for character in display_word if character.isalpha()]
+    if not cased:
+        return False, False, False
+    return (
+        display_word == display_word.lower(),
+        display_word == display_word.title(),
+        display_word == display_word.upper(),
     )
 
 
@@ -96,6 +108,18 @@ def insert_dictionary_entries(
     for entry_index, entry in enumerate(entries):
         word = normalize_word(entry.word)
         display_word = normalize_display_word(entry.word)
+        has_lowercase, has_titlecase, has_uppercase = _case_flags(display_word)
+        connection.execute(
+            "INSERT INTO lexemes("
+            "word, entry_count, has_lowercase, has_titlecase, has_uppercase"
+            ") VALUES (?, 1, ?, ?, ?) "
+            "ON CONFLICT(word) DO UPDATE SET "
+            "entry_count = entry_count + 1, "
+            "has_lowercase = MAX(has_lowercase, excluded.has_lowercase), "
+            "has_titlecase = MAX(has_titlecase, excluded.has_titlecase), "
+            "has_uppercase = MAX(has_uppercase, excluded.has_uppercase)",
+            (word, has_lowercase, has_titlecase, has_uppercase),
+        )
         cursor = connection.execute(
             "INSERT INTO entries("
             "word, display_word, pos, entry_index, etymology, forms, pronunciations"
@@ -161,6 +185,16 @@ def create_schema(connection: sqlite3.Connection) -> None:
         );
         CREATE INDEX entries_word_idx ON entries(word);
         CREATE INDEX entries_display_word_idx ON entries(display_word);
+        CREATE TABLE lexemes (
+            word TEXT PRIMARY KEY,
+            entry_count INTEGER NOT NULL DEFAULT 0,
+            has_lowercase INTEGER NOT NULL DEFAULT 0,
+            has_titlecase INTEGER NOT NULL DEFAULT 0,
+            has_uppercase INTEGER NOT NULL DEFAULT 0,
+            corpus_count INTEGER,
+            corpus_rank INTEGER
+        );
+        CREATE INDEX lexemes_corpus_rank_idx ON lexemes(corpus_rank);
         CREATE TABLE senses (
             id INTEGER PRIMARY KEY,
             entry_id INTEGER NOT NULL,
@@ -265,6 +299,9 @@ def replace_word_entries(
         connection.execute("PRAGMA foreign_keys = ON")
         connection.execute("BEGIN IMMEDIATE")
         connection.execute("DELETE FROM entries WHERE display_word = ?", (normalized_query,))
+        connection.execute(
+            "DELETE FROM lexemes WHERE word = ?", (normalize_word(normalized_query),)
+        )
         _, sense_count, _ = insert_dictionary_entries(connection, entries_value)
         connection.execute(
             "INSERT OR REPLACE INTO lookups("
@@ -332,6 +369,7 @@ def migrate_partial_v3_to_v4(path: str | Path) -> bool:
             not in {
                 LEGACY_SCHEMA_VERSION,
                 OLDER_LEGACY_SCHEMA_VERSION,
+                OLDEST_LEGACY_SCHEMA_VERSION,
             }
             or actual.get("coverage") != "partial"
         ):
@@ -339,7 +377,7 @@ def migrate_partial_v3_to_v4(path: str | Path) -> bool:
 
         language = actual.get("language", "")
         connection.execute("PRAGMA foreign_keys = OFF")
-        for table in ("sense_topics", "senses", "entries", "lookups", "metadata"):
+        for table in ("sense_topics", "senses", "entries", "lexemes", "lookups", "metadata"):
             connection.execute(f"DROP TABLE IF EXISTS {table}")  # noqa: S608
         create_schema(connection)
         set_metadata(

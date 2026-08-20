@@ -7,10 +7,9 @@ section: introduction_and_goals
 title: Introduction and Goals
 order: 10
 status: accepted
-version: 5
+version: 6
 body_format: markdown
 ---
-
 `lexhint` is a Python library and CLI that supplies lexical and dictionary-derived semantic evidence to text-normalization and speech-front-end applications such as `spokenform`. It deliberately does not verbalize text or own speech policy.
 
 ## Requirements overview

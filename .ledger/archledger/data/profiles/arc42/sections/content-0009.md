@@ -7,10 +7,9 @@ section: architecture_decisions
 title: Architecture Decisions
 order: 90
 status: accepted
-version: 5
+version: 6
 body_format: markdown
 ---
-
 The current architecture records these decisions.
 
 - **Separate lexical and semantic resources.** Frequency rank answers common-word questions; dictionary senses answer semantic-context questions. Combining them would discard useful technical vocabulary.
