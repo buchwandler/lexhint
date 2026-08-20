@@ -73,7 +73,16 @@ lexhint dictionary word compiler
 lexhint dictionary status
 ```
 
-Use `--json` for stable machine-readable output. `dictionary status` reports current SQL row counts, capabilities, provenance, size, and build metadata without rebuilding. Use `--path` as an advanced override when inspecting a specific artifact. Rich dictionary lookup reports a controlled capability error for compact runtime artifacts.
+Dictionary word output has three human-readable detail levels. The default `standard` view shows all senses with compact metadata. Use `compact` for a deliberately short shell view, or `full` for every field retained by the local Lexhint dictionary model:
+
+```bash
+lexhint dictionary word love
+lexhint dictionary word love --detail compact
+lexhint dictionary word love --detail full
+lexhint --json dictionary word love
+```
+
+Use `--json` for stable, complete machine-readable output. `--detail` applies only to human-readable output and cannot be combined with `--json`. `dictionary status` reports current SQL row counts, capabilities, provenance, size, and build metadata without rebuilding. Use `--path` as an advanced override when inspecting a specific artifact. Rich dictionary lookup reports a controlled capability error for compact runtime artifacts.
 
 ## Data and scope
 
