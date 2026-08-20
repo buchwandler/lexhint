@@ -7,7 +7,7 @@ section: glossary
 title: Glossary
 order: 120
 status: accepted
-version: 7
+version: 8
 body_format: markdown
 ---
 

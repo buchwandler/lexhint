@@ -12,12 +12,14 @@ from lexhint import (
     LexiconCapabilityError,
     LexiconCoverageError,
     LexiconIncompatible,
+    LexiconNotInstalled,
     SemanticDomain,
 )
 from lexhint.builder import build_dictionary
 from lexhint.cli import main
 from lexhint.models import LexicalSegment
 from lexhint.schema import normalize_capabilities
+from lexhint.status import read_artifact_status
 
 FIXTURE = Path(__file__).parent / "fixtures" / "kaikki-mini.jsonl"
 
@@ -195,3 +197,123 @@ def test_runtime_is_no_network_and_no_write(
     lexicon.supports_domain("The scale is Am.", target=(14, 16), domain="music")
     lexicon.entries("compiler")
     assert hashlib.sha256(path.read_bytes()).digest() == before
+
+
+def test_status_reports_current_capability_aware_counts(tmp_path: Path) -> None:
+    path, _ = build_dictionary(
+        "en",
+        FIXTURE,
+        output=tmp_path / "runtime.sqlite3",
+        capabilities="lexical",
+        no_frequency=True,
+    )
+    result = read_artifact_status("en", path=path)
+    assert result.counts == {
+        "lexemes": 4,
+        "semantic_rows": None,
+        "entries": None,
+        "senses": None,
+        "frequency_lexemes": 0,
+    }
+    assert result.profile == "custom"
+
+
+def test_cli_build_progress_is_stderr_and_json_is_single_stdout_document(
+    tmp_path: Path, capsys: pytest.CaptureFixture[str]
+) -> None:
+    output = tmp_path / "en.sqlite3"
+    assert (
+        main(
+            [
+                "--json",
+                "dictionary",
+                "build",
+                "en",
+                "--source",
+                str(FIXTURE),
+                "--output",
+                str(output),
+                "--no-frequency",
+            ]
+        )
+        == 0
+    )
+    captured = capsys.readouterr()
+    payload = json.loads(captured.out)
+    assert payload["path"] == str(output)
+    assert captured.out.count("\n") == 1
+    assert "Building Lexhint database" in captured.err
+    assert "scanned" in captured.err
+
+
+def test_dictionary_status_cli_supports_default_and_explicit_paths(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch, capsys: pytest.CaptureFixture[str]
+) -> None:
+    monkeypatch.setenv("LEXHINT_CACHE_DIR", str(tmp_path / "cache"))
+    path, _ = build_dictionary("en", FIXTURE, no_frequency=True)
+    assert main(["--json", "dictionary", "status"]) == 0
+    default_status = json.loads(capsys.readouterr().out)
+    assert default_status["path"] == str(path)
+    assert default_status["counts"]["lexemes"] == 4
+    assert main(["--json", "dictionary", "status", "--path", str(path)]) == 0
+    explicit_status = json.loads(capsys.readouterr().out)
+    assert explicit_status["path"] == str(path)
+
+
+def test_build_option_conflicts_and_capability_validation(tmp_path: Path) -> None:
+    with pytest.raises(ValueError, match="no-frequency"):
+        build_dictionary(
+            "en",
+            FIXTURE,
+            output=tmp_path / "one.sqlite3",
+            no_frequency=True,
+            frequency_source=FIXTURE,
+        )
+    with pytest.raises(ValueError, match="requires"):
+        build_dictionary(
+            "en",
+            FIXTURE,
+            output=tmp_path / "two.sqlite3",
+            capabilities="semantic",
+            no_frequency=True,
+        )
+    with pytest.raises(ValueError, match="unknown capability"):
+        build_dictionary(
+            "en",
+            FIXTURE,
+            output=tmp_path / "three.sqlite3",
+            capabilities="lexical,unknown",
+            no_frequency=True,
+        )
+
+
+def test_missing_artifact_is_not_created(tmp_path: Path) -> None:
+    missing = tmp_path / "missing.sqlite3"
+    with pytest.raises(LexiconNotInstalled):
+        Lexicon.from_path(missing)
+    assert not missing.exists()
+
+
+def test_offline_rejects_remote_dictionary_before_urlopen(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    monkeypatch.setattr(
+        "urllib.request.urlopen", lambda *args, **kwargs: pytest.fail("network was called")
+    )
+    with pytest.raises(OSError, match="offline"):
+        build_dictionary(
+            "en",
+            "https://example.invalid/source.jsonl",
+            output=tmp_path / "remote.sqlite3",
+            no_frequency=True,
+            offline=True,
+        )
+
+
+def test_rich_status_reports_database_counts(tmp_path: Path) -> None:
+    path, _ = build_dictionary("en", FIXTURE, output=tmp_path / "rich.sqlite3", no_frequency=True)
+    status = read_artifact_status("en", path=path)
+    assert status.counts["entries"] == 5
+    assert status.counts["senses"] == 9
+    assert status.counts["semantic_rows"] == 3
+    assert status.counts["frequency_lexemes"] == 0

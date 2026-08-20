@@ -63,12 +63,22 @@ class Lexicon:
         self._metadata = self._read_metadata()
         self._validate_metadata()
 
+    @staticmethod
+    def _connect_path_readonly(path: Path) -> sqlite3.Connection:
+        uri = path.resolve().as_uri() + "?mode=ro"
+        connection = sqlite3.connect(uri, uri=True)
+        connection.row_factory = sqlite3.Row
+        return connection
+
     @classmethod
     def from_path(cls, path: str | Path, *, language: str | None = None) -> Lexicon:
         target = Path(path).expanduser()
+        if not target.is_file():
+            raise LexiconNotInstalled(
+                f"no local lexicon artifact at {target}; build or install a Lexhint SQLite database"
+            )
         try:
-            with closing(sqlite3.connect(target)) as connection:
-                connection.row_factory = sqlite3.Row
+            with closing(cls._connect_path_readonly(target)) as connection:
                 actual = {
                     str(row["key"]): str(row["value"])
                     for row in connection.execute("SELECT key, value FROM metadata")
@@ -96,7 +106,7 @@ class Lexicon:
 
     def _read_metadata(self) -> dict[str, str]:
         try:
-            with closing(sqlite3.connect(self.path)) as connection:
+            with closing(self._connect_path_readonly(self.path)) as connection:
                 return {
                     str(row[0]): str(row[1])
                     for row in connection.execute("SELECT key, value FROM metadata")
@@ -138,10 +148,7 @@ class Lexicon:
         )
 
     def _connect(self) -> sqlite3.Connection:
-        uri = self.path.resolve().as_uri() + "?mode=ro"
-        connection = sqlite3.connect(uri, uri=True)
-        connection.row_factory = sqlite3.Row
-        return connection
+        return self._connect_path_readonly(self.path)
 
     def _require(self, capability: str) -> None:
         if capability not in self.capabilities:
@@ -190,16 +197,15 @@ class Lexicon:
     def segment(self, text: str, *, max_word_length: int = 32) -> tuple[LexicalSegment, ...]:
         self._require("lexical")
         self._require_full()
-        value = normalize_word(text)
-        if not value:
+        if not normalize_word(text):
             return ()
         candidates = {
-            value[start:end]
-            for end in range(1, len(value) + 1)
+            normalize_word(text[start:end])
+            for end in range(1, len(text) + 1)
             for start in range(max(0, end - max_word_length), end)
         }
         lexemes = self._lexeme_candidates(candidates)
-        n = len(value)
+        n = len(text)
         best = [-math.inf] * (n + 1)
         previous: list[tuple[int, bool, int | None] | None] = [None] * (n + 1)
         best[0] = 0.0
@@ -209,14 +215,19 @@ class Lexicon:
                 best[end] = unknown_score
                 previous[end] = (end - 1, False, None)
             for start in range(max(0, end - max_word_length), end):
-                info = lexemes.get(value[start:end])
+                info = lexemes.get(normalize_word(text[start:end]))
                 if info is None:
                     continue
+                candidate = text[start:end]
                 length = end - start
                 rank = info["corpus_rank"]
                 if length == 2 and (rank is None or rank > 2_000):
                     continue
-                if value.islower() and not info["has_lowercase"]:
+                if candidate.islower() and not info["has_lowercase"]:
+                    continue
+                if candidate.istitle() and not info["has_titlecase"]:
+                    continue
+                if candidate.isupper() and not info["has_uppercase"]:
                     continue
                 frequency_penalty = math.log10(rank + 9) if rank is not None else 7.0
                 score = best[start] + length * 6.0 - frequency_penalty
@@ -227,7 +238,7 @@ class Lexicon:
         cursor = n
         while cursor > 0:
             start, known, rank = previous[cursor] or (cursor - 1, False, None)
-            raw.append(LexicalSegment(value[start:cursor], known, rank))
+            raw.append(LexicalSegment(text[start:cursor], known, rank))
             cursor = start
         raw.reverse()
         merged: list[LexicalSegment] = []
@@ -324,18 +335,13 @@ class Lexicon:
                 rows = exact or rows
             return tuple(self._entry(connection, row) for row in rows)
 
-    def lookup(
-        self, word: str, *, all_case_variants: bool = False, refresh: bool = False
-    ) -> tuple[DictionaryEntry, ...]:
-        del refresh
+    def lookup(self, word: str, *, all_case_variants: bool = False) -> tuple[DictionaryEntry, ...]:
         return self.entries(word, all_case_variants=all_case_variants)
 
-    def senses(
-        self, word: str, *, all_case_variants: bool = False, refresh: bool = False
-    ) -> tuple[Sense, ...]:
+    def senses(self, word: str, *, all_case_variants: bool = False) -> tuple[Sense, ...]:
         return tuple(
             sense
-            for entry in self.lookup(word, all_case_variants=all_case_variants, refresh=refresh)
+            for entry in self.lookup(word, all_case_variants=all_case_variants)
             for sense in entry.senses
         )
 
@@ -457,9 +463,7 @@ class Lexicon:
         window: int = 6,
         decay: float = 0.7,
         limit: int | None = None,
-        refresh: bool = False,
     ) -> tuple[TopicEvidence, ...]:
-        del refresh
         self._require("dictionary")
         tokens = [(m.group(0), m.start(), m.end()) for m in _WORD_RE.finditer(text)]
         target_indices = self._target_indices(tokens, target)
@@ -490,15 +494,12 @@ class Lexicon:
         window: int = 6,
         decay: float = 0.7,
         threshold: float = 0.4,
-        refresh: bool = False,
     ) -> TopicEvidence | None:
         wanted = normalize_word(topic)
         return next(
             (
                 item
-                for item in self.topic_scores(
-                    text, target=target, window=window, decay=decay, refresh=refresh
-                )
+                for item in self.topic_scores(text, target=target, window=window, decay=decay)
                 if normalize_word(item.topic) == wanted and item.score >= threshold
             ),
             None,

@@ -7,7 +7,7 @@ section: solution_strategy
 title: Solution Strategy
 order: 40
 status: accepted
-version: 7
+version: 8
 body_format: markdown
 ---
 
@@ -21,3 +21,4 @@ The solution is organized around a small, explicit evidence pipeline.
 6. Query nearby context words in batches and apply bounded distance decay to explicit domain evidence.
 7. Validate pinned source hashes and use temporary files followed by atomic rename for downloaded and rebuilt artifacts.
 8. Keep the consumer boundary narrow. Speech pronunciation rules remain downstream.
+9. Emit build configuration and progress on stderr so successful JSON output remains a single stdout document.

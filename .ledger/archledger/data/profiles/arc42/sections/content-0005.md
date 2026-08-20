@@ -7,7 +7,7 @@ section: building_block_view
 title: Building Block View
 order: 50
 status: accepted
-version: 9
+version: 10
 body_format: markdown
 ---
 

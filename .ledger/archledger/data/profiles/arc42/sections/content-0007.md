@@ -7,14 +7,15 @@ section: deployment_view
 title: Deployment View
 order: 70
 status: accepted
-version: 7
+version: 8
 body_format: markdown
 ---
 
 Lexhint is deployed as a local Python package and a local SQLite evidence artifact. There is no application server, worker, or persistent service.
 
-- Consumers install the package and open an artifact with `Lexicon.from_path()`.
-- Artifact paths are selected by the caller or build workflow.
+- Consumers install the package and open an artifact with `Lexicon.from_path()` or the default `Lexicon` resolution.
+- Artifact paths are selected by the caller or build workflow; CLI `--path` is an explicit override.
+- `dictionary status` reports current row counts and metadata without rebuilding the artifact.
 - A complete local artifact supports offline lexical, segmentation, dictionary, and semantic reads when the corresponding capabilities are present.
 - Generated artifacts contain source and hash provenance for dictionary and corpus inputs.
 - Build downloads and replacements use temporary files and atomic rename.

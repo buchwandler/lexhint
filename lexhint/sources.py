@@ -22,6 +22,22 @@ class ResolvedFrequencySource:
     sha256: str
 
 
+def _sidecar_path(path: Path) -> Path:
+    return path.with_name(path.name + ".sha256")
+
+
+def _write_sidecar(path: Path, digest: str) -> None:
+    sidecar = _sidecar_path(path)
+    fd, temporary = tempfile.mkstemp(prefix=f".{sidecar.name}.", dir=sidecar.parent)
+    os.close(fd)
+    temporary_path = Path(temporary)
+    try:
+        temporary_path.write_text(digest + "\n", encoding="ascii")
+        temporary_path.replace(sidecar)
+    finally:
+        temporary_path.unlink(missing_ok=True)
+
+
 def _sha256(path: Path) -> str:
     digest = hashlib.sha256()
     with path.open("rb") as handle:
@@ -98,6 +114,18 @@ def resolve_frequency_source(
     target = _cache_path(base_language, FREQUENCYWORDS_REVISION)
     if refresh:
         target.unlink(missing_ok=True)
+        _sidecar_path(target).unlink(missing_ok=True)
+    if target.is_file():
+        sidecar = _sidecar_path(target)
+        expected = sidecar.read_text(encoding="ascii").strip() if sidecar.is_file() else ""
+        digest = _sha256(target)
+        if not expected or expected != digest:
+            target.unlink()
+            sidecar.unlink(missing_ok=True)
+            if offline:
+                raise OSError(
+                    f"cached FrequencyWords source for {base_language} failed hash validation"
+                )
     if not target.is_file():
         if offline:
             raise OSError(
@@ -105,6 +133,7 @@ def resolve_frequency_source(
                 "use --frequency-source or --no-frequency"
             )
         _download(url, target, timeout=timeout)
+        _write_sidecar(target, _sha256(target))
     digest = _sha256(target)
     return ResolvedFrequencySource(
         target,

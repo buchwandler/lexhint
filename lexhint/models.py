@@ -109,12 +109,3 @@ class DictionaryBuildStats:
     frequency_matches: int = 0
     frequency_total_tokens: int = 0
     entries: int = 0
-
-
-@dataclass(frozen=True, slots=True)
-class DictionaryFetchResult:
-    word: str
-    status: str
-    senses: int
-    source_url: str
-    cached: bool

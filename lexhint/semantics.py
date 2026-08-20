@@ -50,12 +50,21 @@ def insert_lexeme_domains(
 ) -> int:
     rows = 0
     for word, topics in domains_by_word.items():
+        normalized = normalize_word(word)
         for domain, (weight, source_topics) in project_topics(topics).items():
+            existing = connection.execute(
+                "SELECT weight, source_topics FROM lexeme_domains WHERE word=? AND domain=?",
+                (normalized, domain.value),
+            ).fetchone()
+            if existing is not None:
+                previous_topics = json.loads(str(existing[1]))
+                source_topics = tuple(sorted(set(previous_topics) | set(source_topics)))
+                weight = max(weight, float(existing[0]))
             connection.execute(
                 "INSERT OR REPLACE INTO lexeme_domains("
                 "word, domain, weight, source_topics) VALUES (?, ?, ?, ?)",
                 (
-                    normalize_word(word),
+                    normalized,
                     domain.value,
                     weight,
                     json.dumps(source_topics, separators=(",", ":")),

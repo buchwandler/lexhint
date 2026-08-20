@@ -7,7 +7,7 @@ section: quality_requirements
 title: Quality Requirements
 order: 100
 status: accepted
-version: 7
+version: 8
 body_format: markdown
 ---
 

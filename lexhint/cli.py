@@ -18,8 +18,15 @@ from .lexicon import (
     LexiconIncompatible,
     LexiconNotInstalled,
 )
-from .models import DictionaryEntry, DomainEvidence, LexicalSegment, WordEvidence
-from .schema import PROFILES
+from .models import (
+    DictionaryBuildStats,
+    DictionaryEntry,
+    DomainEvidence,
+    LexicalSegment,
+    WordEvidence,
+)
+from .schema import PROFILES, normalize_capabilities
+from .status import ArtifactStatus, read_artifact_status
 
 _DEFAULT_LANGUAGE = "en"
 
@@ -138,7 +145,10 @@ def _parser() -> argparse.ArgumentParser:
     inspect = dictionary_sub.add_parser("word", help="show rich dictionary entries")
     inspect.add_argument("values", nargs="+")
     inspect.add_argument("-l", "--language", choices=sorted(SUPPORTED_LANGUAGES))
-    inspect.add_argument("--path", required=True, help="local SQLite artifact")
+    inspect.add_argument("--path", help="override the local SQLite artifact")
+    status = dictionary_sub.add_parser("status", help="show SQLite artifact status and counts")
+    status.add_argument("language", nargs="?", choices=sorted(SUPPORTED_LANGUAGES), default=None)
+    status.add_argument("--path", help="override the local SQLite artifact")
 
     return parser
 
@@ -180,6 +190,32 @@ def _context(values: Sequence[DomainEvidence], style: _Style) -> None:
         print(f"{style.bold(evidence.domain.value)}  {evidence.score:.2f}")
         for cue in evidence.cues:
             print(f"  {cue.text}  distance={cue.distance}  weight={cue.weight:.2f}")
+
+
+def _status(info: ArtifactStatus, style: _Style) -> None:
+    values = info.as_dict()
+    counts = values["counts"]
+    print(style.bold("Lexhint database"))
+    print(f"  language      {values['language']}")
+    print(f"  schema        {values['schema_version']}")
+    print(f"  coverage      {values['coverage']}")
+    print(f"  profile       {values['profile']}")
+    print(f"  capabilities  {', '.join(values['capabilities'])}")
+    print(f"  lexemes       {counts['lexemes']:,}")
+    print(
+        f"  semantic      {counts['semantic_rows']:,}"
+        if counts["semantic_rows"] is not None
+        else "  semantic      not included"
+    )
+    print(
+        f"  dictionary    {counts['entries']:,} entries, {counts['senses']:,} senses"
+        if counts["entries"] is not None
+        else "  dictionary    not included"
+    )
+    print(f"  frequency     {counts['frequency_lexemes']:,} lexemes ranked")
+    print(f"  built         {values['built_at']}")
+    print(f"  size          {values['size_bytes']:,} bytes")
+    print(f"  path          {values['path']}")
 
 
 def _run(args: argparse.Namespace, *, style: _Style, json_output: bool) -> int:
@@ -238,6 +274,24 @@ def _run(args: argparse.Namespace, *, style: _Style, json_output: bool) -> int:
     if args.dictionary_command == "build":
         language = args.language or _default_language()
         source = args.source_option or args.source_positional or KAIKKI_RAW_URL
+        selection = normalize_capabilities(args.capabilities, profile=args.profile)
+        print("Building Lexhint database", file=sys.stderr)
+        print(f"  language      {language}", file=sys.stderr)
+        print(f"  capabilities  {', '.join(selection.capabilities)}", file=sys.stderr)
+        print(f"  dictionary    {source}", file=sys.stderr)
+        frequency = (
+            "disabled" if args.no_frequency else args.frequency_source or "FrequencyWords automatic"
+        )
+        print(f"  frequency     {frequency}", file=sys.stderr)
+        print(f"  output        {args.output or 'default cache artifact'}", file=sys.stderr)
+
+        def report(stats: DictionaryBuildStats) -> None:
+            print(
+                f"  scanned {stats.scanned_entries:,}   lexemes {stats.words:,}   "
+                f"entries {stats.kept_entries:,}   senses {stats.senses:,}",
+                file=sys.stderr,
+            )
+
         path, stats = build_dictionary(
             language,
             source,
@@ -248,6 +302,7 @@ def _run(args: argparse.Namespace, *, style: _Style, json_output: bool) -> int:
             no_frequency=args.no_frequency,
             refresh_frequency=args.refresh_frequency,
             offline=args.offline,
+            progress=report,
         )
         if json_output:
             _json({"language": language, "path": str(path), **asdict(stats)})
@@ -280,6 +335,14 @@ def _run(args: argparse.Namespace, *, style: _Style, json_output: bool) -> int:
             )
         else:
             _entries(word, entries, style)
+        return 0
+    if args.dictionary_command == "status":
+        language = args.language
+        artifact_info = read_artifact_status(language, path=args.path)
+        if json_output:
+            _json(artifact_info.as_dict())
+        else:
+            _status(artifact_info, style)
         return 0
     raise AssertionError("unreachable")
 

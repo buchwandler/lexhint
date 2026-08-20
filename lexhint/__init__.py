@@ -7,13 +7,6 @@ try:
 except PackageNotFoundError:
     __version__ = "0+unknown"
 
-from .dictionary import (
-    Dictionary,
-    DictionaryCoverageError,
-    DictionaryIncompatible,
-    DictionaryNotInstalled,
-    DictionaryOfflineError,
-)
 from .lexicon import (
     Lexicon,
     LexiconCapabilityError,
@@ -50,10 +43,5 @@ __all__ = [
     "SemanticDomain",
     "Sense",
     "WordEvidence",
-    "Dictionary",
-    "DictionaryCoverageError",
-    "DictionaryOfflineError",
-    "DictionaryIncompatible",
-    "DictionaryNotInstalled",
     "__version__",
 ]

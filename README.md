@@ -61,18 +61,19 @@ lexhint --offline dictionary build en --source ./raw-wiktextract-data.jsonl.gz
 
 Capabilities are canonicalized in the order `lexical,semantic,dictionary`. `semantic` and `dictionary` require `lexical`. Profiles are shortcuts: `runtime` means `lexical,semantic`, and `rich` means `lexical,semantic,dictionary`.
 
-Frequency enrichment is independent of capabilities. Use `--no-frequency` for a valid lexical artifact without corpus data. Automatic sources are cached under `~/.cache/lexhint/sources/frequencywords/<revision>/`, or an equivalent XDG/`LEXHINT_CACHE_DIR` location. Builds record source URLs, revisions, hashes, schema, capabilities, and builder metadata.
+Frequency enrichment is independent of capabilities. Use `--no-frequency` for a valid lexical artifact without corpus data. Automatic sources are cached under `~/.cache/lexhint/sources/frequencywords/<revision>/`, or an equivalent XDG/`LEXHINT_CACHE_DIR` location. Builds record source URLs, revisions, hashes, schema, capabilities, and builder metadata. Build configuration and progress are written to stderr, while the final result, including JSON, is written to stdout.
 
 ## CLI queries
 
 ```bash
-lexhint word --path en.sqlite3 compiler
-lexhint segment --path en.sqlite3 chatgpt
-lexhint context --path en.sqlite3 "The compiler is 8.3.2." --target 16:21
-lexhint dictionary word --path en.sqlite3 compiler
+lexhint word compiler
+lexhint segment chatgpt
+lexhint context "The compiler is 8.3.2." --target 16:21
+lexhint dictionary word compiler
+lexhint dictionary status
 ```
 
-Use `--json` for stable machine-readable output. Rich dictionary lookup reports a controlled capability error for compact runtime artifacts.
+Use `--json` for stable machine-readable output. `dictionary status` reports current SQL row counts, capabilities, provenance, size, and build metadata without rebuilding. Use `--path` as an advanced override when inspecting a specific artifact. Rich dictionary lookup reports a controlled capability error for compact runtime artifacts.
 
 ## Data and scope
 

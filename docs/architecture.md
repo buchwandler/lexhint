@@ -1,6 +1,6 @@
 ---
 title: "Architecture Documentation"
-version: 11
+version: 14
 generator: "archledger 0.4.0"
 arc42_template_version: "9.0-EN"
 ---
@@ -42,6 +42,7 @@ The architecture is constrained by a local, self-describing SQLite artifact and 
 
 - `lexhint.Lexicon` opens artifacts through SQLite read-only mode.
 - Runtime operations never fetch network resources, create missing lexemes, or write partial caches.
+- The CLI resolves default cached or vendored artifacts for ordinary reads and exposes `dictionary status` for current SQL counts.
 - Schema 7 metadata records schema version, language, coverage, profile, capabilities, creation time, builder version, and source provenance.
 - `lexemes` is present for the lexical capability. Semantic and dictionary tables are capability-specific.
 - Default builds select `lexical,semantic,dictionary` and automatic pinned full FrequencyWords enrichment.
@@ -90,6 +91,7 @@ The solution is organized around a small, explicit evidence pipeline.
 6. Query nearby context words in batches and apply bounded distance decay to explicit domain evidence.
 7. Validate pinned source hashes and use temporary files followed by atomic rename for downloaded and rebuilt artifacts.
 8. Keep the consumer boundary narrow. Speech pronunciation rules remain downstream.
+9. Emit build configuration and progress on stderr so successful JSON output remains a single stdout document.
 
 ## Strategy Items
 
@@ -132,7 +134,7 @@ The consumer decides what an unknown run, version, or candidate should mean. Lex
 
 ## Lexical lookup and segmentation
 
-1. The consumer constructs `Lexicon` from one local SQLite artifact.
+1. The consumer constructs `Lexicon` from one local SQLite artifact, resolved from the vendored or configured cache path when no override is supplied.
 2. Construction validates schema version, language, coverage, and explicit capabilities.
 3. `word()` and `contains()` query dictionary-derived lexemes. `segment()` evaluates known spans using authoritative full coverage, case flags, dynamic programming, and optional corpus rank.
 4. Runtime reads do not acquire missing data or write to the artifact.
@@ -150,8 +152,9 @@ The consumer decides what an unknown run, version, or candidate should mean. Lex
 
 Lexhint is deployed as a local Python package and a local SQLite evidence artifact. There is no application server, worker, or persistent service.
 
-- Consumers install the package and open an artifact with `Lexicon.from_path()`.
-- Artifact paths are selected by the caller or build workflow.
+- Consumers install the package and open an artifact with `Lexicon.from_path()` or the default `Lexicon` resolution.
+- Artifact paths are selected by the caller or build workflow; CLI `--path` is an explicit override.
+- `dictionary status` reports current row counts and metadata without rebuilding the artifact.
 - A complete local artifact supports offline lexical, segmentation, dictionary, and semantic reads when the corresponding capabilities are present.
 - Generated artifacts contain source and hash provenance for dictionary and corpus inputs.
 - Build downloads and replacements use temporary files and atomic rename.
@@ -167,11 +170,11 @@ Schema 7 metadata is explicit and self-describing. `lexemes` is always present f
 
 ### Provenance and data lifecycle
 
-Metadata records `dictionary_source`, `dictionary_source_sha256`, `frequency_source`, and `frequency_source_sha256`, alongside profile, capabilities, creation time, and builder version. Automatic FrequencyWords sources are cached by pinned revision and language, validated with SHA-256, and downloaded through temporary files followed by atomic rename.
+Metadata records `dictionary_source`, `dictionary_source_sha256`, `frequency_source`, and `frequency_source_sha256`, alongside profile, capabilities, creation time, and builder version. Remote dictionary input is hashed while streamed. Automatic FrequencyWords sources are cached by pinned revision and language, validated against an atomic SHA-256 sidecar, and downloaded through temporary files followed by atomic rename.
 
 ### Errors and offline behavior
 
-Capability, coverage, schema, language, and missing-artifact failures have controlled public exceptions. Frequency acquisition fails the build unless the caller explicitly selects `--no-frequency` or a custom source. Missing semantic evidence is not semantic negation.
+Capability, coverage, schema, language, and missing-artifact failures have controlled public exceptions. Offline mode rejects every HTTP(S) build source and permits only local or already validated cached inputs. Frequency acquisition fails the build unless the caller explicitly selects `--no-frequency` or a custom source. Missing semantic evidence is not semantic negation.
 
 ### Verification and licensing
 

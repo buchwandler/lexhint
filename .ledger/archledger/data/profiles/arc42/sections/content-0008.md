@@ -7,7 +7,7 @@ section: cross_cutting_concepts
 title: Cross-cutting Concepts
 order: 80
 status: accepted
-version: 8
+version: 9
 body_format: markdown
 ---
 
@@ -17,11 +17,11 @@ Schema 7 metadata is explicit and self-describing. `lexemes` is always present f
 
 ### Provenance and data lifecycle
 
-Metadata records `dictionary_source`, `dictionary_source_sha256`, `frequency_source`, and `frequency_source_sha256`, alongside profile, capabilities, creation time, and builder version. Automatic FrequencyWords sources are cached by pinned revision and language, validated with SHA-256, and downloaded through temporary files followed by atomic rename.
+Metadata records `dictionary_source`, `dictionary_source_sha256`, `frequency_source`, and `frequency_source_sha256`, alongside profile, capabilities, creation time, and builder version. Remote dictionary input is hashed while streamed. Automatic FrequencyWords sources are cached by pinned revision and language, validated against an atomic SHA-256 sidecar, and downloaded through temporary files followed by atomic rename.
 
 ### Errors and offline behavior
 
-Capability, coverage, schema, language, and missing-artifact failures have controlled public exceptions. Frequency acquisition fails the build unless the caller explicitly selects `--no-frequency` or a custom source. Missing semantic evidence is not semantic negation.
+Capability, coverage, schema, language, and missing-artifact failures have controlled public exceptions. Offline mode rejects every HTTP(S) build source and permits only local or already validated cached inputs. Frequency acquisition fails the build unless the caller explicitly selects `--no-frequency` or a custom source. Missing semantic evidence is not semantic negation.
 
 ### Verification and licensing
 

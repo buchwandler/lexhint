@@ -5,15 +5,10 @@ import sqlite3
 import unicodedata
 from collections.abc import Iterable, Iterator, Mapping
 from dataclasses import dataclass
-from datetime import datetime, timezone
-from pathlib import Path
 
 from .models import DictionaryEntry, Example, Form, Pronunciation
 
 SCHEMA_VERSION = "7"
-LEGACY_SCHEMA_VERSION = "6"
-OLDER_LEGACY_SCHEMA_VERSION = "5"
-OLDEST_LEGACY_SCHEMA_VERSION = "4"
 
 
 @dataclass(frozen=True, slots=True)
@@ -255,46 +250,6 @@ def set_metadata(connection: sqlite3.Connection, values: Mapping[str, str]) -> N
     connection.executemany(
         "INSERT OR REPLACE INTO metadata(key, value) VALUES (?, ?)", values.items()
     )
-
-
-def utc_now() -> str:
-    return datetime.now(timezone.utc).isoformat()
-
-
-def initialize_partial(path: str | Path, language: str) -> Path:
-    raise RuntimeError("partial runtime caches are no longer supported; rebuild the dictionary")
-
-
-def dictionary_coverage(path: str | Path) -> str:
-    with sqlite3.connect(path) as connection:
-        row = connection.execute("SELECT value FROM metadata WHERE key='coverage'").fetchone()
-    return "" if row is None else str(row[0])
-
-
-def lookup_sense_count(path: str | Path, query: str) -> int:
-    with sqlite3.connect(path) as connection:
-        row = connection.execute(
-            "SELECT COUNT(*) FROM senses AS s JOIN entries AS e ON e.id=s.entry_id "
-            "WHERE e.display_word=?",
-            (normalize_display_word(query),),
-        ).fetchone()
-    return 0 if row is None else int(row[0])
-
-
-def lookup_status(path: str | Path, query: str) -> str | None:
-    return None
-
-
-def replace_word_entries(*args: object, **kwargs: object) -> int:
-    raise RuntimeError("partial runtime caches are no longer supported; rebuild the dictionary")
-
-
-def replace_word_rows(*args: object, **kwargs: object) -> int:
-    raise RuntimeError("partial runtime caches are no longer supported; rebuild the dictionary")
-
-
-def migrate_partial_v3_to_v4(path: str | Path) -> bool:
-    raise RuntimeError("partial runtime caches are no longer supported; rebuild the dictionary")
 
 
 def iter_jsonl_entries(lines: Iterable[str]) -> Iterator[dict[str, object]]:

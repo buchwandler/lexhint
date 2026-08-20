@@ -7,7 +7,7 @@ section: risks_and_technical_debt
 title: Risks and Technical Debt
 order: 110
 status: accepted
-version: 6
+version: 7
 body_format: markdown
 ---
 

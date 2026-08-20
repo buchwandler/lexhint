@@ -7,7 +7,7 @@ section: architecture_decisions
 title: Architecture Decisions
 order: 90
 status: accepted
-version: 7
+version: 8
 body_format: markdown
 ---
 
