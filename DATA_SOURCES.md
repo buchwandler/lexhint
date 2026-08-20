@@ -1,56 +1,31 @@
 # Data sources
 
-`lexhint` code is Apache-2.0 licensed. This source archive does not bundle the external
-frequency lists or Wiktionary-derived dictionary data described below.
+Lexhint code is Apache-2.0 licensed. External dictionary and corpus data are not bundled by this source archive and may carry separate attribution and redistribution requirements.
 
 ## FrequencyWords
 
-`lexhint fetch <language>` downloads a 50,000-word frequency list from:
+Default dictionary builds use the pinned full FrequencyWords file for the selected language:
 
-- FrequencyWords by hermitdave
-- https://github.com/hermitdave/FrequencyWords
-- source corpus: OpenSubtitles 2018
-- upstream repository states: MIT for code, CC BY-SA 4.0 for generated content
+- Provider: [FrequencyWords](https://github.com/hermitdave/FrequencyWords)
+- Corpus: OpenSubtitles 2018
+- Variant: `<language>_full.txt`
+- Revision: the pinned `FREQUENCYWORDS_REVISION` in `lexhint/frequency.py`
+- Resolved URL: `https://raw.githubusercontent.com/hermitdave/FrequencyWords/<revision>/content/2018/<language>/<language>_full.txt`
 
-The downloaded list is normalized locally into a gzip file with one word per line.
-Its line number is the frequency rank.
+The builder caches the downloaded file by provider, revision, language, and full-file variant. It records the resolved URL and SHA-256 in the SQLite metadata. Frequency rows enrich dictionary-derived lexemes only. They never act as a dictionary allowlist.
 
-## Wiktionary / Wiktextract / Kaikki
+Use `--no-frequency` to opt out or `--frequency-source` to provide a reproducible local/custom source. Offline builds may use a cached automatic source or an explicit local source.
 
-`lexhint dictionary word` and `lexhint dictionary fetch` may lazily download one
-Kaikki single-word raw JSONL page at a time. Only the requested page is transferred;
-lexhint filters its requested `lang_code` and stores curated rich dictionary entries in a
-local schema-v5 SQLite partial cache. Successful empty and not-found lookups are recorded
-so they are not repeatedly requested. The `--offline` option disables all network access.
+## Wiktionary, Wiktextract, and Kaikki
 
-`lexhint dictionary build` reads Wiktextract-compatible JSONL for complete offline
-coverage. The recommended source is the pre-extracted data published by Kaikki:
+Dictionary builds consume Wiktextract-compatible JSONL, such as the bulk source published by [Kaikki](https://kaikki.org/dictionary/rawdata.html):
 
-- https://kaikki.org/dictionary/rawdata.html
-- current raw English Wiktextract download URL used in the MVP:
-  https://kaikki.org/dictionary/raw-wiktextract-data.jsonl.gz
-- Wiktextract project: https://github.com/tatuylonen/wiktextract
+```text
+https://kaikki.org/dictionary/raw-wiktextract-data.jsonl.gz
+```
 
-Both lazy and bulk paths use the same curated rich extraction policy. The builder streams
-the source, keeps entries whose `lang_code` matches the requested language, and preserves
-source entry and sense order. Stored fields are:
+The builder filters entries by requested `lang_code`, preserves curated lexical and rich fields, and records dictionary source identity and hashes when available. Semantic-domain rows are a deterministic build-time projection of source topic metadata and retain source-topic provenance.
 
-- normalized word key and display spelling
-- part of speech and compact etymology text
-- forms and pronunciations
-- sense glosses and explicit topics
-- usage/grammar tags
-- examples with optional translations
-- basic synonyms and antonyms
+Runtime Lexicon operations do not fetch Kaikki pages, create missing records, or mutate caches. Exact online source tooling is not part of ordinary runtime lookup. Old partial-cache artifacts are incompatible and must be rebuilt.
 
-Context scoring uses only the normalized topic index, not the rich JSON payloads. The
-FrequencyWords lexicon is a separate resource and is not used as a dictionary allowlist.
-Categories, translations beyond examples, templates, raw source metadata, and maintenance
-fields are not part of the curated public model.
-
-Wiktionary entry text is dual-licensed under CC BY-SA 4.0 and GFDL. If you vendor
-or redistribute a generated SQLite dictionary, review and comply with the applicable
-Wiktionary, Wiktextract/Kaikki, and source attribution/license requirements.
-
-`lexhint` deliberately keeps generated dictionary databases out of the source ZIP so
-that code licensing and data licensing remain separate.
+Wiktionary-derived text is dual-licensed under CC BY-SA 4.0 and GFDL. Wiktextract, Kaikki, FrequencyWords, and the OpenSubtitles corpus have their own terms. Review upstream licenses before vendoring or redistributing generated SQLite artifacts.

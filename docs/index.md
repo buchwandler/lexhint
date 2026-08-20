@@ -1,35 +1,8 @@
-# lexhint
+# Lexhint
 
-`lexhint` provides lexical and dictionary-derived semantic evidence for text-normalization and speech-front-end applications.
+Lexhint is a local lexical-evidence engine backed by self-describing SQLite artifacts.
 
-It provides:
-
-- dictionary membership with optional build-time corpus frequency ranks;
-- segmentation of compact identifiers and domain labels;
-- compact dictionary senses and semantic topics;
-- candidate-aware context evidence for downstream speech applications.
-
-`lexhint` does not verbalize text. Pronunciation and speech policy remain in the consuming application.
-
-## Quick start
-
-Install the package with its development dependencies:
-
-```bash
-python -m pip install -e ".[dev]"
-```
-
-Prepare the schema-6 English dictionary dataset and try the CLI:
-
-```bash
-lexhint setup
-lexhint word house
-lexhint segment chatgpt
-```
-
-Use `--json` for machine-readable output and `--offline` to prevent dictionary network access.
-
-## Documentation
+It provides lexical membership, frequency enrichment, compact-string segmentation, stable semantic-domain evidence, and optional rich dictionary entries. It does not speak or normalize text.
 
 ```{toctree}
 :maxdepth: 2
@@ -38,7 +11,4 @@ architecture
 changelog
 ```
 
-## Source and project information
-
-- [Project README](https://github.com/buchwandler/lexhint)
-- [Data sources and licensing](https://github.com/buchwandler/lexhint/blob/main/DATA_SOURCES.md)
+See the [README](https://github.com/buchwandler/lexhint) for installation, build commands, API examples, and data-source boundaries.

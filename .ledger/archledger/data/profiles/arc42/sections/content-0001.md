@@ -7,31 +7,23 @@ section: introduction_and_goals
 title: Introduction and Goals
 order: 10
 status: accepted
-version: 6
+version: 8
 body_format: markdown
+source_refs:
+  - path: lexhint/lexicon.py
+    role: documents
+    reason: Lexicon runtime documented by the architecture
 ---
-`lexhint` is a Python library and CLI that supplies lexical and dictionary-derived semantic evidence to text-normalization and speech-front-end applications such as `spokenform`. It deliberately does not verbalize text or own speech policy.
 
-## Requirements overview
+Lexhint is a small Python runtime plus prebuilt SQLite evidence artifacts. It supplies lexical membership, optional corpus commonness, compact-string segmentation, stable semantic-domain evidence, and optional rich dictionary inspection.
 
-- Determine common-word membership and frequency rank for supported languages.
-- Segment compact identifiers and domain labels into known words and unknown runs.
-- Provide grouped curated dictionary entries, rich senses, and explicit semantic topics from Wiktextract/Kaikki data.
-- Provide candidate-aware context evidence while excluding the candidate token itself.
-- Support both lazy per-word acquisition and complete streamed dictionary builds.
-- Expose human-readable CLI output and stable JSON output for automation.
+It does not decide how text is spoken. Spokenform and other consumers own tokenization policy, URLs, numbers, versions, acronyms, pronunciation, and interpretation precedence. Dataset publication is outside this repository.
 
-## Quality goals
+## Runtime contract
 
-- Keep the runtime dependency-free beyond the Python standard library.
-- Make network use explicit, bounded, cacheable, and avoidable with `--offline`.
-- Preserve deterministic normalization, segmentation, storage, and JSON behavior, with
-  source and snapshot identities recorded for external data.
-- Keep external data separate from the Apache-2.0 code distribution.
+- `word()` and `contains()` query dictionary-derived `lexemes`.
+- `segment()` uses authoritative full coverage, case flags, dynamic programming, and optional corpus rank.
+- `entries()` requires the `dictionary` capability.
+- `context_domains()` and `supports_domain()` require `semantic` and full coverage.
 
-## Stakeholders
-
-- Speech and text-normalization consumers need small, explainable evidence objects.
-- Application developers need a simple Python API and CLI.
-- Maintainers need reproducible builds, tests, and safe data-source handling.
-- Distributors need clear boundaries between code licensing and external dictionary data.
+Absence of semantic evidence is not semantic negation. Capability, coverage, schema, language, and missing-artifact failures have controlled public exceptions.

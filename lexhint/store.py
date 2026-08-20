@@ -4,23 +4,20 @@ import json
 import sqlite3
 import unicodedata
 from collections.abc import Iterable, Iterator, Mapping
-from contextlib import closing
 from dataclasses import dataclass
 from datetime import datetime, timezone
 from pathlib import Path
 
 from .models import DictionaryEntry, Example, Form, Pronunciation
 
-SCHEMA_VERSION = "6"
-LEGACY_SCHEMA_VERSION = "5"
-OLDER_LEGACY_SCHEMA_VERSION = "4"
-OLDEST_LEGACY_SCHEMA_VERSION = "3"
+SCHEMA_VERSION = "7"
+LEGACY_SCHEMA_VERSION = "6"
+OLDER_LEGACY_SCHEMA_VERSION = "5"
+OLDEST_LEGACY_SCHEMA_VERSION = "4"
 
 
 @dataclass(frozen=True, slots=True)
 class SemanticSenseRow:
-    """Compatibility projection of one rich sense for semantic callers."""
-
     word: str
     display_word: str
     pos: str
@@ -39,11 +36,7 @@ def normalize_display_word(value: str) -> str:
 def strings(value: object) -> tuple[str, ...]:
     if not isinstance(value, list):
         return ()
-    result: list[str] = []
-    for item in value:
-        if isinstance(item, str) and item and item not in result:
-            result.append(item)
-    return tuple(result)
+    return tuple(dict.fromkeys(item for item in value if isinstance(item, str) and item))
 
 
 def semantic_rows(entry: Mapping[str, object], *, language: str) -> Iterator[SemanticSenseRow]:
@@ -52,11 +45,7 @@ def semantic_rows(entry: Mapping[str, object], *, language: str) -> Iterator[Sem
     for parsed in dictionary_entries(entry, language=language):
         for sense in parsed.senses:
             yield SemanticSenseRow(
-                normalize_word(parsed.word),
-                parsed.word,
-                parsed.pos,
-                sense.glosses,
-                sense.topics,
+                normalize_word(parsed.word), parsed.word, parsed.pos, sense.glosses, sense.topics
             )
 
 
@@ -99,31 +88,48 @@ def _case_flags(display_word: str) -> tuple[bool, bool, bool]:
     )
 
 
+def _has_table(connection: sqlite3.Connection, name: str) -> bool:
+    row = connection.execute(
+        "SELECT 1 FROM sqlite_master WHERE type='table' AND name=?", (name,)
+    ).fetchone()
+    return row is not None
+
+
+def insert_lexeme(connection: sqlite3.Connection, word: str, *, entry_count: int = 1) -> None:
+    normalized = normalize_word(word)
+    display = normalize_display_word(word)
+    lower, title, upper = _case_flags(display)
+    connection.execute(
+        "INSERT INTO lexemes(word, entry_count, has_lowercase, has_titlecase, has_uppercase) "
+        "VALUES (?, ?, ?, ?, ?) ON CONFLICT(word) DO UPDATE SET "
+        "entry_count=entry_count + excluded.entry_count, "
+        "has_lowercase=MAX(has_lowercase, excluded.has_lowercase), "
+        "has_titlecase=MAX(has_titlecase, excluded.has_titlecase), "
+        "has_uppercase=MAX(has_uppercase, excluded.has_uppercase)",
+        (normalized, entry_count, lower, title, upper),
+    )
+
+
 def insert_dictionary_entries(
     connection: sqlite3.Connection, entries: Iterable[DictionaryEntry]
 ) -> tuple[int, int, set[str]]:
     entry_count = 0
     sense_count = 0
     words: set[str] = set()
+    rich = _has_table(connection, "entries")
     for entry_index, entry in enumerate(entries):
         word = normalize_word(entry.word)
         display_word = normalize_display_word(entry.word)
-        has_lowercase, has_titlecase, has_uppercase = _case_flags(display_word)
-        connection.execute(
-            "INSERT INTO lexemes("
-            "word, entry_count, has_lowercase, has_titlecase, has_uppercase"
-            ") VALUES (?, 1, ?, ?, ?) "
-            "ON CONFLICT(word) DO UPDATE SET "
-            "entry_count = entry_count + 1, "
-            "has_lowercase = MAX(has_lowercase, excluded.has_lowercase), "
-            "has_titlecase = MAX(has_titlecase, excluded.has_titlecase), "
-            "has_uppercase = MAX(has_uppercase, excluded.has_uppercase)",
-            (word, has_lowercase, has_titlecase, has_uppercase),
-        )
+        insert_lexeme(connection, display_word)
+        words.add(word)
+        entry_count += 1
+        sense_count += len(entry.senses)
+        if not rich:
+            continue
         cursor = connection.execute(
             "INSERT INTO entries("
-            "word, display_word, pos, entry_index, etymology, forms, pronunciations"
-            ") VALUES (?, ?, ?, ?, ?, ?, ?)",
+            "word, display_word, pos, entry_index, etymology, forms, pronunciations) "
+            "VALUES (?, ?, ?, ?, ?, ?, ?)",
             (
                 word,
                 display_word,
@@ -136,13 +142,11 @@ def insert_dictionary_entries(
         )
         assert cursor.lastrowid is not None
         entry_id = cursor.lastrowid
-        entry_count += 1
-        words.add(word)
         for sense_index, sense in enumerate(entry.senses):
-            cursor = connection.execute(
+            sense_cursor = connection.execute(
                 "INSERT INTO senses("
-                "entry_id, sense_index, glosses, topics, tags, examples, synonyms, antonyms"
-                ") VALUES (?, ?, ?, ?, ?, ?, ?, ?)",
+                "entry_id, sense_index, glosses, topics, tags, examples, synonyms, antonyms) "
+                "VALUES (?, ?, ?, ?, ?, ?, ?, ?)",
                 (
                     entry_id,
                     sense_index,
@@ -154,87 +158,96 @@ def insert_dictionary_entries(
                     json_tuple(sense.antonyms),
                 ),
             )
-            assert cursor.lastrowid is not None
-            sense_id = cursor.lastrowid
-            for topic in sense.topics:
-                connection.execute(
-                    "INSERT INTO sense_topics(entry_id, sense_id, topic) VALUES (?, ?, ?)",
-                    (entry_id, sense_id, topic),
-                )
-            sense_count += 1
+            assert sense_cursor.lastrowid is not None
+            sense_id = sense_cursor.lastrowid
+            if _has_table(connection, "sense_topics"):
+                for topic in sense.topics:
+                    connection.execute(
+                        "INSERT INTO sense_topics(entry_id, sense_id, topic) VALUES (?, ?, ?)",
+                        (entry_id, sense_id, topic),
+                    )
     return entry_count, sense_count, words
 
 
-def create_schema(connection: sqlite3.Connection) -> None:
+def create_schema(
+    connection: sqlite3.Connection,
+    capabilities: Iterable[str] = ("lexical", "semantic", "dictionary"),
+) -> None:
+    selected = set(capabilities)
     connection.execute("PRAGMA foreign_keys = ON")
     connection.executescript(
         """
-        CREATE TABLE metadata (
-            key TEXT PRIMARY KEY,
-            value TEXT NOT NULL
-        );
-        CREATE TABLE entries (
-            id INTEGER PRIMARY KEY,
-            word TEXT NOT NULL,
-            display_word TEXT NOT NULL,
-            pos TEXT NOT NULL,
-            entry_index INTEGER NOT NULL,
-            etymology TEXT NOT NULL DEFAULT '',
-            forms TEXT NOT NULL DEFAULT '[]',
-            pronunciations TEXT NOT NULL DEFAULT '[]'
-        );
-        CREATE INDEX entries_word_idx ON entries(word);
-        CREATE INDEX entries_display_word_idx ON entries(display_word);
+        CREATE TABLE metadata (key TEXT PRIMARY KEY, value TEXT NOT NULL);
         CREATE TABLE lexemes (
             word TEXT PRIMARY KEY,
-            entry_count INTEGER NOT NULL DEFAULT 0,
-            has_lowercase INTEGER NOT NULL DEFAULT 0,
-            has_titlecase INTEGER NOT NULL DEFAULT 0,
-            has_uppercase INTEGER NOT NULL DEFAULT 0,
+            entry_count INTEGER NOT NULL,
+            has_lowercase INTEGER NOT NULL,
+            has_titlecase INTEGER NOT NULL,
+            has_uppercase INTEGER NOT NULL,
             corpus_count INTEGER,
             corpus_rank INTEGER
         );
         CREATE INDEX lexemes_corpus_rank_idx ON lexemes(corpus_rank);
-        CREATE TABLE senses (
-            id INTEGER PRIMARY KEY,
-            entry_id INTEGER NOT NULL,
-            sense_index INTEGER NOT NULL,
-            glosses TEXT NOT NULL,
-            topics TEXT NOT NULL,
-            tags TEXT NOT NULL,
-            examples TEXT NOT NULL,
-            synonyms TEXT NOT NULL,
-            antonyms TEXT NOT NULL,
-            FOREIGN KEY(entry_id) REFERENCES entries(id) ON DELETE CASCADE
-        );
-        CREATE INDEX senses_entry_idx ON senses(entry_id);
-        CREATE TABLE sense_topics (
-            entry_id INTEGER NOT NULL,
-            sense_id INTEGER NOT NULL,
-            topic TEXT NOT NULL,
-            FOREIGN KEY(entry_id) REFERENCES entries(id) ON DELETE CASCADE,
-            FOREIGN KEY(sense_id) REFERENCES senses(id) ON DELETE CASCADE
-        );
-        CREATE INDEX sense_topics_topic_idx ON sense_topics(topic);
-        CREATE INDEX sense_topics_entry_idx ON sense_topics(entry_id);
-        CREATE TABLE lookups (
-            query TEXT PRIMARY KEY,
-            normalized TEXT NOT NULL,
-            status TEXT NOT NULL,
-            fetched_at TEXT NOT NULL,
-            source_url TEXT NOT NULL
-        );
-        CREATE INDEX lookups_normalized_idx ON lookups(normalized);
         """
     )
+    if "semantic" in selected:
+        connection.executescript(
+            """
+            CREATE TABLE lexeme_domains (
+                word TEXT NOT NULL,
+                domain TEXT NOT NULL,
+                weight REAL NOT NULL,
+                source_topics TEXT NOT NULL,
+                PRIMARY KEY(word, domain),
+                FOREIGN KEY(word) REFERENCES lexemes(word)
+            );
+            CREATE INDEX lexeme_domains_domain_idx ON lexeme_domains(domain);
+            """
+        )
+    if "dictionary" in selected:
+        connection.executescript(
+            """
+            CREATE TABLE entries (
+                id INTEGER PRIMARY KEY,
+                word TEXT NOT NULL,
+                display_word TEXT NOT NULL,
+                pos TEXT NOT NULL,
+                entry_index INTEGER NOT NULL,
+                etymology TEXT NOT NULL DEFAULT '',
+                forms TEXT NOT NULL DEFAULT '[]',
+                pronunciations TEXT NOT NULL DEFAULT '[]'
+            );
+            CREATE INDEX entries_word_idx ON entries(word);
+            CREATE INDEX entries_display_word_idx ON entries(display_word);
+            CREATE TABLE senses (
+                id INTEGER PRIMARY KEY,
+                entry_id INTEGER NOT NULL,
+                sense_index INTEGER NOT NULL,
+                glosses TEXT NOT NULL,
+                topics TEXT NOT NULL,
+                tags TEXT NOT NULL,
+                examples TEXT NOT NULL,
+                synonyms TEXT NOT NULL,
+                antonyms TEXT NOT NULL,
+                FOREIGN KEY(entry_id) REFERENCES entries(id) ON DELETE CASCADE
+            );
+            CREATE INDEX senses_entry_idx ON senses(entry_id);
+            CREATE TABLE sense_topics (
+                entry_id INTEGER NOT NULL,
+                sense_id INTEGER NOT NULL,
+                topic TEXT NOT NULL,
+                FOREIGN KEY(entry_id) REFERENCES entries(id) ON DELETE CASCADE,
+                FOREIGN KEY(sense_id) REFERENCES senses(id) ON DELETE CASCADE
+            );
+            CREATE INDEX sense_topics_topic_idx ON sense_topics(topic);
+            CREATE INDEX sense_topics_entry_idx ON sense_topics(entry_id);
+            """
+        )
 
 
 def metadata(connection: sqlite3.Connection) -> dict[str, str]:
     return {
-        str(row["key"] if isinstance(row, sqlite3.Row) else row[0]): str(
-            row["value"] if isinstance(row, sqlite3.Row) else row[1]
-        )
-        for row in connection.execute("SELECT key, value FROM metadata")
+        str(row[0]): str(row[1]) for row in connection.execute("SELECT key, value FROM metadata")
     }
 
 
@@ -249,151 +262,39 @@ def utc_now() -> str:
 
 
 def initialize_partial(path: str | Path, language: str) -> Path:
-    target = Path(path).expanduser()
-    target.parent.mkdir(parents=True, exist_ok=True)
-    if target.exists():
-        return target
-    connection = sqlite3.connect(target, timeout=30.0)
-    try:
-        create_schema(connection)
-        set_metadata(
-            connection,
-            {
-                "schema_version": SCHEMA_VERSION,
-                "dictionary_profile": "rich",
-                "language": language.lower().split("-", 1)[0],
-                "coverage": "partial",
-                "source_kind": "kaikki-word",
-                "source_mode": "live-partial",
-                "snapshot_id": "partial-cache",
-            },
-        )
-        connection.commit()
-    finally:
-        connection.close()
-    return target
-
-
-def lookup_status(path: str | Path, query: str) -> str | None:
-    normalized_query = normalize_display_word(query)
-    with closing(sqlite3.connect(path)) as connection:
-        row = connection.execute(
-            "SELECT status FROM lookups WHERE query = ?", (normalized_query,)
-        ).fetchone()
-    return None if row is None else str(row[0])
-
-
-def replace_word_entries(
-    path: str | Path,
-    *,
-    language: str,
-    query: str,
-    source_url: str,
-    entries: Iterable[DictionaryEntry],
-    status: str = "complete",
-) -> int:
-    normalized_query = normalize_display_word(query)
-    entries_value = tuple(entries)
-    connection = sqlite3.connect(path, timeout=30.0)
-    try:
-        connection.execute("PRAGMA foreign_keys = ON")
-        connection.execute("BEGIN IMMEDIATE")
-        connection.execute("DELETE FROM entries WHERE display_word = ?", (normalized_query,))
-        connection.execute(
-            "DELETE FROM lexemes WHERE word = ?", (normalize_word(normalized_query),)
-        )
-        _, sense_count, _ = insert_dictionary_entries(connection, entries_value)
-        connection.execute(
-            "INSERT OR REPLACE INTO lookups("
-            "query, normalized, status, fetched_at, source_url"
-            ") VALUES (?, ?, ?, ?, ?)",
-            (normalized_query, normalize_word(normalized_query), status, utc_now(), source_url),
-        )
-        connection.commit()
-    except Exception:
-        connection.rollback()
-        raise
-    finally:
-        connection.close()
-    return sense_count
-
-
-def replace_word_rows(
-    path: str | Path,
-    *,
-    language: str,
-    query: str,
-    source_url: str,
-    entries: Iterable[Mapping[str, object]],
-    status: str = "complete",
-) -> int:
-    from .extract import dictionary_entries
-
-    rich_entries = tuple(
-        parsed
-        for raw_entry in entries
-        for parsed in dictionary_entries(raw_entry, language=language)
-    )
-    return replace_word_entries(
-        path,
-        language=language,
-        query=query,
-        source_url=source_url,
-        entries=rich_entries,
-        status=status,
-    )
+    raise RuntimeError("partial runtime caches are no longer supported; rebuild the dictionary")
 
 
 def dictionary_coverage(path: str | Path) -> str:
-    with closing(sqlite3.connect(path)) as connection:
-        row = connection.execute("SELECT value FROM metadata WHERE key = 'coverage'").fetchone()
+    with sqlite3.connect(path) as connection:
+        row = connection.execute("SELECT value FROM metadata WHERE key='coverage'").fetchone()
     return "" if row is None else str(row[0])
 
 
 def lookup_sense_count(path: str | Path, query: str) -> int:
-    with closing(sqlite3.connect(path)) as connection:
+    with sqlite3.connect(path) as connection:
         row = connection.execute(
-            "SELECT COUNT(*) FROM senses AS s JOIN entries AS e ON e.id = s.entry_id "
-            "WHERE e.display_word = ?",
+            "SELECT COUNT(*) FROM senses AS s JOIN entries AS e ON e.id=s.entry_id "
+            "WHERE e.display_word=?",
             (normalize_display_word(query),),
         ).fetchone()
     return 0 if row is None else int(row[0])
 
 
-def migrate_partial_v3_to_v4(path: str | Path) -> bool:
-    """Invalidate a legacy partial cache whose rows cannot form rich entries."""
-    with closing(sqlite3.connect(path, timeout=30.0)) as connection:
-        actual = metadata(connection)
-        if (
-            actual.get("schema_version")
-            not in {
-                LEGACY_SCHEMA_VERSION,
-                OLDER_LEGACY_SCHEMA_VERSION,
-                OLDEST_LEGACY_SCHEMA_VERSION,
-            }
-            or actual.get("coverage") != "partial"
-        ):
-            return False
+def lookup_status(path: str | Path, query: str) -> str | None:
+    return None
 
-        language = actual.get("language", "")
-        connection.execute("PRAGMA foreign_keys = OFF")
-        for table in ("sense_topics", "senses", "entries", "lexemes", "lookups", "metadata"):
-            connection.execute(f"DROP TABLE IF EXISTS {table}")  # noqa: S608
-        create_schema(connection)
-        set_metadata(
-            connection,
-            {
-                "schema_version": SCHEMA_VERSION,
-                "dictionary_profile": "rich",
-                "language": language,
-                "coverage": "partial",
-                "source_kind": "kaikki-word",
-                "source_mode": "live-partial",
-                "snapshot_id": "partial-cache",
-            },
-        )
-        connection.commit()
-    return True
+
+def replace_word_entries(*args: object, **kwargs: object) -> int:
+    raise RuntimeError("partial runtime caches are no longer supported; rebuild the dictionary")
+
+
+def replace_word_rows(*args: object, **kwargs: object) -> int:
+    raise RuntimeError("partial runtime caches are no longer supported; rebuild the dictionary")
+
+
+def migrate_partial_v3_to_v4(path: str | Path) -> bool:
+    raise RuntimeError("partial runtime caches are no longer supported; rebuild the dictionary")
 
 
 def iter_jsonl_entries(lines: Iterable[str]) -> Iterator[dict[str, object]]:

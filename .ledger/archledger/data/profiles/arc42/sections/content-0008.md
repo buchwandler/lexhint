@@ -7,25 +7,22 @@ section: cross_cutting_concepts
 title: Cross-cutting Concepts
 order: 80
 status: accepted
-version: 6
+version: 8
 body_format: markdown
 ---
-### Normalization and identity
 
-Unicode NFC normalization is used for stored display values and case folding for lookup keys. Dictionary rows retain display spelling so case-sensitive variants can be preferred without changing lookup identity.
+### Capability-specific schema
 
-### Data lifecycle and caching
+Schema 7 metadata is explicit and self-describing. `lexemes` is always present for lexical capability. `lexeme_domains` exists only for `semantic`; each row stores bounded deterministic weight and source-topic provenance. Rich `entries`, `senses`, `sense_topics`, forms, and pronunciations exist only for `dictionary`. Old partial-cache schemas are rejected and must be rebuilt.
 
-Word lists are immutable normalized gzip files with a JSON provenance sidecar containing the pinned source revision, normalized SHA-256, and word count. Partial dictionaries maintain lookup status and timestamps so empty and not-found results are not repeatedly requested; their metadata identifies them as live partial caches. Full coverage is authoritative and does not trigger lazy fetches; local full indexes record a reproducible source snapshot identity. Schema-v5 compatibility is checked at runtime; older partial caches are invalidated, while full incompatible indexes require a rebuild.
+### Provenance and data lifecycle
+
+Metadata records `dictionary_source`, `dictionary_source_sha256`, `frequency_source`, and `frequency_source_sha256`, alongside profile, capabilities, creation time, and builder version. Automatic FrequencyWords sources are cached by pinned revision and language, validated with SHA-256, and downloaded through temporary files followed by atomic rename.
 
 ### Errors and offline behavior
 
-Resource absence, malformed input, network failures, not-found results, incompatible metadata, and offline misses have distinct controlled exceptions. The CLI turns them into concise messages or JSON errors with actionable hints.
-
-### Interfaces and observability
-
-Python APIs return immutable dataclasses and tuples. CLI JSON serializes explicit fields, structured context cues, and build statistics. Progress reporting is sent to stderr and is used only for interactive bulk builds.
+Capability, coverage, schema, language, and missing-artifact failures have controlled public exceptions. Frequency acquisition fails the build unless the caller explicitly selects `--no-frequency` or a custom source. Missing semantic evidence is not semantic negation.
 
 ### Verification and licensing
 
-Tests cover segmentation, parsing, schema behavior, lazy fetching, target exclusion, and CLI contracts using fixtures and mocked network access. External data provenance and redistribution duties are maintained separately in `DATA_SOURCES.md`.
+Tests cover read-only behavior, no-network guards, segmentation, schema and capability validation, frequency policy, semantic target exclusion, CLI contracts, and source extraction. External dictionary and corpus data remain subject to the obligations documented in `DATA_SOURCES.md`.

@@ -7,17 +7,17 @@ section: architecture_decisions
 title: Architecture Decisions
 order: 90
 status: accepted
-version: 6
+version: 7
 body_format: markdown
 ---
+
 The current architecture records these decisions.
 
-- **Separate lexical and semantic resources.** Frequency rank answers common-word questions; dictionary senses answer semantic-context questions. Combining them would discard useful technical vocabulary.
-- **Use curated hierarchical SQLite rather than hand-maintained context JSON.** SQLite supports incremental word caching, grouped rich lookup, indexed topics, metadata validation, and complete offline indexes without mirroring raw Wiktionary data.
-- **Use lazy fetch by default in the Python API.** Normal local reads do not unexpectedly access the network. Explicit CLI operations or `fetch_missing=True` opt into acquisition.
-- **Distinguish live data from reproducible snapshots.** Partial/live caches and remote full builds remain useful for interactive work; local full indexes carry a source hash and are the reproducible deployment/benchmark boundary.
-- **Keep the runtime API narrow.** Build and download infrastructure remains available from advanced modules without becoming accidental top-level package contracts.
-- **Exclude the candidate from its own context evidence.** This prevents a target token from falsely validating an interpretation based on its own dictionary topics.
-- **Stream bulk sources.** Kaikki data is too large to require a temporary in-memory or duplicate raw copy; the builder processes it line by line.
-- **Keep runtime dependencies to the standard library.** `urllib`, `sqlite3`, gzip, and dataclasses provide the required portability for a small library.
-- **Use a narrow consumer boundary.** Speech pronunciation rules stay in the downstream speech layer instead of being duplicated in lexical infrastructure.
+- **Use a self-describing SQLite artifact.** Schema, language, coverage, profile, capabilities, and provenance are validated at runtime.
+- **Separate lexical, semantic, and dictionary capabilities.** Consumers can select the evidence they need without allowing data from an older artifact to leak into a fresh build.
+- **Treat frequency as enrichment.** Corpus rank improves segmentation and commonness evidence but does not define lexical capability.
+- **Build fresh artifacts atomically.** Capability-specific tables are created from the resolved build plan and replacements cannot expose partial output.
+- **Use stable semantic domains.** Raw source topics are projected into a small deterministic taxonomy at build time.
+- **Exclude the candidate from context evidence.** A target token cannot validate its own interpretation.
+- **Keep the runtime read-only and offline by default.** Acquisition belongs to explicit build workflows.
+- **Keep a narrow consumer boundary.** Lexhint supplies evidence; downstream consumers own interpretation and speech rendering.

@@ -7,23 +7,20 @@ section: runtime_view
 title: Runtime View
 order: 60
 status: accepted
-version: 6
+version: 7
 body_format: markdown
 ---
-## Word membership and segmentation
 
-1. The CLI or API selects a language and constructs `Dictionary`.
-2. Dictionary resolves a vendored or cached SQLite artifact and validates schema, language, and coverage metadata.
-3. `word_info` returns dictionary membership and optional one-based corpus rank/count. `segment` evaluates candidate word spans, rewards longer and frequent words, penalizes unknown characters, and merges adjacent unknown spans.
-4. The result is a tuple of `LexicalSegment` values. `known` reports lexical-resource evidence only; it does not select pronunciation.
+## Lexical lookup and segmentation
 
-## Lazy dictionary context
+1. The consumer constructs `Lexicon` from one local SQLite artifact.
+2. Construction validates schema version, language, coverage, and explicit capabilities.
+3. `word()` and `contains()` query dictionary-derived lexemes. `segment()` evaluates known spans using authoritative full coverage, case flags, dynamic programming, and optional corpus rank.
+4. Runtime reads do not acquire missing data or write to the artifact.
 
-1. `Dictionary` opens or initializes a schema-6 partial SQLite cache, or opens a full index, and validates language and coverage metadata. `from_path()` can infer the language from that metadata.
-2. Context tokenization finds nearby word tokens and identifies the target token by overlap or nearest span.
-3. The target token is excluded. Missing nearby words are fetched individually only when `fetch_missing` is enabled and offline mode is not active; `refresh` explicitly revisits cached words.
-4. Stored explicit topics are aggregated with distance decay into structured cues. `topic_scores` supports bounded windows and result limits, while `supports` returns `TopicEvidence` only when the requested topic reaches the threshold. Missing evidence is not negative evidence.
+## Semantic evidence
 
-## Bulk dictionary build
-
-The builder reads a local path or HTTP(S) source through a text stream, filters entries by `lang_code`, converts entries with the shared curated extractor, commits incrementally, records source identity/hash and build statistics, labels local full indexes with a SHA-256 snapshot and remote full indexes as live, runs `ANALYZE`, and atomically replaces the target database.
+1. `lexhint.semantics` maps supported raw source topics to stable `SemanticDomain` values at build time.
+2. Context tokenization excludes every token overlapping the target span.
+3. Nearby words are queried in batches. Domain weights receive configurable distance decay.
+4. Results preserve cue text, character spans, token distance, and contribution weight. The candidate cannot validate itself.

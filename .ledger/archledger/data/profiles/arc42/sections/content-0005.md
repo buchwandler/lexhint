@@ -7,19 +7,35 @@ section: building_block_view
 title: Building Block View
 order: 50
 status: accepted
-version: 7
+version: 9
 body_format: markdown
 ---
-The package is a set of focused Python modules with the CLI as the outer adapter.
 
-- `lexhint.cli` parses commands, resolves languages and flags, formats human output, and emits stable JSON.
-- `lexhint.dictionary.Dictionary` owns membership, optional corpus evidence, rich lookup, and bounded-query segmentation from one SQLite dataset.
-- `lexhint.dictionary.Dictionary` validates schema and language metadata, reads grouped entries, and computes soft `TopicEvidence` with structured `ContextCue` values. `from_path()` can infer the language from a self-describing index.
-- `lexhint.extract` converts Kaikki mappings into the curated immutable entry model shared by lazy and bulk ingestion.
-- `lexhint.store` defines schema-6 SQLite storage, lexeme persistence, frequency provenance, rich entry persistence, normalized topic indexing, lookup state, and partial-cache updates.
-- `lexhint.kaikki` builds exact-word Kaikki URLs and streams JSONL responses for lazy fetches.
-- `lexhint.builder` streams local or remote bulk JSONL and writes a complete SQLite index.
-- `lexhint.download` defines supported languages, upstream URLs, cache paths, and atomic word-list downloads.
-- `lexhint.models` contains the immutable runtime evidence and advanced operation-result dataclasses.
+The package is organized around a local artifact runtime and focused build modules.
 
-The public package exports the principal runtime `Dictionary`, evidence models, exceptions, and version from `lexhint.__init__`. Build/download helpers remain importable from their owning advanced modules. Tests exercise module boundaries with local fixtures and mocked network calls.
+- `lexhint.lexicon.Lexicon` owns read-only artifact access, lexical lookup, segmentation, dictionary inspection, and semantic evidence queries.
+- `lexhint.schema` defines schema and capability validation for the self-describing SQLite artifact.
+- `lexhint.builder` creates fresh atomic artifacts from streamed source data and applies the immutable build plan.
+- `lexhint.extract` converts source records into curated lexical and dictionary data.
+- `lexhint.semantics` projects source topics into the stable `SemanticDomain` taxonomy.
+- `lexhint.frequency` and `lexhint.sources` resolve corpus enrichment and source provenance.
+- `lexhint.store` persists lexemes, domains, rich dictionary tables, metadata, and indexes.
+- `lexhint.cli` exposes build and runtime operations in human-readable and JSON forms.
+
+The public package exports `Lexicon` and `SemanticDomain` as the principal consumer interface. Build and source helpers remain available from their owning modules.
+
+## Consumer interface
+
+```python
+from lexhint import Lexicon, SemanticDomain
+
+lexicon = Lexicon.from_path("en.sqlite3")
+segments = lexicon.segment("chatgpt")
+text = "The compiler is 8.3.2."
+start = text.index("8.3.2")
+evidence = lexicon.supports_domain(
+    text, target=(start, start + len("8.3.2")), domain=SemanticDomain.COMPUTING
+)
+```
+
+The consumer decides what an unknown run, version, or candidate should mean. Lexhint ends at evidence.

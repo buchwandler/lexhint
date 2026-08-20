@@ -7,27 +7,24 @@ section: context_and_scope
 title: Context and Scope
 order: 30
 status: accepted
-version: 5
+version: 6
 body_format: markdown
 ---
-`lexhint` sits between lexical resources and a speech or text-normalization consumer.
+
+Lexhint sits between lexical data artifacts and a text-normalization or speech consumer.
 
 ## Business context
 
 ```text
-FrequencyWords ──> common-word evidence ─┐
-                                         ├─> lexhint ──> dictionary API ──> consumer
-Wiktionary/Kaikki ─> rich entries ───────┘
-                         └─> indexed topics ──> context evidence
+Lexical and semantic evidence ──> lexhint ──> consumer interpretation and speech policy
+Corpus frequency enrichment ────> lexhint ──> lexical ranking and evidence
 ```
 
-The consumer decides how evidence affects pronunciation. For example, `lexhint` can report that `chat` is known and `gpt` is an unknown run, or that nearby `compiler` evidence supports a `computing` interpretation. It does not implement `Am -> A minor`, version pronunciation, URL symbol names, or other speech policy.
+The consumer decides what an unknown run, version, or candidate should mean. Lexhint ends at evidence and does not own tokenization, pronunciation, or interpretation precedence.
 
 ## Technical context
 
-- Inputs are FrequencyWords text files and Wiktextract-compatible JSONL, either local or remote.
-- The CLI and Python API read resources through the cache layer.
-- The application process owns in-memory lexical data and read-only SQLite dictionary access.
-- Lazy dictionary lookups request only exact Kaikki word pages and persist curated rich entries.
-- Full builds stream the bulk JSONL source line by line into SQLite.
-- Outputs are dataclasses, tuples, CLI text, or stable JSON. No service endpoint or daemon is required.
+- Wiktextract/Kaikki JSONL supplies lexical and semantic data during builds.
+- FrequencyWords enriches existing lexemes with corpus fields.
+- A local SQLite artifact is the runtime boundary.
+- No service endpoint or daemon is required.

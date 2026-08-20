@@ -7,17 +7,15 @@ section: deployment_view
 title: Deployment View
 order: 70
 status: accepted
-version: 6
+version: 7
 body_format: markdown
 ---
-`lexhint` is deployed as a local Python package and command-line executable. There is no application server, worker, or persistent service.
 
-- The package is installed from a wheel or source distribution and exposes the `lexhint` entry point.
-- Vendored dictionaries, when deliberately included, are package data under `lexhint/data`.
-- Otherwise, the runtime dictionary artifact lives at `dictionaries/<language>.sqlite3`; corpus source provenance is embedded in its metadata.
-- FrequencyWords is consumed only during reproducible dataset builds and its revision/hash are stored in SQLite metadata.
-- Lazy dictionary downloads use exact Kaikki word-page URLs.
-- Bulk dictionary builds may read the official Kaikki raw JSONL URL or a local compatible file.
-- `--offline` prevents missing dictionary data from being fetched. A complete local index supports fully offline context queries.
-- Temporary files are created beside cache targets and atomically renamed into place, limiting partially written resources.
-- Code-only release artifacts do not include user caches or generated external datasets.
+Lexhint is deployed as a local Python package and a local SQLite evidence artifact. There is no application server, worker, or persistent service.
+
+- Consumers install the package and open an artifact with `Lexicon.from_path()`.
+- Artifact paths are selected by the caller or build workflow.
+- A complete local artifact supports offline lexical, segmentation, dictionary, and semantic reads when the corresponding capabilities are present.
+- Generated artifacts contain source and hash provenance for dictionary and corpus inputs.
+- Build downloads and replacements use temporary files and atomic rename.
+- Generated external datasets are distributed separately from code according to `DATA_SOURCES.md`.
