@@ -136,3 +136,82 @@ def test_dictionary_lookup_preserves_case_and_no_entry_behavior(
     assert main(["dictionary", "word", "missing", "--path", str(rich_artifact)]) == 0
     missing_output = capsys.readouterr().out
     assert "no dictionary entries found" in missing_output
+
+
+def test_dictionary_field_overlays_are_repeatable(
+    rich_artifact: Path, capsys: pytest.CaptureFixture[str]
+) -> None:
+    assert (
+        main(
+            dictionary_args(
+                rich_artifact,
+                "--detail",
+                "compact",
+                "--show",
+                "example",
+                "--show",
+                "synonym",
+            )
+        )
+        == 0
+    )
+
+    output = capsys.readouterr().out
+    assert "examples" in output
+    assert "Their love grew over time." in output
+    assert "synonyms: affection" in output
+    assert "tags:" not in output
+
+    assert (
+        main(
+            dictionary_args(
+                rich_artifact,
+                "--detail",
+                "full",
+                "--hide",
+                "examples,tags,etymology",
+            )
+        )
+        == 0
+    )
+
+    output = capsys.readouterr().out
+    assert "etymology" not in output
+    assert "examples" not in output
+    assert "tags:" not in output
+
+
+def test_dictionary_pos_filters_select_entries(
+    rich_artifact: Path, capsys: pytest.CaptureFixture[str]
+) -> None:
+    assert main(dictionary_args(rich_artifact, "--pos", "noun,verb")) == 0
+    output = capsys.readouterr().out
+    assert "  noun" in output
+    assert "  verb" in output
+    assert "Proper Noun" not in output
+
+    assert main(dictionary_args(rich_artifact, "--exclude-pos", "verb")) == 0
+    output = capsys.readouterr().out
+    assert "  verb" not in output
+    assert "  noun" in output
+
+
+def test_dictionary_pos_filters_apply_to_json_and_reject_human_options(
+    rich_artifact: Path, capsys: pytest.CaptureFixture[str]
+) -> None:
+    assert main(["--json", *dictionary_args(rich_artifact, "--pos", "NOUN")]) == 0
+    payload = json.loads(capsys.readouterr().out)
+    assert [entry["pos"] for entry in payload["entries"]] == ["noun", "noun"]
+
+    assert main(["--json", *dictionary_args(rich_artifact, "--hide", "examples")]) == 1
+    captured = capsys.readouterr()
+    assert captured.out == ""
+    assert "cannot be used with --json" in captured.err
+
+
+def test_dictionary_pos_empty_result_is_explained(
+    rich_artifact: Path, capsys: pytest.CaptureFixture[str]
+) -> None:
+    assert main(dictionary_args(rich_artifact, "--pos", "adjective")) == 0
+    output = capsys.readouterr().out
+    assert "no dictionary entries matched --pos adjective" in output

@@ -79,10 +79,15 @@ Dictionary word output has three human-readable detail levels. The default `stan
 lexhint dictionary word love
 lexhint dictionary word love --detail compact
 lexhint dictionary word love --detail full
-lexhint --json dictionary word love
+lexhint dictionary word love --detail full --hide examples,tags
+lexhint dictionary word love --detail compact --show examples
+lexhint dictionary word love --pos noun,verb --exclude-pos proper_noun
+lexhint --json dictionary word love --pos noun
 ```
 
-Use `--json` for stable, complete machine-readable output. `--detail` applies only to human-readable output and cannot be combined with `--json`. `dictionary status` reports current SQL row counts, capabilities, provenance, size, and build metadata without rebuilding. Use `--path` as an advanced override when inspecting a specific artifact. Rich dictionary lookup reports a controlled capability error for compact runtime artifacts.
+The `--show` and `--hide` options accept repeatable comma-separated fields. Canonical fields are `etymology`, `pronunciations`, `forms`, `tags`, `topics`, `examples`, `synonyms`, and `antonyms`; the `all`, `entry`, `sense`, and `relations` groups are also supported. `--width` controls human output from 40 through 240 columns.
+
+Use `--json` for stable, complete machine-readable output. POS selection applies to JSON entries, while `--detail`, `--show`, `--hide`, and `--width` are human-only options. `dictionary status` reports current SQL row counts, capabilities, provenance, size, and build metadata without rebuilding. Use `--path` as an advanced override when inspecting a specific artifact. Rich dictionary lookup reports a controlled capability error for compact runtime artifacts.
 
 ## Data and scope
 

@@ -18,15 +18,14 @@ from .lexicon import (
     LexiconIncompatible,
     LexiconNotInstalled,
 )
-from .models import (
-    DictionaryBuildStats,
-    DictionaryEntry,
-    DomainEvidence,
-    Form,
-    LexicalSegment,
-    Pronunciation,
-    Sense,
-    WordEvidence,
+from .models import DictionaryBuildStats, DomainEvidence, LexicalSegment, WordEvidence
+from .render import (
+    DictionaryRenderOptions,
+    filter_dictionary_entries,
+    render_dictionary_entries,
+    resolve_dictionary_fields,
+    resolve_pos_filters,
+    terminal_render_width,
 )
 from .schema import PROFILES, normalize_capabilities
 from .status import ArtifactStatus, read_artifact_status
@@ -146,7 +145,14 @@ def _parser() -> argparse.ArgumentParser:
         help="refresh the cached automatic frequency source",
     )
 
-    inspect = dictionary_sub.add_parser("word", help="show rich dictionary entries")
+    inspect = dictionary_sub.add_parser(
+        "word",
+        help="show rich dictionary entries",
+        epilog=(
+            "Dictionary fields: etymology, pronunciations, forms, tags, topics, "
+            "examples, synonyms, antonyms. Groups: all, entry, sense, relations."
+        ),
+    )
     inspect.add_argument("values", nargs="+")
     inspect.add_argument("-l", "--language", choices=sorted(SUPPORTED_LANGUAGES))
     inspect.add_argument("--path", help="override the local SQLite artifact")
@@ -156,6 +162,31 @@ def _parser() -> argparse.ArgumentParser:
         default=None,
         help="human-readable dictionary detail level (default: standard)",
     )
+    inspect.add_argument(
+        "--show",
+        action="append",
+        metavar="FIELDS",
+        help="add comma-separated dictionary fields or groups",
+    )
+    inspect.add_argument(
+        "--hide",
+        action="append",
+        metavar="FIELDS",
+        help="remove comma-separated dictionary fields or groups",
+    )
+    inspect.add_argument(
+        "--pos",
+        action="append",
+        metavar="POS",
+        help="show only comma-separated parts of speech",
+    )
+    inspect.add_argument(
+        "--exclude-pos",
+        action="append",
+        metavar="POS",
+        help="exclude comma-separated parts of speech",
+    )
+    inspect.add_argument("--width", type=int, help="human-output width, from 40 through 240")
     status = dictionary_sub.add_parser("status", help="show SQLite artifact status and counts")
     status.add_argument("language", nargs="?", choices=sorted(SUPPORTED_LANGUAGES), default=None)
     status.add_argument("--path", help="override the local SQLite artifact")
@@ -182,138 +213,6 @@ def _segments(text: str, values: Sequence[LexicalSegment], style: _Style) -> Non
     for value in values:
         status = style.green("known") if value.known else style.yellow("unknown")
         print(f"  {style.cyan(value.text)}  {status}")
-
-
-def _primary_gloss(sense: Sense) -> str | None:
-    return next((gloss for gloss in reversed(sense.glosses) if gloss), None)
-
-
-def _print_sense_metadata(sense: Sense) -> None:
-    tags = tuple(value for value in sense.tags if value)
-    topics = tuple(value for value in sense.topics if value)
-    if tags:
-        print(f"       tags: {', '.join(tags)}")
-    if topics:
-        print(f"       topics: {', '.join(topics)}")
-
-
-def _unique_forms(values: Sequence[DictionaryEntry]) -> tuple[Form, ...]:
-    seen: set[str] = set()
-    result: list[Form] = []
-    for entry in values:
-        for form in entry.forms:
-            if form.form not in seen:
-                seen.add(form.form)
-                result.append(form)
-    return tuple(result)
-
-
-def _unique_pronunciations(
-    values: Sequence[DictionaryEntry],
-) -> tuple[Pronunciation, ...]:
-    seen: set[tuple[str, tuple[str, ...]]] = set()
-    result: list[Pronunciation] = []
-    for entry in values:
-        for pronunciation in entry.pronunciations:
-            key = (pronunciation.ipa, pronunciation.tags)
-            if key not in seen:
-                seen.add(key)
-                result.append(pronunciation)
-    return tuple(result)
-
-
-def _entries_compact(values: Sequence[DictionaryEntry], style: _Style) -> None:
-    for entry in values:
-        print(f"  {style.cyan(entry.pos or 'entry')}")
-        if not entry.senses:
-            continue
-        gloss = _primary_gloss(entry.senses[0])
-        additional = len(entry.senses) - 1
-        suffix = f"  +{additional} sense"
-        if additional != 1:
-            suffix += "s"
-        print(f"    {gloss or ''}{suffix if additional else ''}")
-
-
-def _entries_standard(values: Sequence[DictionaryEntry], style: _Style) -> None:
-    sense_number = 1
-    for entry in values:
-        print(f"  {style.cyan(entry.pos or 'entry')}")
-        for sense in entry.senses:
-            gloss = _primary_gloss(sense)
-            print(f"    {sense_number}. {gloss or ''}")
-            _print_sense_metadata(sense)
-            sense_number += 1
-    forms = _unique_forms(values)
-    if forms:
-        print()
-        print(f"  forms: {', '.join(form.form for form in forms)}")
-    pronunciations = _unique_pronunciations(values)
-    if pronunciations:
-        print("  pronunciation:")
-        for pronunciation in pronunciations:
-            tags = f" [{', '.join(pronunciation.tags)}]" if pronunciation.tags else ""
-            print(f"    {pronunciation.ipa}{tags}")
-
-
-def _print_relation(label: str, values: Sequence[str]) -> None:
-    values = tuple(value for value in values if value)
-    if values:
-        print(f"       {label}:")
-        for value in values:
-            print(f"         {value}")
-
-
-def _entries_full(values: Sequence[DictionaryEntry], style: _Style) -> None:
-    sense_number = 1
-    for entry in values:
-        print(f"  {style.cyan(entry.pos or 'entry')}")
-        if entry.etymology:
-            print(f"    etymology: {entry.etymology}")
-        for sense in entry.senses:
-            print(f"    {sense_number}.")
-            for gloss in sense.glosses:
-                if gloss:
-                    print(f"       {gloss}")
-            _print_sense_metadata(sense)
-            for example in sense.examples:
-                print(f"       example: {example.text}")
-                if example.translation:
-                    print(f"         translation: {example.translation}")
-            _print_relation("synonyms", sense.synonyms)
-            _print_relation("antonyms", sense.antonyms)
-            sense_number += 1
-        if entry.forms:
-            print("    forms:")
-            for form in entry.forms:
-                tags = f" [{', '.join(form.tags)}]" if form.tags else ""
-                print(f"      {form.form}{tags}")
-        if entry.pronunciations:
-            print("    pronunciation:")
-            for pronunciation in entry.pronunciations:
-                tags = f" [{', '.join(pronunciation.tags)}]" if pronunciation.tags else ""
-                print(f"      {pronunciation.ipa}{tags}")
-
-
-def _entries(
-    word: str,
-    values: Sequence[DictionaryEntry],
-    style: _Style,
-    *,
-    detail: str = "standard",
-) -> None:
-    print(style.bold(word))
-    if not values:
-        print(f"  {style.yellow('no dictionary entries found')}")
-        return
-    if detail == "compact":
-        _entries_compact(values, style)
-    elif detail == "standard":
-        _entries_standard(values, style)
-    elif detail == "full":
-        _entries_full(values, style)
-    else:
-        raise AssertionError(f"unknown dictionary detail: {detail}")
 
 
 def _context(values: Sequence[DomainEvidence], style: _Style) -> None:
@@ -454,12 +353,25 @@ def _run(args: argparse.Namespace, *, style: _Style, json_output: bool) -> int:
             print(f"  output        {path}")
         return 0
     if args.dictionary_command == "word":
-        if json_output and args.detail is not None:
+        presentation_options = (
+            args.detail is not None or args.show or args.hide or args.width is not None
+        )
+        if json_output and presentation_options:
+            if args.detail is not None and not (args.show or args.hide or args.width):
+                raise ValueError(
+                    "--detail only applies to human-readable output; omit it when using --json"
+                )
             raise ValueError(
-                "--detail only applies to human-readable output; omit it when using --json"
+                "--detail/--show/--hide/--width are human-output options "
+                "and cannot be used with --json"
             )
         language, word = _language(args.values, args.language)
-        entries = Lexicon(language, path=args.path).entries(word)
+        lexicon = Lexicon(language, path=args.path)
+        original_entries = lexicon.entries(word)
+        include_pos, exclude_pos = resolve_pos_filters(args.pos, args.exclude_pos)
+        entries = filter_dictionary_entries(
+            original_entries, include=include_pos, exclude=exclude_pos
+        )
         if json_output:
             _json(
                 {
@@ -469,7 +381,24 @@ def _run(args: argparse.Namespace, *, style: _Style, json_output: bool) -> int:
                 }
             )
         else:
-            _entries(word, entries, style, detail=args.detail or "standard")
+            if not entries and include_pos is not None and original_entries:
+                print(style.bold(word))
+                selectors = ", ".join(sorted(include_pos))
+                print(f"  {style.yellow(f'no dictionary entries matched --pos {selectors}')}")
+            elif not entries and exclude_pos and original_entries:
+                print(style.bold(word))
+                selectors = ", ".join(sorted(exclude_pos))
+                message = f"no dictionary entries remained after --exclude-pos {selectors}"
+                print(f"  {style.yellow(message)}")
+            else:
+                detail = args.detail or "standard"
+                options = DictionaryRenderOptions(
+                    fields=resolve_dictionary_fields(detail, show=args.show, hide=args.hide),
+                    include_pos=include_pos,
+                    exclude_pos=exclude_pos,
+                    width=terminal_render_width(args.width),
+                )
+                print(render_dictionary_entries(word, entries, options=options, detail=detail))
         return 0
     if args.dictionary_command == "status":
         language = args.language
