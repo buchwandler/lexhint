@@ -50,14 +50,25 @@ class Lexicon:
         self,
         language: str,
         *,
+        variant: str | None = None,
+        dataset_version: str | None = None,
         path: str | Path | None = None,
     ) -> None:
+        if path is not None and (variant is not None or dataset_version is not None):
+            raise ValueError("path cannot be combined with variant or dataset_version")
         self.language = language.lower().split("-", 1)[0]
+        self.variant = variant
+        self.dataset_version = dataset_version
         self.path = Path(path).expanduser() if path is not None else self._resolve_path()
         if not self.path.is_file():
+            if path is not None:
+                raise LexiconNotInstalled(
+                    f"no local lexicon artifact at {self.path}; "
+                    "build or install a Lexhint SQLite database"
+                )
             raise LexiconNotInstalled(
                 f"no local lexicon artifact installed for {self.language!r}; "
-                "build or install a Lexhint SQLite database"
+                f"run 'lexhint dataset download {self.language}'"
             )
         self._metadata = self._read_metadata()
         self._validate_metadata()
@@ -90,6 +101,18 @@ class Lexicon:
         return cls(language or stored, path=target)
 
     def _resolve_path(self) -> Path:
+        from .datasets import DatasetAmbiguous, DatasetError, resolve_installed_dataset
+
+        try:
+            return resolve_installed_dataset(
+                self.language, variant=self.variant, version=self.dataset_version
+            ).path
+        except DatasetAmbiguous:
+            raise
+        except DatasetError as exc:
+            if self.variant is not None or self.dataset_version is not None:
+                raise LexiconNotInstalled(str(exc)) from exc
+
         vendored = (
             files("lexhint")
             .joinpath("data")

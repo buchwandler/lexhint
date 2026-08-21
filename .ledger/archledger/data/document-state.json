@@ -1,9 +1,9 @@
 {
   "documents": {
     "arc42:markdown:draft=false:superseded=false": {
-      "fingerprint": "sha256:84b0e054311706c34057acfe63cf13300fddfd239742f6ecbc866393348ebc85",
-      "input_count": 12,
-      "version": 14
+      "fingerprint": "sha256:5309e5d0467abd84b0b13f294905a927aabb8e1982a6071f0fccca9057c0aed8",
+      "input_count": 13,
+      "version": 15
     }
   },
   "schema": "archledger.document-state.v1"

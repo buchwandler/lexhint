@@ -8,6 +8,13 @@ except PackageNotFoundError:
     __version__ = "0+unknown"
 
 from .builder import project_artifact
+from .datasets import (
+    InstalledDataset,
+    available_datasets,
+    download_dataset,
+    list_installed_datasets,
+    remove_dataset,
+)
 from .lexicon import (
     Lexicon,
     LexiconCapabilityError,
@@ -45,5 +52,10 @@ __all__ = [
     "SemanticDomain",
     "Sense",
     "WordEvidence",
+    "InstalledDataset",
+    "available_datasets",
+    "download_dataset",
+    "list_installed_datasets",
+    "remove_dataset",
     "__version__",
 ]

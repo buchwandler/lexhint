@@ -5,12 +5,25 @@ import json
 import os
 import sys
 from collections.abc import Sequence
+from contextlib import suppress
 from dataclasses import asdict
 from pathlib import Path
 from typing import NoReturn
 
 from . import __version__
 from .builder import build_dictionary, project_artifact
+from .datasets import (
+    DatasetArtifact,
+    DatasetError,
+    DatasetProgress,
+    InstalledDataset,
+    available_datasets,
+    download_dataset,
+    list_installed_datasets,
+    remove_dataset,
+    resolve_installed_dataset,
+    validate_datasets,
+)
 from .download import KAIKKI_RAW_URL, SUPPORTED_LANGUAGES
 from .lexicon import (
     Lexicon,
@@ -97,6 +110,12 @@ def _target_span(text: str, target: str) -> tuple[int, int]:
     return start, start + len(target)
 
 
+def _artifact_selector(parser: argparse.ArgumentParser) -> None:
+    parser.add_argument("--variant", help="installed dataset capability variant")
+    parser.add_argument("--dataset-version", help="exact installed dataset release version")
+    parser.add_argument("--path", help="local SQLite artifact")
+
+
 def _parser() -> argparse.ArgumentParser:
     parser = _ArgumentParser(
         prog="lexhint", description="Local lexical evidence from SQLite language artifacts."
@@ -114,13 +133,13 @@ def _parser() -> argparse.ArgumentParser:
         command = sub.add_parser(name, help=help_text)
         command.add_argument("values", nargs="+")
         command.add_argument("-l", "--language", choices=sorted(SUPPORTED_LANGUAGES))
-        command.add_argument("--path", help="local SQLite artifact")
+        _artifact_selector(command)
 
     context = sub.add_parser("context", help="show semantic-domain evidence around a target")
     context.add_argument("text", nargs="+")
     context.add_argument("--target", required=True, help="START:END span or literal target")
     context.add_argument("-l", "--language", choices=sorted(SUPPORTED_LANGUAGES))
-    context.add_argument("--path", help="local SQLite artifact")
+    _artifact_selector(context)
     context.add_argument("--window", type=int, default=6)
     context.add_argument("--decay", type=float, default=0.7)
     context.add_argument("--limit", type=int)
@@ -166,7 +185,7 @@ def _parser() -> argparse.ArgumentParser:
     )
     inspect.add_argument("values", nargs="+")
     inspect.add_argument("-l", "--language", choices=sorted(SUPPORTED_LANGUAGES))
-    inspect.add_argument("--path", help="override the local SQLite artifact")
+    _artifact_selector(inspect)
     inspect.add_argument(
         "--detail",
         choices=_DICTIONARY_DETAILS,
@@ -200,7 +219,32 @@ def _parser() -> argparse.ArgumentParser:
     inspect.add_argument("--width", type=int, help="human-output width, from 40 through 240")
     status = dictionary_sub.add_parser("status", help="show SQLite artifact status and counts")
     status.add_argument("language", nargs="?", choices=sorted(SUPPORTED_LANGUAGES), default=None)
-    status.add_argument("--path", help="override the local SQLite artifact")
+    _artifact_selector(status)
+
+    dataset = sub.add_parser("dataset", help="download and manage published datasets")
+    dataset_sub = dataset.add_subparsers(dest="dataset_command", required=True)
+    download = dataset_sub.add_parser("download", help="download a published dataset")
+    download.add_argument("language", choices=sorted(SUPPORTED_LANGUAGES))
+    download.add_argument("--variant", default="runtime")
+    download.add_argument("--version", dest="dataset_version")
+    download.add_argument("--force", action="store_true")
+    available = dataset_sub.add_parser("available", help="list published datasets")
+    available.add_argument("--language", choices=sorted(SUPPORTED_LANGUAGES))
+    available.add_argument("--version", dest="dataset_version")
+    info = dataset_sub.add_parser("info", help="show an installed dataset")
+    info.add_argument("language", choices=sorted(SUPPORTED_LANGUAGES))
+    info.add_argument("--variant")
+    info.add_argument("--version", dest="dataset_version")
+    listing = dataset_sub.add_parser("list", help="list installed datasets")
+    listing.add_argument("--language", choices=sorted(SUPPORTED_LANGUAGES))
+    remove = dataset_sub.add_parser("remove", help="remove installed dataset artifacts")
+    remove.add_argument("language", choices=sorted(SUPPORTED_LANGUAGES))
+    remove.add_argument("--variant", required=True)
+    remove.add_argument("--version", dest="dataset_version")
+    validate = dataset_sub.add_parser("validate", help="validate installed dataset artifacts")
+    validate.add_argument("language", nargs="?", choices=sorted(SUPPORTED_LANGUAGES))
+    validate.add_argument("--variant")
+    validate.add_argument("--version", dest="dataset_version")
 
     return parser
 
@@ -259,10 +303,131 @@ def _status(info: ArtifactStatus, style: _Style) -> None:
     print(f"  path          {values['path']}")
 
 
+def _dataset_value(value: DatasetArtifact | InstalledDataset) -> dict[str, object]:
+    return value.as_dict()
+
+
+def _dataset_progress(progress: DatasetProgress) -> None:
+    total = f"/{progress.total_bytes:,} bytes" if progress.total_bytes is not None else ""
+    print(f"{progress.phase}: {progress.downloaded_bytes:,}{total}", file=sys.stderr)
+
+
+def _run_dataset(args: argparse.Namespace, *, json_output: bool) -> int:
+    if args.dataset_command == "download":
+        result = download_dataset(
+            args.language,
+            variant=args.variant,
+            version=args.dataset_version,
+            force=args.force,
+            offline=args.offline,
+            progress=None if json_output else _dataset_progress,
+        )
+        payload = _dataset_value(result)
+        if json_output:
+            _json(payload)
+        elif result.already_installed:
+            print(
+                f"Already installed {result.language}/{result.variant} "
+                f"{result.dataset_version}: {result.path}"
+            )
+        else:
+            print(
+                f"Installed {result.language}/{result.variant} "
+                f"{result.dataset_version}: {result.path}"
+            )
+        return 0
+    if args.dataset_command == "available":
+        remote_items = available_datasets(
+            language=args.language, version=args.dataset_version, offline=args.offline
+        )
+        payload = {"available": [_dataset_value(value) for value in remote_items]}
+        if json_output:
+            _json(payload)
+        else:
+            for remote_item in remote_items:
+                print(
+                    f"{remote_item.language} {remote_item.variant} {remote_item.dataset_version} "
+                    f"{', '.join(remote_item.capabilities)} {remote_item.compressed_size:,} bytes"
+                )
+        return 0
+    if args.dataset_command == "list":
+        installed_items = list_installed_datasets(args.language)
+        selected: dict[str, InstalledDataset] = {}
+        for installed_item in installed_items:
+            with suppress(DatasetError):
+                selected[installed_item.language] = resolve_installed_dataset(
+                    installed_item.language
+                )
+        payload_items: list[dict[str, object]] = []
+        for installed_item in installed_items:
+            value = _dataset_value(installed_item)
+            value["selected"] = selected.get(installed_item.language) == installed_item
+            payload_items.append(value)
+        payload = {"installed": payload_items}
+        if json_output:
+            _json(payload)
+        else:
+            for installed_item, value in zip(installed_items, payload_items, strict=True):
+                marker = " *" if value["selected"] else ""
+                print(
+                    f"{installed_item.language} {installed_item.variant} "
+                    f"{installed_item.dataset_version} {', '.join(installed_item.capabilities)} "
+                    f"{installed_item.size_bytes:,} bytes{marker}"
+                )
+        return 0
+    if args.dataset_command == "info":
+        selected_item = resolve_installed_dataset(
+            args.language, variant=args.variant, version=args.dataset_version
+        )
+        installed_values = [
+            _dataset_value(value) for value in list_installed_datasets(args.language)
+        ]
+        payload = _dataset_value(selected_item)
+        payload["installed_variants"] = installed_values
+        if json_output:
+            _json(payload)
+        else:
+            for key, field_value in payload.items():
+                if key != "installed_variants":
+                    print(f"{key}: {field_value}")
+            print("installed variants:")
+            for value in installed_values:
+                print(f"  {value['variant']} {value['dataset_version']} {value['path']}")
+        return 0
+    if args.dataset_command == "remove":
+        removed = remove_dataset(args.language, variant=args.variant, version=args.dataset_version)
+        payload = {"removed": [str(path) for path in removed]}
+        if json_output:
+            _json(payload)
+        else:
+            for path in removed:
+                print(f"Removed {path}")
+        return 0
+    if args.dataset_command == "validate":
+        valid_items = validate_datasets(
+            args.language, variant=args.variant, version=args.dataset_version
+        )
+        payload = {"valid": [_dataset_value(value) for value in valid_items]}
+        if json_output:
+            _json(payload)
+        else:
+            for valid_item in valid_items:
+                print(
+                    f"Valid {valid_item.language}/{valid_item.variant}/"
+                    f"{valid_item.dataset_version}: {valid_item.path}"
+                )
+        return 0
+    raise AssertionError("unreachable")
+
+
 def _run(args: argparse.Namespace, *, style: _Style, json_output: bool) -> int:
+    if args.command == "dataset":
+        return _run_dataset(args, json_output=json_output)
     if args.command == "word":
         language, word = _language(args.values, args.language)
-        lexicon = Lexicon(language, path=args.path)
+        lexicon = Lexicon(
+            language, variant=args.variant, dataset_version=args.dataset_version, path=args.path
+        )
         info = lexicon.word(word)
         if json_output:
             _json({"language": language, **asdict(info)})
@@ -271,7 +436,9 @@ def _run(args: argparse.Namespace, *, style: _Style, json_output: bool) -> int:
         return 0
     if args.command == "segment":
         language, text = _language(args.values, args.language)
-        lexicon = Lexicon(language, path=args.path)
+        lexicon = Lexicon(
+            language, variant=args.variant, dataset_version=args.dataset_version, path=args.path
+        )
         values = lexicon.segment(text)
         if json_output:
             _json(
@@ -287,7 +454,9 @@ def _run(args: argparse.Namespace, *, style: _Style, json_output: bool) -> int:
     if args.command == "context":
         language = (args.language or _default_language()).lower().split("-", 1)[0]
         text = " ".join(args.text)
-        lexicon = Lexicon(language, path=args.path)
+        lexicon = Lexicon(
+            language, variant=args.variant, dataset_version=args.dataset_version, path=args.path
+        )
         domains = lexicon.context_domains(
             text,
             target=_target_span(text, args.target),
@@ -389,7 +558,9 @@ def _run(args: argparse.Namespace, *, style: _Style, json_output: bool) -> int:
                 "and cannot be used with --json"
             )
         language, word = _language(args.values, args.language)
-        lexicon = Lexicon(language, path=args.path)
+        lexicon = Lexicon(
+            language, variant=args.variant, dataset_version=args.dataset_version, path=args.path
+        )
         original_entries = lexicon.entries(word)
         include_pos, exclude_pos = resolve_pos_filters(args.pos, args.exclude_pos)
         entries = filter_dictionary_entries(
@@ -425,7 +596,12 @@ def _run(args: argparse.Namespace, *, style: _Style, json_output: bool) -> int:
         return 0
     if args.dictionary_command == "status":
         language = args.language
-        artifact_info = read_artifact_status(language, path=args.path)
+        artifact_info = read_artifact_status(
+            language,
+            variant=args.variant,
+            dataset_version=args.dataset_version,
+            path=args.path,
+        )
         if json_output:
             _json(artifact_info.as_dict())
         else:
@@ -446,6 +622,7 @@ def main(argv: Sequence[str] | None = None) -> int:
     try:
         return _run(args, style=style, json_output=json_output)
     except (
+        DatasetError,
         LexiconCapabilityError,
         LexiconCoverageError,
         LexiconIncompatible,
@@ -455,11 +632,14 @@ def main(argv: Sequence[str] | None = None) -> int:
         RuntimeError,
     ) as exc:
         message = str(exc)
-        hint = (
-            "run 'lexhint dictionary build <language>'"
-            if isinstance(exc, (LexiconNotInstalled, LexiconIncompatible, LexiconCoverageError))
-            else None
-        )
+        if isinstance(exc, DatasetError) or (
+            isinstance(exc, LexiconNotInstalled) and "installed for" in message
+        ):
+            hint = "run 'lexhint dataset download <language>'"
+        elif isinstance(exc, (LexiconIncompatible, LexiconCoverageError, LexiconNotInstalled)):
+            hint = "run 'lexhint dictionary build <language>'"
+        else:
+            hint = None
         if json_output:
             payload = {"error": message}
             if hint:

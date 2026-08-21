@@ -39,15 +39,26 @@ def _count(connection: sqlite3.Connection, query: str) -> int:
 
 
 def read_artifact_status(
-    language: str | None = None, *, path: str | Path | None = None
+    language: str | None = None,
+    *,
+    variant: str | None = None,
+    dataset_version: str | None = None,
+    path: str | Path | None = None,
 ) -> ArtifactStatus:
     if language is None and path is None:
         language = "en"
     if language is None:
         assert path is not None
+        if variant is not None or dataset_version is not None:
+            raise ValueError("path cannot be combined with variant or dataset_version")
         lexicon = Lexicon.from_path(path)
     else:
-        lexicon = Lexicon(language, path=path)
+        lexicon = Lexicon(
+            language,
+            variant=variant,
+            dataset_version=dataset_version,
+            path=path,
+        )
     metadata = lexicon.metadata
     with closing(lexicon._connect()) as connection:
         has_semantic = _has_table(connection, "lexeme_domains")

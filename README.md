@@ -10,30 +10,57 @@ Lexhint does not normalize or speak text. Word boundaries, acronyms, URLs, numbe
 python -m pip install lexhint
 ```
 
-Lexhint supports Python 3.10 through 3.14. The Python package is code-only and does not include a complete language SQLite artifact. Install a prebuilt artifact from the [lexhint-datasets repository](https://github.com/buchwandler/lexhint-datasets), or build one locally as shown below. Keep dataset downloads and their licensing and provenance separate from the Python package.
+Lexhint supports Python 3.10 through 3.14. The Python package contains code only, so install a dataset explicitly after installing the package. Published datasets are maintained separately in the [lexhint-datasets repository](https://github.com/buchwandler/lexhint-datasets), with their own licensing and provenance.
 
 ## Quick start
 
-After installing the package and an English artifact, run:
+Install the normal English runtime artifact, inspect it, and query it locally:
 
 ```bash
-lexhint word compiler
-lexhint segment compilerword
-lexhint context "The compiler is 8.3.2." --target 16:21
-lexhint dictionary word compiler
-lexhint dictionary status
+python -m pip install lexhint
+lexhint dataset download en
+lexhint dataset list
+lexhint word compiler -l en
+lexhint context "The compiler is 8.3.2." -l en --target 16:21
 ```
+
+`lexhint dataset download` is the only networked step. `Lexicon`, query commands, and dataset inventory commands use installed files and do not silently contact GitHub.
+
+The download default is the `runtime` variant (`lexical,semantic`). Optional variants are:
+
+- `lexical` for membership, frequency, and segmentation;
+- `runtime` for lexical and semantic context evidence;
+- `rich` for lexical, semantic, and dictionary inspection.
+
+Install several variants side by side:
+
+```bash
+lexhint dataset download en --variant rich
+lexhint dataset list --language en
+lexhint dictionary word love -l en --variant rich
+lexhint dataset remove en --variant rich
+```
+
+For reproducibility, install and select an exact release:
+
+```bash
+lexhint dataset download en --variant runtime --version 2026.08.20
+```
+
+The managed store uses `LEXHINT_DATA_DIR` when set, or the platform data directory otherwise. Artifacts are stored by language, variant, and dataset version. A local-build alternative is available with `lexhint dictionary build`; pass its output with `--path` when querying.
 
 For a small local artifact without FrequencyWords enrichment, build from the repository fixture with `lexhint dictionary build en --source tests/fixtures/kaikki-mini.jsonl --output /tmp/lexhint-en.sqlite3 --no-frequency` and pass `--path /tmp/lexhint-en.sqlite3` to the query commands.
 
 ## 1. Common-word lexicon
 
-Open a local artifact with `Lexicon`:
+Open the highest-capability installed artifact with `Lexicon`, or select a variant/version explicitly:
 
 ```python
 from lexhint import Lexicon
 
-lexicon = Lexicon.from_path("en.sqlite3")
+lexicon = Lexicon("en")  # highest installed compatible variant
+runtime = Lexicon("en", variant="runtime")
+pinned = Lexicon("en", variant="runtime", dataset_version="2026.08.20")
 info = lexicon.word("compiler")
 print(info.known, info.frequency_rank)
 print(lexicon.segment("compilerword"))
@@ -82,12 +109,15 @@ Frequency enrichment is independent of capabilities. Use `--no-frequency` for a 
 ## CLI queries
 
 ```bash
-lexhint word compiler
-lexhint segment chatgpt
-lexhint context "The compiler is 8.3.2." --target 16:21
-lexhint dictionary word compiler
-lexhint dictionary status
+lexhint word compiler -l en
+lexhint word compiler -l en --variant runtime
+lexhint segment chatgpt -l en --dataset-version 2026.08.20
+lexhint context "The compiler is 8.3.2." -l en --target 16:21
+lexhint dictionary word compiler -l en --variant rich
+lexhint dictionary status en --variant runtime
 ```
+
+All artifact-consuming query commands accept `--variant` and `--dataset-version`; `--path` remains an explicit custom-file override. Use `--json` for one JSON document on stdout. Dataset `list`, `info`, and `validate` are local; `available` and `download` access the published catalog.
 
 Dictionary word output has three human-readable detail levels. The default `standard` view shows all senses with compact metadata. Use `compact` for a deliberately short shell view, or `full` for every field retained by the local Lexhint dictionary model:
 
