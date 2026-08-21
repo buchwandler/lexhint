@@ -10,6 +10,7 @@ status: accepted
 version: 9
 body_format: markdown
 ---
+
 The current architecture records these decisions.
 
 - **Use a self-describing SQLite artifact.** Schema, language, coverage, profile, capabilities, and provenance are validated at runtime.

@@ -7,17 +7,18 @@ versioning:
 entry_id: entry-0001
 release_version: 0.1.2
 kind: changed
-summary: Changed WordEvidence to expose lexical case attestation and uppercase-only
+summary:
+  Changed WordEvidence to expose lexical case attestation and uppercase-only
   evidence
 status: accepted
 audience: null
 scopes: []
 source_refs:
-- tl:task-0015
+  - tl:task-0015
 paths:
-- lexhint/models.py
-- lexhint/lexicon.py
-- tests/test_final_form.py
+  - lexhint/models.py
+  - lexhint/lexicon.py
+  - tests/test_final_form.py
 issues: []
 prs: []
 sources: []

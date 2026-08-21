@@ -10,10 +10,11 @@ status: accepted
 version: 9
 body_format: markdown
 source_refs:
-- path: lexhint/lexicon.py
-  role: documents
-  reason: Lexicon runtime documented by the architecture
+  - path: lexhint/lexicon.py
+    role: documents
+    reason: Lexicon runtime documented by the architecture
 ---
+
 Lexhint is a small Python runtime plus prebuilt SQLite evidence artifacts. It supplies lexical membership, optional corpus commonness, compact-string segmentation, stable semantic-domain evidence, and optional rich dictionary inspection.
 
 It does not decide how text is spoken. Spokenform and other consumers own tokenization policy, URLs, numbers, versions, acronyms, pronunciation, and interpretation precedence. Dataset publication is outside this repository.

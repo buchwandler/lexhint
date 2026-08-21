@@ -73,8 +73,6 @@ The consumer decides what an unknown run, version, or candidate should mean. Lex
 - A local SQLite artifact is the runtime boundary.
 - No service endpoint or daemon is required.
 
-
-
 ## Business Context
 
 <!-- archledger: no accepted records for this section yet -->
@@ -132,8 +130,6 @@ evidence = lexicon.supports_domain(
 
 The consumer decides what an unknown run, version, or candidate should mean. Lexhint ends at evidence.
 
-
-
 <!-- archledger: no accepted records for this section yet -->
 
 # Runtime View
@@ -153,8 +149,6 @@ The consumer decides what an unknown run, version, or candidate should mean. Lex
 3. Nearby words are queried in batches. Domain weights receive configurable distance decay, with adjacent eligible tokens at distance 1.
 4. Results preserve cue text, character spans, token distance, and contribution weight. The candidate cannot validate itself. Domain results are hints rather than sense-disambiguated semantic certainty, and missing evidence is not negative evidence.
 
-
-
 <!-- archledger: no accepted records for this section yet -->
 
 # Deployment View
@@ -168,8 +162,6 @@ Lexhint is deployed as a local Python package and a local SQLite evidence artifa
 - Generated artifacts contain source and hash provenance for dictionary and corpus inputs.
 - Build downloads and replacements use temporary files and atomic rename.
 - Generated external datasets are distributed separately from code according to `DATA_SOURCES.md`.
-
-
 
 <!-- archledger: no accepted records for this section yet -->
 
@@ -192,8 +184,6 @@ Capability, coverage, schema, language, and missing-artifact failures have contr
 ### Verification and licensing
 
 Tests cover read-only behavior, no-network guards, segmentation, case attestation, virtual-boundary semantic target anchoring, schema and capability validation, frequency policy, semantic target exclusion, CLI contracts, and source extraction. External dictionary and corpus data remain subject to the obligations documented in `DATA_SOURCES.md`.
-
-
 
 ## Explicit immutable managed dataset artifacts
 
@@ -226,8 +216,6 @@ The current architecture records these decisions.
 | Resilience        | Read-only runtime access, source hashes, temporary downloads, and atomic replacement                             | A failed build does not replace an existing artifact with partial output.                          |
 | Maintainability   | Focused runtime and build modules, capability-specific schema, and boundary tests                                | Schema, extraction, semantic projection, storage, and CLI behavior can be checked independently.   |
 | Compliance        | External resources remain separate from code and provenance is embedded in artifacts                             | A distributor can review data obligations before distributing generated artifacts.                 |
-
-
 
 ## Quality Requirements Overview
 

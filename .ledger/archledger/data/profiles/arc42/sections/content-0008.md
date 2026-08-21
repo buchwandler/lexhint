@@ -10,6 +10,7 @@ status: accepted
 version: 11
 body_format: markdown
 ---
+
 ### Capability-specific schema
 
 Schema metadata is explicit and self-describing. `language`, `locale`, `variant`, `schema_version`, and `dataset_version` remain separate dimensions. Locale is optional and does not create `en-GB` or `en-US` artifacts. Strict equality, not a compatibility range, controls SQLite access.

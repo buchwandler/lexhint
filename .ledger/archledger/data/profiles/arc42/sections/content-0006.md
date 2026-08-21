@@ -10,6 +10,7 @@ status: accepted
 version: 10
 body_format: markdown
 ---
+
 ## Lexical lookup and segmentation
 
 1. The consumer constructs `Lexicon` from one local SQLite artifact, resolved from the vendored, configured cache, or schema-aware managed dataset path when no override is supplied.
