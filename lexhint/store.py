@@ -6,7 +6,7 @@ import unicodedata
 from collections.abc import Iterable, Iterator, Mapping
 from dataclasses import dataclass
 
-from .models import DictionaryEntry, Example, Form, Pronunciation
+from .models import DictionaryEntry, Example, Form, Pronunciation, RelatedTerm
 
 SCHEMA_VERSION = "7"
 
@@ -67,6 +67,19 @@ def _json_forms(values: tuple[Form, ...]) -> str:
 def _json_pronunciations(values: tuple[Pronunciation, ...]) -> str:
     return json.dumps(
         [{"ipa": value.ipa, "tags": value.tags} for value in values],
+        ensure_ascii=False,
+        separators=(",", ":"),
+    )
+
+
+def _json_related(values: tuple[str | RelatedTerm, ...]) -> str:
+    return json.dumps(
+        [
+            value
+            if isinstance(value, str)
+            else {"word": value.word, "relation": value.relation, "tags": value.tags}
+            for value in values
+        ],
         ensure_ascii=False,
         separators=(",", ":"),
     )
@@ -149,8 +162,8 @@ def insert_dictionary_entries(
                     json_tuple(sense.topics),
                     json_tuple(sense.tags),
                     _json_examples(sense.examples),
-                    json_tuple(sense.synonyms),
-                    json_tuple(sense.antonyms),
+                    _json_related(sense.synonyms),
+                    _json_related(sense.antonyms),
                 ),
             )
             assert sense_cursor.lastrowid is not None

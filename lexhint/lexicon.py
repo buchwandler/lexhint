@@ -2,14 +2,17 @@ from __future__ import annotations
 
 import json
 import math
+import os
 import re
 import sqlite3
 from collections.abc import Mapping
 from contextlib import closing
+from dataclasses import replace
 from importlib.resources import files
 from pathlib import Path
 
 from .download import cached_dictionary_path
+from .languages import locale_spec, normalize_language, normalize_locale
 from .models import (
     ContextCue,
     DictionaryEntry,
@@ -18,6 +21,7 @@ from .models import (
     Form,
     LexicalSegment,
     Pronunciation,
+    RelatedTerm,
     SemanticDomain,
     Sense,
     WordEvidence,
@@ -25,6 +29,16 @@ from .models import (
 from .store import SCHEMA_VERSION, normalize_display_word, normalize_word
 
 _WORD_RE = re.compile(r"[^\W\d_]+(?:[-'][^\W\d_]+)*", re.UNICODE)
+_REGIONAL_TAGS = {
+    "uk",
+    "british",
+    "british-english",
+    "british english",
+    "us",
+    "american",
+    "american-english",
+    "american english",
+}
 
 
 class LexiconNotInstalled(FileNotFoundError):
@@ -43,6 +57,20 @@ class LexiconCoverageError(RuntimeError):
     """The artifact does not have authoritative full lexical coverage."""
 
 
+def _locale_rank(tags: tuple[str, ...], locale: str | None) -> int:
+    if locale is None:
+        return 0
+    spec = locale_spec("en", locale)
+    assert spec is not None
+    normalized = {tag.casefold() for tag in tags}
+    preferred = {tag.casefold() for tag in spec.preferred_source_tags}
+    if normalized & preferred:
+        return 0
+    if normalized & _REGIONAL_TAGS:
+        return 2
+    return 1
+
+
 class Lexicon:
     """Read-only lexical evidence from one self-describing SQLite artifact."""
 
@@ -53,10 +81,12 @@ class Lexicon:
         variant: str | None = None,
         dataset_version: str | None = None,
         path: str | Path | None = None,
+        locale: str | None = None,
     ) -> None:
         if path is not None and (variant is not None or dataset_version is not None):
             raise ValueError("path cannot be combined with variant or dataset_version")
-        self.language = language.lower().split("-", 1)[0]
+        self.language = normalize_language(language)
+        self.locale = normalize_locale(self.language, locale)
         self.variant = variant
         self.dataset_version = dataset_version
         self.path = Path(path).expanduser() if path is not None else self._resolve_path()
@@ -81,7 +111,9 @@ class Lexicon:
         return connection
 
     @classmethod
-    def from_path(cls, path: str | Path, *, language: str | None = None) -> Lexicon:
+    def from_path(
+        cls, path: str | Path, *, language: str | None = None, locale: str | None = None
+    ) -> Lexicon:
         target = Path(path).expanduser()
         if not target.is_file():
             raise LexiconNotInstalled(
@@ -98,20 +130,33 @@ class Lexicon:
         stored = actual.get("language")
         if not stored:
             raise LexiconIncompatible("lexicon artifact has no language metadata")
-        return cls(language or stored, path=target)
+        return cls(language or stored, locale=locale, path=target)
 
     def _resolve_path(self) -> Path:
         from .datasets import DatasetAmbiguous, DatasetError, resolve_installed_dataset
 
-        try:
-            return resolve_installed_dataset(
-                self.language, variant=self.variant, version=self.dataset_version
-            ).path
-        except DatasetAmbiguous:
-            raise
-        except DatasetError as exc:
-            if self.variant is not None or self.dataset_version is not None:
+        if self.variant is not None or self.dataset_version is not None:
+            try:
+                return resolve_installed_dataset(
+                    self.language, variant=self.variant, version=self.dataset_version
+                ).path
+            except DatasetAmbiguous:
+                raise
+            except DatasetError as exc:
                 raise LexiconNotInstalled(str(exc)) from exc
+
+        def installed_path() -> Path | None:
+            try:
+                return resolve_installed_dataset(self.language).path
+            except DatasetAmbiguous:
+                raise
+            except DatasetError:
+                return None
+
+        if os.environ.get("LEXHINT_DATA_DIR"):
+            installed = installed_path()
+            if installed is not None:
+                return installed
 
         vendored = (
             files("lexhint")
@@ -124,7 +169,13 @@ class Lexicon:
                 return Path(str(vendored))
         except TypeError:
             pass
-        return cached_dictionary_path(self.language)
+        cached = cached_dictionary_path(self.language)
+        if cached.is_file():
+            return cached
+        installed = installed_path()
+        if installed is not None:
+            return installed
+        return cached
 
     def _read_metadata(self) -> dict[str, str]:
         try:
@@ -153,6 +204,10 @@ class Lexicon:
         capabilities = self._metadata.get("capabilities", "")
         if "lexical" not in {item for item in capabilities.split(",") if item}:
             raise LexiconIncompatible("lexicon metadata does not declare lexical capability")
+
+    @property
+    def schema_version(self) -> str:
+        return SCHEMA_VERSION
 
     @property
     def metadata(self) -> Mapping[str, str]:
@@ -278,6 +333,25 @@ class Lexicon:
         return tuple(str(item) for item in data) if isinstance(data, list) else ()
 
     @classmethod
+    def _related(cls, value: str) -> tuple[str | RelatedTerm, ...]:
+        data = cls._loads(value)
+        if not isinstance(data, list):
+            return ()
+        result: list[str | RelatedTerm] = []
+        for item in data:
+            if isinstance(item, str):
+                result.append(item)
+            elif isinstance(item, Mapping) and isinstance(item.get("word"), str):
+                result.append(
+                    RelatedTerm(
+                        str(item["word"]),
+                        str(item.get("relation", "")),
+                        tuple(str(tag) for tag in item.get("tags", ())),
+                    )
+                )
+        return tuple(result)
+
+    @classmethod
     def _entry(cls, connection: sqlite3.Connection, row: sqlite3.Row) -> DictionaryEntry:
         def examples(value: str) -> tuple[Example, ...]:
             data = cls._loads(value)
@@ -329,8 +403,8 @@ class Lexicon:
                     cls._tuple(str(sense["topics"])),
                     cls._tuple(str(sense["tags"])),
                     examples(str(sense["examples"])),
-                    cls._tuple(str(sense["synonyms"])),
-                    cls._tuple(str(sense["antonyms"])),
+                    cls._related(str(sense["synonyms"])),
+                    cls._related(str(sense["antonyms"])),
                 )
                 for sense in senses
             ),
@@ -338,6 +412,24 @@ class Lexicon:
             pronunciations=pronunciations(str(row["pronunciations"])),
             etymology=str(row["etymology"]) or None,
         )
+
+    def _localized_entry(self, entry: DictionaryEntry) -> DictionaryEntry:
+        if self.locale is None:
+            return entry
+        senses = tuple(
+            sorted(
+                entry.senses,
+                key=lambda sense: _locale_rank(sense.tags, self.locale),
+            )
+        )
+        forms = tuple(sorted(entry.forms, key=lambda form: _locale_rank(form.tags, self.locale)))
+        pronunciations = tuple(
+            sorted(
+                entry.pronunciations,
+                key=lambda pronunciation: _locale_rank(pronunciation.tags, self.locale),
+            )
+        )
+        return replace(entry, senses=senses, forms=forms, pronunciations=pronunciations)
 
     def entries(self, word: str, *, all_case_variants: bool = False) -> tuple[DictionaryEntry, ...]:
         self._require("dictionary")
@@ -352,7 +444,16 @@ class Lexicon:
                     row for row in rows if normalize_display_word(row["display_word"]) == wanted
                 ]
                 rows = exact or rows
-            return tuple(self._entry(connection, row) for row in rows)
+            entries = tuple(self._localized_entry(self._entry(connection, row)) for row in rows)
+            return tuple(
+                sorted(
+                    entries,
+                    key=lambda entry: min(
+                        (_locale_rank(sense.tags, self.locale) for sense in entry.senses),
+                        default=1,
+                    ),
+                )
+            )
 
     def senses(self, word: str, *, all_case_variants: bool = False) -> tuple[Sense, ...]:
         return tuple(

@@ -2,7 +2,8 @@ from __future__ import annotations
 
 from collections.abc import Iterator, Mapping
 
-from .models import DictionaryEntry, Example, Form, Pronunciation, Sense
+from .languages import normalize_language
+from .models import DictionaryEntry, Example, Form, Pronunciation, RelatedTerm, Sense
 from .store import normalize_display_word
 
 
@@ -43,20 +44,21 @@ def _examples(value: object) -> tuple[Example, ...]:
     return tuple(result)
 
 
-def _related(value: object) -> tuple[str, ...]:
+def _related(value: object, relation: str) -> tuple[str | RelatedTerm, ...]:
     if not isinstance(value, list):
         return ()
-    result: list[str] = []
+    result: list[str | RelatedTerm] = []
     for item in value:
-        word: str | None
         if isinstance(item, str):
-            word = item
+            if item and item not in result:
+                result.append(item)
         elif isinstance(item, Mapping):
             word = _text(item.get("word"))
-        else:
-            continue
-        if word and word not in result:
-            result.append(word)
+            if word:
+                tags = _strings(item.get("tags"))
+                related: str | RelatedTerm = RelatedTerm(word, relation, tags) if tags else word
+                if related not in result:
+                    result.append(related)
     return tuple(result)
 
 
@@ -104,8 +106,8 @@ def _sense(raw: Mapping[str, object], entry_topics: tuple[str, ...]) -> Sense | 
         topics=tuple(dict.fromkeys(entry_topics + _strings(raw.get("topics")))),
         tags=_strings(raw.get("tags")),
         examples=_examples(raw.get("examples")),
-        synonyms=_related(raw.get("synonyms")),
-        antonyms=_related(raw.get("antonyms")),
+        synonyms=_related(raw.get("synonyms"), "synonym"),
+        antonyms=_related(raw.get("antonyms"), "antonym"),
     )
     if not any((sense.glosses, sense.topics, sense.examples, sense.synonyms, sense.antonyms)):
         return None
@@ -114,7 +116,7 @@ def _sense(raw: Mapping[str, object], entry_topics: tuple[str, ...]) -> Sense | 
 
 def dictionary_entries(entry: Mapping[str, object], *, language: str) -> Iterator[DictionaryEntry]:
     """Convert one source entry to the curated Lexhint dictionary model."""
-    base_language = language.lower().split("-", 1)[0]
+    base_language = normalize_language(language)
     if str(entry.get("lang_code") or "").lower() != base_language:
         return
 

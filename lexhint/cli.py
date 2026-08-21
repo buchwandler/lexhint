@@ -13,6 +13,8 @@ from typing import NoReturn
 from . import __version__
 from .builder import build_dictionary, project_artifact
 from .datasets import (
+    DATASET_VARIANT_NAMES,
+    DEFAULT_DATASET_VARIANT,
     DatasetArtifact,
     DatasetError,
     DatasetProgress,
@@ -24,7 +26,8 @@ from .datasets import (
     resolve_installed_dataset,
     validate_datasets,
 )
-from .download import KAIKKI_RAW_URL, SUPPORTED_LANGUAGES
+from .download import KAIKKI_RAW_URL
+from .languages import SUPPORTED_LANGUAGES, normalize_language, normalize_locale
 from .lexicon import (
     Lexicon,
     LexiconCapabilityError,
@@ -79,18 +82,18 @@ class _Style:
 
 
 def _default_language() -> str:
-    return os.environ.get("LEXHINT_LANGUAGE", _DEFAULT_LANGUAGE).lower().split("-", 1)[0]
+    return normalize_language(os.environ.get("LEXHINT_LANGUAGE", _DEFAULT_LANGUAGE))
 
 
 def _language(values: Sequence[str], explicit: str | None) -> tuple[str, str]:
     if explicit:
         if len(values) != 1:
             raise ValueError("one value is required when --language is used")
-        return explicit.lower().split("-", 1)[0], values[0]
+        return normalize_language(explicit), values[0]
     if len(values) == 1:
         return _default_language(), values[0]
     if len(values) == 2:
-        return values[0].lower().split("-", 1)[0], values[1]
+        return normalize_language(values[0]), values[1]
     raise ValueError("expected WORD/TEXT or LANGUAGE WORD/TEXT")
 
 
@@ -111,7 +114,12 @@ def _target_span(text: str, target: str) -> tuple[int, int]:
 
 
 def _artifact_selector(parser: argparse.ArgumentParser) -> None:
-    parser.add_argument("--variant", help="installed dataset capability variant")
+    parser.add_argument(
+        "--variant",
+        choices=DATASET_VARIANT_NAMES,
+        default=None,
+        help="installed dataset capability variant",
+    )
     parser.add_argument("--dataset-version", help="exact installed dataset release version")
     parser.add_argument("--path", help="local SQLite artifact")
 
@@ -134,6 +142,10 @@ def _parser() -> argparse.ArgumentParser:
         command.add_argument("values", nargs="+")
         command.add_argument("-l", "--language", choices=sorted(SUPPORTED_LANGUAGES))
         _artifact_selector(command)
+        if name == "word":
+            command.add_argument(
+                "--locale", help="optional regional presentation preference, such as GB or en-US"
+            )
 
     context = sub.add_parser("context", help="show semantic-domain evidence around a target")
     context.add_argument("text", nargs="+")
@@ -187,6 +199,10 @@ def _parser() -> argparse.ArgumentParser:
     inspect.add_argument("-l", "--language", choices=sorted(SUPPORTED_LANGUAGES))
     _artifact_selector(inspect)
     inspect.add_argument(
+        "--locale",
+        help="optional regional presentation preference, such as GB or en-US",
+    )
+    inspect.add_argument(
         "--detail",
         choices=_DICTIONARY_DETAILS,
         default=None,
@@ -225,25 +241,31 @@ def _parser() -> argparse.ArgumentParser:
     dataset_sub = dataset.add_subparsers(dest="dataset_command", required=True)
     download = dataset_sub.add_parser("download", help="download a published dataset")
     download.add_argument("language", choices=sorted(SUPPORTED_LANGUAGES))
-    download.add_argument("--variant", default="runtime")
+    download.add_argument(
+        "--variant",
+        choices=DATASET_VARIANT_NAMES,
+        default=DEFAULT_DATASET_VARIANT,
+        help=f"dataset capability variant (default: {DEFAULT_DATASET_VARIANT})",
+    )
     download.add_argument("--version", dest="dataset_version")
     download.add_argument("--force", action="store_true")
     available = dataset_sub.add_parser("available", help="list published datasets")
     available.add_argument("--language", choices=sorted(SUPPORTED_LANGUAGES))
     available.add_argument("--version", dest="dataset_version")
+    available.add_argument("--variant", choices=DATASET_VARIANT_NAMES)
     info = dataset_sub.add_parser("info", help="show an installed dataset")
     info.add_argument("language", choices=sorted(SUPPORTED_LANGUAGES))
-    info.add_argument("--variant")
+    info.add_argument("--variant", choices=DATASET_VARIANT_NAMES)
     info.add_argument("--version", dest="dataset_version")
     listing = dataset_sub.add_parser("list", help="list installed datasets")
     listing.add_argument("--language", choices=sorted(SUPPORTED_LANGUAGES))
     remove = dataset_sub.add_parser("remove", help="remove installed dataset artifacts")
     remove.add_argument("language", choices=sorted(SUPPORTED_LANGUAGES))
-    remove.add_argument("--variant", required=True)
+    remove.add_argument("--variant", required=True, choices=DATASET_VARIANT_NAMES)
     remove.add_argument("--version", dest="dataset_version")
     validate = dataset_sub.add_parser("validate", help="validate installed dataset artifacts")
     validate.add_argument("language", nargs="?", choices=sorted(SUPPORTED_LANGUAGES))
-    validate.add_argument("--variant")
+    validate.add_argument("--variant", choices=DATASET_VARIANT_NAMES)
     validate.add_argument("--version", dest="dataset_version")
 
     return parser
@@ -338,7 +360,10 @@ def _run_dataset(args: argparse.Namespace, *, json_output: bool) -> int:
         return 0
     if args.dataset_command == "available":
         remote_items = available_datasets(
-            language=args.language, version=args.dataset_version, offline=args.offline
+            language=args.language,
+            version=args.dataset_version,
+            variant=args.variant,
+            offline=args.offline,
         )
         payload = {"available": [_dataset_value(value) for value in remote_items]}
         if json_output:
@@ -346,7 +371,8 @@ def _run_dataset(args: argparse.Namespace, *, json_output: bool) -> int:
         else:
             for remote_item in remote_items:
                 print(
-                    f"{remote_item.language} {remote_item.variant} {remote_item.dataset_version} "
+                    f"{remote_item.language} {remote_item.variant} "
+                    f"s{remote_item.schema_version} {remote_item.dataset_version} "
                     f"{', '.join(remote_item.capabilities)} {remote_item.compressed_size:,} bytes"
                 )
         return 0
@@ -371,6 +397,7 @@ def _run_dataset(args: argparse.Namespace, *, json_output: bool) -> int:
                 marker = " *" if value["selected"] else ""
                 print(
                     f"{installed_item.language} {installed_item.variant} "
+                    f"s{installed_item.schema_version} {installed_item.dataset_version} "
                     f"{installed_item.dataset_version} {', '.join(installed_item.capabilities)} "
                     f"{installed_item.size_bytes:,} bytes{marker}"
                 )
@@ -392,7 +419,10 @@ def _run_dataset(args: argparse.Namespace, *, json_output: bool) -> int:
                     print(f"{key}: {field_value}")
             print("installed variants:")
             for value in installed_values:
-                print(f"  {value['variant']} {value['dataset_version']} {value['path']}")
+                print(
+                    f"  {value['variant']} s{value['schema_version']} "
+                    f"{value['dataset_version']} {value['path']}"
+                )
         return 0
     if args.dataset_command == "remove":
         removed = remove_dataset(args.language, variant=args.variant, version=args.dataset_version)
@@ -425,12 +455,17 @@ def _run(args: argparse.Namespace, *, style: _Style, json_output: bool) -> int:
         return _run_dataset(args, json_output=json_output)
     if args.command == "word":
         language, word = _language(args.values, args.language)
+        locale = normalize_locale(language, args.locale)
         lexicon = Lexicon(
-            language, variant=args.variant, dataset_version=args.dataset_version, path=args.path
+            language,
+            variant=args.variant,
+            dataset_version=args.dataset_version,
+            path=args.path,
+            locale=locale,
         )
         info = lexicon.word(word)
         if json_output:
-            _json({"language": language, **asdict(info)})
+            _json({"language": language, "locale": locale, **asdict(info)})
         else:
             _word(info, style)
         return 0
@@ -452,7 +487,7 @@ def _run(args: argparse.Namespace, *, style: _Style, json_output: bool) -> int:
             _segments(text, values, style)
         return 0
     if args.command == "context":
-        language = (args.language or _default_language()).lower().split("-", 1)[0]
+        language = normalize_language(args.language or _default_language())
         text = " ".join(args.text)
         lexicon = Lexicon(
             language, variant=args.variant, dataset_version=args.dataset_version, path=args.path
@@ -558,8 +593,13 @@ def _run(args: argparse.Namespace, *, style: _Style, json_output: bool) -> int:
                 "and cannot be used with --json"
             )
         language, word = _language(args.values, args.language)
+        locale = normalize_locale(language, args.locale)
         lexicon = Lexicon(
-            language, variant=args.variant, dataset_version=args.dataset_version, path=args.path
+            language,
+            variant=args.variant,
+            dataset_version=args.dataset_version,
+            path=args.path,
+            locale=locale,
         )
         original_entries = lexicon.entries(word)
         include_pos, exclude_pos = resolve_pos_filters(args.pos, args.exclude_pos)
@@ -570,6 +610,7 @@ def _run(args: argparse.Namespace, *, style: _Style, json_output: bool) -> int:
             _json(
                 {
                     "language": language,
+                    "locale": locale,
                     "word": word,
                     "entries": [asdict(value) for value in entries],
                 }
@@ -591,6 +632,7 @@ def _run(args: argparse.Namespace, *, style: _Style, json_output: bool) -> int:
                     include_pos=include_pos,
                     exclude_pos=exclude_pos,
                     width=terminal_render_width(args.width),
+                    locale=lexicon.locale,
                 )
                 print(render_dictionary_entries(word, entries, options=options, detail=detail))
         return 0

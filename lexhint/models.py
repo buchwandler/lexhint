@@ -51,13 +51,20 @@ class Pronunciation:
 
 
 @dataclass(frozen=True, slots=True)
+class RelatedTerm:
+    word: str
+    relation: str
+    tags: tuple[str, ...] = ()
+
+
+@dataclass(frozen=True, slots=True)
 class Sense:
     glosses: tuple[str, ...] = ()
     topics: tuple[str, ...] = ()
     tags: tuple[str, ...] = ()
     examples: tuple[Example, ...] = ()
-    synonyms: tuple[str, ...] = ()
-    antonyms: tuple[str, ...] = ()
+    synonyms: tuple[str | RelatedTerm, ...] = ()
+    antonyms: tuple[str | RelatedTerm, ...] = ()
 
 
 @dataclass(frozen=True, slots=True)

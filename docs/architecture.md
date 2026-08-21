@@ -1,6 +1,6 @@
 ---
 title: "Architecture Documentation"
-version: 15
+version: 16
 generator: "archledger 0.4.0"
 arc42_template_version: "9.0-EN"
 ---
@@ -43,7 +43,8 @@ The architecture is constrained by a local, self-describing SQLite artifact and 
 - `lexhint.Lexicon` opens artifacts through SQLite read-only mode.
 - Runtime operations never fetch network resources, create missing lexemes, or write partial caches.
 - The CLI resolves default cached or vendored artifacts for ordinary reads and exposes `dictionary status` for current SQL counts.
-- Schema 7 metadata records schema version, language, coverage, profile, capabilities, creation time, builder version, and source provenance.
+- `SCHEMA_VERSION` is an exact artifact compatibility key. Current schema 7 clients select and open only schema 7 artifacts; schema families are stored side by side under `s<schema>` paths.
+- Metadata records schema version, base language, coverage, profile, capabilities, creation time, builder version, and source provenance.
 - `lexemes` is present for the lexical capability. Semantic and dictionary tables are capability-specific.
 - Default builds select `lexical,semantic,dictionary` and automatic pinned full FrequencyWords enrichment.
 - Frequency is enrichment, not a capability.
@@ -70,8 +71,6 @@ The consumer decides what an unknown run, version, or candidate should mean. Lex
 - FrequencyWords enriches existing lexemes with corpus fields.
 - A local SQLite artifact is the runtime boundary.
 - No service endpoint or daemon is required.
-
-
 
 ## Business Context
 
@@ -112,7 +111,7 @@ The package is organized around a local artifact runtime and focused build modul
 - `lexhint.store` persists lexemes, domains, rich dictionary tables, metadata, and indexes.
 - `lexhint.cli` exposes build and runtime operations in human-readable and JSON forms.
 
-The public package exports `Lexicon` and `SemanticDomain` as the principal consumer interface. Build and source helpers remain available from their owning modules.
+The public package exports `Lexicon` and `SemanticDomain` as the principal consumer interface. It also exports `SCHEMA_VERSION`, `DATASET_VARIANTS`, `DATASET_VARIANT_NAMES`, `DEFAULT_DATASET_VARIANT`, and `supported_base_languages()` for the separate dataset publisher contract. Build and source helpers remain available from their owning modules.
 
 ## Consumer interface
 
@@ -130,18 +129,17 @@ evidence = lexicon.supports_domain(
 
 The consumer decides what an unknown run, version, or candidate should mean. Lexhint ends at evidence.
 
-
-
 <!-- archledger: no accepted records for this section yet -->
 
 # Runtime View
 
 ## Lexical lookup and segmentation
 
-1. The consumer constructs `Lexicon` from one local SQLite artifact, resolved from the vendored or configured cache path when no override is supplied.
-2. Construction validates schema version, language, coverage, and explicit capabilities.
-3. `word()` and `contains()` query dictionary-derived lexemes. `segment()` evaluates known spans using authoritative full coverage, case flags, dynamic programming, and optional corpus rank.
-4. Runtime reads do not acquire missing data or write to the artifact.
+1. The consumer constructs `Lexicon` from one local SQLite artifact, resolved from the vendored, configured cache, or schema-aware managed dataset path when no override is supplied.
+2. Construction validates exact schema version, base language, coverage, and explicit capabilities before queries.
+3. An optional locale such as `GB` or `US` is runtime presentation state. It does not change artifact resolution or physical English dataset identity.
+4. `word()` and `contains()` query dictionary-derived lexemes. `segment()` evaluates known spans using authoritative full coverage, case flags, dynamic programming, and optional corpus rank.
+5. Runtime reads do not acquire missing data or write to the artifact.
 
 ## Semantic evidence
 
@@ -149,8 +147,6 @@ The consumer decides what an unknown run, version, or candidate should mean. Lex
 2. Context tokenization excludes every token overlapping the target span.
 3. Nearby words are queried in batches. Domain weights receive configurable distance decay.
 4. Results preserve cue text, character spans, token distance, and contribution weight. The candidate cannot validate itself.
-
-
 
 <!-- archledger: no accepted records for this section yet -->
 
@@ -166,13 +162,13 @@ Lexhint is deployed as a local Python package and a local SQLite evidence artifa
 - Build downloads and replacements use temporary files and atomic rename.
 - Generated external datasets are distributed separately from code according to `DATA_SOURCES.md`.
 
-
-
 <!-- archledger: no accepted records for this section yet -->
 
 # Cross-cutting Concepts
 
 ### Capability-specific schema
+
+Schema metadata is explicit and self-describing. `language`, `locale`, `variant`, `schema_version`, and `dataset_version` remain separate dimensions. Locale is optional and does not create `en-GB` or `en-US` artifacts. Strict equality, not a compatibility range, controls SQLite access.
 
 Schema 7 metadata is explicit and self-describing. `lexemes` is always present for lexical capability. `lexeme_domains` exists only for `semantic`; each row stores bounded deterministic weight and source-topic provenance. Rich `entries`, `senses`, `sense_topics`, forms, and pronunciations exist only for `dictionary`. Old partial-cache schemas are rejected and must be rebuilt.
 
@@ -188,11 +184,9 @@ Capability, coverage, schema, language, and missing-artifact failures have contr
 
 Tests cover read-only behavior, no-network guards, segmentation, schema and capability validation, frequency policy, semantic target exclusion, CLI contracts, and source extraction. External dictionary and corpus data remain subject to the obligations documented in `DATA_SOURCES.md`.
 
-
-
 ## Explicit immutable managed dataset artifacts
 
-Lexhint treats published datasets as explicit, immutable local artifacts rather than package-installed Python models. The dataset manager stores artifacts by normalized language, capability variant, and exact release version under the persistent data directory. Downloads stream gzip data, verify manifest hashes, sizes, schema, language, coverage, and capabilities, then atomically install the database and sidecar metadata. Runtime Lexicon construction resolves only installed files and never contacts the network automatically. The highest-capability compatible installed variant is selected by default, while callers may pin a variant and release version.
+Lexhint treats published datasets as explicit, immutable local artifacts rather than package-installed Python models. The dataset manager stores artifacts by normalized base language, capability variant, exact schema family, and exact release version under the persistent data directory. Downloads stream gzip data, verify manifest hashes, sizes, schema, language, coverage, and capabilities, then atomically install the database and sidecar metadata. Runtime Lexicon construction resolves only installed files and never contacts the network automatically. The highest-capability compatible installed variant is selected by default, while callers may pin a variant and release version.
 
 # Architecture Decisions
 
@@ -219,8 +213,6 @@ The current architecture records these decisions.
 | Resilience        | Read-only runtime access, source hashes, temporary downloads, and atomic replacement                             | A failed build does not replace an existing artifact with partial output.                          |
 | Maintainability   | Focused runtime and build modules, capability-specific schema, and boundary tests                                | Schema, extraction, semantic projection, storage, and CLI behavior can be checked independently.   |
 | Compliance        | External resources remain separate from code and provenance is embedded in artifacts                             | A distributor can review data obligations before distributing generated artifacts.                 |
-
-
 
 ## Quality Requirements Overview
 

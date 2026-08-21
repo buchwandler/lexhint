@@ -9,11 +9,24 @@ except PackageNotFoundError:
 
 from .builder import project_artifact
 from .datasets import (
+    DATASET_VARIANT_NAMES,
+    DATASET_VARIANTS,
+    DEFAULT_DATASET_VARIANT,
+    DatasetVariantSpec,
     InstalledDataset,
     available_datasets,
     download_dataset,
     list_installed_datasets,
     remove_dataset,
+)
+from .languages import (
+    LOCALES,
+    SUPPORTED_BASE_LANGUAGES,
+    LocaleSpec,
+    locale_spec,
+    normalize_language,
+    normalize_locale,
+    supported_base_languages,
 )
 from .lexicon import (
     Lexicon,
@@ -30,13 +43,27 @@ from .models import (
     Form,
     LexicalSegment,
     Pronunciation,
+    RelatedTerm,
     SemanticDomain,
     Sense,
     WordEvidence,
 )
+from .store import SCHEMA_VERSION
 
 __all__ = [
     "ContextCue",
+    "SCHEMA_VERSION",
+    "DATASET_VARIANTS",
+    "DATASET_VARIANT_NAMES",
+    "DEFAULT_DATASET_VARIANT",
+    "DatasetVariantSpec",
+    "LOCALES",
+    "LocaleSpec",
+    "SUPPORTED_BASE_LANGUAGES",
+    "locale_spec",
+    "normalize_language",
+    "normalize_locale",
+    "supported_base_languages",
     "DictionaryEntry",
     "DomainEvidence",
     "Example",
@@ -48,6 +75,7 @@ __all__ = [
     "LexiconCoverageError",
     "LexiconIncompatible",
     "LexiconNotInstalled",
+    "RelatedTerm",
     "Pronunciation",
     "SemanticDomain",
     "Sense",

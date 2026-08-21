@@ -47,7 +47,7 @@ For reproducibility, install and select an exact release:
 lexhint dataset download en --variant runtime --version 2026.08.20
 ```
 
-The managed store uses `LEXHINT_DATA_DIR` when set, or the platform data directory otherwise. Artifacts are stored by language, variant, and dataset version. A local-build alternative is available with `lexhint dictionary build`; pass its output with `--path` when querying.
+The managed store uses `LEXHINT_DATA_DIR` when set, or the platform data directory otherwise. Artifacts are stored by base language, variant, exact SQLite schema, and dataset version. A local-build alternative is available with `lexhint dictionary build`; pass its output with `--path` when querying.
 
 For a small local artifact without FrequencyWords enrichment, build from the repository fixture with `lexhint dictionary build en --source tests/fixtures/kaikki-mini.jsonl --output /tmp/lexhint-en.sqlite3 --no-frequency` and pass `--path /tmp/lexhint-en.sqlite3` to the query commands.
 
@@ -65,6 +65,16 @@ info = lexicon.word("compiler")
 print(info.known, info.frequency_rank)
 print(lexicon.segment("compilerword"))
 ```
+
+Locale is optional runtime presentation state, not a dataset identity. The base language remains `en`, and all of these requests can use the same physical artifact:
+
+```python
+neutral = Lexicon("en")
+british = Lexicon("en", locale="GB")
+american = Lexicon("en", locale="en-US")
+```
+
+`locale` accepts the canonical `GB` and `US` values plus their supported aliases. Without a locale, English remains region-neutral. Locale-aware ordering and labels use only regional tags retained from source data. Frequency remains base-language English data, not British or American frequency.
 
 Runtime access is local-only, deterministic, read-only, and never fetches missing entries or mutates the database. `segment()` and semantic context operations require full authoritative coverage.
 

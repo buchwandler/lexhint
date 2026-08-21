@@ -7,7 +7,7 @@ section: building_block_view
 title: Building Block View
 order: 50
 status: accepted
-version: 10
+version: 11
 body_format: markdown
 ---
 
@@ -22,7 +22,7 @@ The package is organized around a local artifact runtime and focused build modul
 - `lexhint.store` persists lexemes, domains, rich dictionary tables, metadata, and indexes.
 - `lexhint.cli` exposes build and runtime operations in human-readable and JSON forms.
 
-The public package exports `Lexicon` and `SemanticDomain` as the principal consumer interface. Build and source helpers remain available from their owning modules.
+The public package exports `Lexicon` and `SemanticDomain` as the principal consumer interface. It also exports `SCHEMA_VERSION`, `DATASET_VARIANTS`, `DATASET_VARIANT_NAMES`, `DEFAULT_DATASET_VARIANT`, and `supported_base_languages()` for the separate dataset publisher contract. Build and source helpers remain available from their owning modules.
 
 ## Consumer interface
 

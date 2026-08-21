@@ -18,6 +18,7 @@ from urllib.parse import urlparse
 from .download import cached_dictionary_path, package_version, user_agent
 from .extract import dictionary_entries
 from .frequency import enrich_frequency, iter_frequency_rows
+from .languages import normalize_language
 from .models import DictionaryBuildStats
 from .schema import CapabilitySelection, normalize_capabilities
 from .semantics import insert_lexeme_domains
@@ -164,7 +165,7 @@ def prepare_build_plan(
     if offline and urlparse(source_value).scheme in {"http", "https"}:
         raise OSError("HTTP dictionary sources are unavailable in offline mode")
     selection = normalize_capabilities(capabilities, profile=profile)
-    base_language = language.lower().split("-", 1)[0]
+    base_language = normalize_language(language)
     resolved_frequency = resolve_frequency_source(
         base_language,
         source=frequency_source,

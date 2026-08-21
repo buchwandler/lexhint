@@ -7,7 +7,8 @@ from importlib.metadata import PackageNotFoundError, version
 from pathlib import Path
 from typing import BinaryIO, cast
 
-SUPPORTED_LANGUAGES = frozenset({"cs", "de", "en", "es", "fr", "it", "pt"})
+from .languages import SUPPORTED_LANGUAGES, normalize_language
+
 KAIKKI_RAW_URL = "https://kaikki.org/dictionary/raw-wiktextract-data.jsonl.gz"
 _PROJECT_URL = "https://github.com/buchwandler/lexhint"
 
@@ -57,7 +58,8 @@ def request(
 
 
 def cached_dictionary_path(language: str) -> Path:
-    language = language.lower().split("-", 1)[0]
+    candidate = language.strip().lower().replace("_", "-")
+    language = "en" if candidate in {"en-us", "en-gb"} else normalize_language(language)
     return cache_dir() / "dictionaries" / f"{language}.sqlite3"
 
 

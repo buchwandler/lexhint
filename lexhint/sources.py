@@ -10,6 +10,7 @@ from urllib.parse import urlparse
 
 from .download import cache_dir, user_agent
 from .frequency import FREQUENCYWORDS_REVISION
+from .languages import normalize_language
 
 
 @dataclass(frozen=True, slots=True)
@@ -82,7 +83,7 @@ def resolve_frequency_source(
 ) -> ResolvedFrequencySource | None:
     if not enabled:
         return None
-    base_language = language.lower().split("-", 1)[0]
+    base_language = normalize_language(language)
     if source is not None:
         source_value = str(source)
         parsed = urlparse(source_value)

@@ -6,7 +6,8 @@ import textwrap
 from collections.abc import Sequence
 from dataclasses import dataclass
 
-from .models import DictionaryEntry, Form, Pronunciation, Sense
+from .languages import locale_spec
+from .models import DictionaryEntry, Form, Pronunciation, RelatedTerm, Sense
 
 DICTIONARY_FIELDS = frozenset(
     {
@@ -53,6 +54,7 @@ class DictionaryRenderOptions:
     include_pos: frozenset[str] | None = None
     exclude_pos: frozenset[str] = frozenset()
     width: int = 100
+    locale: str | None = None
 
 
 def split_csv(values: Sequence[str] | None) -> tuple[str, ...]:
@@ -161,8 +163,21 @@ def _wrap_value(text: str, width: int, indent: str) -> list[str]:
     return _wrap(text, width, initial=indent, subsequent=indent)
 
 
-def _wrap_labeled(label: str, values: Sequence[str], width: int, indent: str) -> list[str]:
-    text = ", ".join(value for value in values if value)
+def _wrap_labeled(
+    label: str,
+    values: Sequence[str | RelatedTerm],
+    width: int,
+    indent: str,
+    locale: str | None = None,
+) -> list[str]:
+    formatted: list[str] = []
+    for value in values:
+        if isinstance(value, str):
+            formatted.append(value)
+            continue
+        regional_label = _regional_label(value.tags, locale)
+        formatted.append(f"{regional_label}: {value.word}" if regional_label else value.word)
+    text = ", ".join(formatted)
     if not text:
         return []
     initial = f"{indent}{label}: "
@@ -194,14 +209,31 @@ def _unique_pronunciations(values: Sequence[DictionaryEntry]) -> tuple[Pronuncia
     return tuple(result)
 
 
-def _format_form(form: Form) -> str:
+def _regional_label(tags: Sequence[str], locale: str | None) -> str | None:
+    if locale is None:
+        return None
+    spec = locale_spec("en", locale)
+    assert spec is not None
+    normalized = {tag.casefold() for tag in tags}
+    if locale == "GB" and normalized & {"us", "american", "american-english", "american english"}:
+        return "American English"
+    if locale == "US" and normalized & {"uk", "british", "british-english", "british english"}:
+        return "British English"
+    return None
+
+
+def _format_form(form: Form, locale: str | None = None) -> str:
+    label = _regional_label(form.tags, locale)
+    prefix = f"{label}: " if label else ""
     suffix = f" [{', '.join(form.tags)}]" if form.tags else ""
-    return f"{form.form}{suffix}"
+    return f"{prefix}{form.form}{suffix}"
 
 
-def _format_pronunciation(pronunciation: Pronunciation) -> str:
+def _format_pronunciation(pronunciation: Pronunciation, locale: str | None = None) -> str:
+    label = _regional_label(pronunciation.tags, locale)
+    prefix = f"{label}: " if label else ""
     suffix = f" [{', '.join(pronunciation.tags)}]" if pronunciation.tags else ""
-    return f"{pronunciation.ipa}{suffix}"
+    return f"{prefix}{pronunciation.ipa}{suffix}"
 
 
 def _append_block(lines: list[str], block: Sequence[str]) -> None:
@@ -239,7 +271,13 @@ def _render_examples(sense: Sense, width: int) -> list[str]:
     return lines
 
 
-def _render_sense(sense: Sense, number: int, fields: frozenset[str], width: int) -> list[str]:
+def _render_sense(
+    sense: Sense,
+    number: int,
+    fields: frozenset[str],
+    width: int,
+    locale: str | None = None,
+) -> list[str]:
     lines: list[str] = []
     glosses = tuple(gloss for gloss in sense.glosses if gloss)
     if glosses:
@@ -255,9 +293,9 @@ def _render_sense(sense: Sense, number: int, fields: frozenset[str], width: int)
     if "examples" in fields and sense.examples:
         _append_block(lines, _render_examples(sense, width))
     if "synonyms" in fields:
-        lines.extend(_wrap_labeled("synonyms", sense.synonyms, width, "       "))
+        lines.extend(_wrap_labeled("synonyms", sense.synonyms, width, "       ", locale))
     if "antonyms" in fields:
-        lines.extend(_wrap_labeled("antonyms", sense.antonyms, width, "       "))
+        lines.extend(_wrap_labeled("antonyms", sense.antonyms, width, "       ", locale))
     return lines
 
 
@@ -267,6 +305,7 @@ def _render_entry(
     width: int,
     number: int,
     detail: str,
+    locale: str | None,
 ) -> list[str]:
     lines = [f"  {entry.pos or 'entry'}"]
     if "etymology" in fields and entry.etymology:
@@ -274,30 +313,36 @@ def _render_entry(
     if "pronunciations" in fields and entry.pronunciations:
         if detail == "standard":
             block = ["    pronunciation: "]
-            block[0] += _format_pronunciation(entry.pronunciations[0])
+            block[0] += _format_pronunciation(entry.pronunciations[0], locale)
             block.extend(
-                f"      {_format_pronunciation(value)}" for value in entry.pronunciations[1:]
+                f"      {_format_pronunciation(value, locale)}"
+                for value in entry.pronunciations[1:]
             )
         else:
             block = ["    pronunciations"]
-            block.extend(f"      {_format_pronunciation(value)}" for value in entry.pronunciations)
+            block.extend(
+                f"      {_format_pronunciation(value, locale)}" for value in entry.pronunciations
+            )
         _append_block(lines, block)
     if "forms" in fields and entry.forms:
         if detail == "standard":
-            block = [f"    forms: {_format_form(entry.forms[0])}"]
-            block.extend(f"      {_format_form(value)}" for value in entry.forms[1:])
+            block = [f"    forms: {_format_form(entry.forms[0], locale)}"]
+            block.extend(f"      {_format_form(value, locale)}" for value in entry.forms[1:])
         else:
             block = ["    forms"]
-            block.extend(f"      {_format_form(value)}" for value in entry.forms)
+            block.extend(f"      {_format_form(value, locale)}" for value in entry.forms)
         _append_block(lines, block)
     for sense in entry.senses:
-        _append_block(lines, _render_sense(sense, number, fields, width))
+        _append_block(lines, _render_sense(sense, number, fields, width, locale))
         number += 1
     return lines
 
 
 def _render_compact(
-    entries: Sequence[DictionaryEntry], fields: frozenset[str], width: int
+    entries: Sequence[DictionaryEntry],
+    fields: frozenset[str],
+    width: int,
+    locale: str | None = None,
 ) -> list[str]:
     lines: list[str] = []
     number = 1
@@ -307,7 +352,7 @@ def _render_compact(
             continue
         if fields:
             for sense in entry.senses:
-                _append_block(lines, _render_sense(sense, number, fields, width))
+                _append_block(lines, _render_sense(sense, number, fields, width, locale))
                 number += 1
         else:
             gloss = next((value for value in entry.senses[0].glosses if value), "")
@@ -330,14 +375,14 @@ def render_dictionary_entries(
         lines.append("  no dictionary entries found")
         return "\n".join(lines)
     if detail == "compact":
-        body = _render_compact(entries, options.fields, options.width)
+        body = _render_compact(entries, options.fields, options.width, options.locale)
     else:
         body = []
         number = 1
         for entry in entries:
             _append_block(
                 body,
-                _render_entry(entry, options.fields, options.width, number, detail),
+                _render_entry(entry, options.fields, options.width, number, detail, options.locale),
             )
             number += len(entry.senses)
     lines.extend(body)
