@@ -1,0 +1,126 @@
+schema_version: 1
+object_type: commit_audit_sheet
+versioning:
+  schema_version: 1
+  revision: 3
+release_version: v0.1.1
+git_base_ref: v0.1.0
+git_base_sha: cd003845e3f9ed0b2610ae13e89525867d8eab39
+git_head_ref: HEAD
+git_head_sha: 2ed77ccffc4eb9fac94e011e1ea0ef7a41c20115
+git_range: cd003845e3f9ed0b2610ae13e89525867d8eab39..2ed77ccffc4eb9fac94e011e1ea0ef7a41c20115
+commit_count: 2
+rows:
+  - sha: 13092eaea5b38b98c0226d472378c900024f0921
+    source_ref: git:13092eaea5b38b98c0226d472378c900024f0921
+    short_sha: 13092ea
+    changed_paths:
+      - .ledger/archledger/data/document-state.json
+      - .ledger/archledger/data/records/concepts/concept-0013.md
+      - .ledger/archledger/data/storage.yaml
+      - README.md
+      - docs/architecture.md
+      - docs/index.md
+      - lexhint/__init__.py
+      - lexhint/cli.py
+      - lexhint/datasets.py
+      - lexhint/download.py
+      - lexhint/lexicon.py
+      - lexhint/status.py
+      - tests/test_cli_dataset.py
+      - tests/test_dataset_catalog.py
+      - tests/test_dataset_install.py
+      - tests/test_dataset_resolver.py
+    stats:
+      files_changed: 0
+      insertions: 1383
+      deletions: 38
+    inspected: true
+    inspected_paths:
+      - README.md
+      - docs/index.md
+      - lexhint/__init__.py
+      - lexhint/cli.py
+      - lexhint/datasets.py
+      - lexhint/download.py
+      - lexhint/lexicon.py
+      - lexhint/status.py
+      - tests/test_cli_dataset.py
+      - tests/test_dataset_catalog.py
+      - tests/test_dataset_install.py
+      - tests/test_dataset_resolver.py
+    observed_behavior:
+      The public CLI and Python API can discover compatible published
+      dataset artifacts from GitHub releases, download and verify them, install them
+      as versioned SQLite datasets, select installed variants, and report or validate
+      their status. Tests cover catalog parsing, installation, resolver behavior, and
+      CLI output.
+    public_impact: public
+    decision: accepted
+    evidence_subject: "feat: introduce lexicon download from github release"
+    target_entry_id: entry-0001
+    notes: Dataset publishing and installation are user-visible capabilities.
+  - sha: 2ed77ccffc4eb9fac94e011e1ea0ef7a41c20115
+    source_ref: git:2ed77ccffc4eb9fac94e011e1ea0ef7a41c20115
+    short_sha: 2ed77cc
+    changed_paths:
+      - .ledger/archledger/data/document-state.json
+      - .ledger/archledger/data/profiles/arc42/sections/content-0002.md
+      - .ledger/archledger/data/profiles/arc42/sections/content-0005.md
+      - .ledger/archledger/data/profiles/arc42/sections/content-0006.md
+      - .ledger/archledger/data/profiles/arc42/sections/content-0008.md
+      - .ledger/archledger/data/records/concepts/concept-0013.md
+      - DATA_SOURCES.md
+      - README.md
+      - docs/architecture.md
+      - docs/index.md
+      - lexhint/__init__.py
+      - lexhint/builder.py
+      - lexhint/cli.py
+      - lexhint/datasets.py
+      - lexhint/download.py
+      - lexhint/extract.py
+      - lexhint/languages.py
+      - lexhint/lexicon.py
+      - lexhint/models.py
+      - lexhint/render.py
+      - lexhint/sources.py
+      - lexhint/store.py
+      - tests/test_locales.py
+      - tests/test_schema_contract.py
+    stats:
+      files_changed: 0
+      insertions: 796
+      deletions: 136
+    inspected: true
+    inspected_paths:
+      - DATA_SOURCES.md
+      - README.md
+      - docs/index.md
+      - lexhint/__init__.py
+      - lexhint/builder.py
+      - lexhint/cli.py
+      - lexhint/datasets.py
+      - lexhint/download.py
+      - lexhint/extract.py
+      - lexhint/languages.py
+      - lexhint/lexicon.py
+      - lexhint/models.py
+      - lexhint/render.py
+      - lexhint/sources.py
+      - lexhint/store.py
+      - tests/test_locales.py
+      - tests/test_schema_contract.py
+    observed_behavior:
+      Dataset selection now exposes lexical, runtime, and rich capability
+      variants, records schema versions in artifact paths and metadata, rejects incompatible
+      catalogs, and supports GB or US locale preferences in lookup ordering and rendered
+      forms, pronunciations, and related terms. Tests cover locale normalization, regional
+      ordering, schema compatibility, and public exports.
+    public_impact: public
+    decision: accepted
+    evidence_subject: "feat: improve dataset download and manage cli"
+    target_entry_id: entry-0002
+    notes:
+      The changes extend the dataset and dictionary contracts exposed to CLI and
+      library users.
