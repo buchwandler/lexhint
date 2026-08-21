@@ -244,11 +244,21 @@ class Lexicon:
         normalized = normalize_word(word)
         with closing(self._connect()) as connection:
             row = connection.execute(
-                "SELECT corpus_count, corpus_rank FROM lexemes WHERE word=?", (normalized,)
+                "SELECT corpus_count, corpus_rank, has_lowercase, has_titlecase, "
+                "has_uppercase FROM lexemes WHERE word=?",
+                (normalized,),
             ).fetchone()
         if row is None:
             return WordEvidence(word, False)
-        return WordEvidence(word, True, row["corpus_rank"], row["corpus_count"])
+        return WordEvidence(
+            text=word,
+            known=True,
+            frequency_rank=row["corpus_rank"],
+            frequency_count=row["corpus_count"],
+            has_lowercase=bool(row["has_lowercase"]),
+            has_titlecase=bool(row["has_titlecase"]),
+            has_uppercase=bool(row["has_uppercase"]),
+        )
 
     def contains(self, word: str) -> bool:
         return self.word(word).known
@@ -467,21 +477,32 @@ class Lexicon:
         return tuple(sorted({topic for sense in self.senses(word) for topic in sense.topics}))
 
     @staticmethod
-    def _target_indices(tokens: list[tuple[str, int, int]], target: tuple[int, int]) -> set[int]:
+    def _context_token_distances(
+        tokens: list[tuple[str, int, int]], target: tuple[int, int]
+    ) -> dict[int, int]:
         start, end = target
         overlapping = {
             i
             for i, (_, token_start, token_end) in enumerate(tokens)
-            if token_start < end and token_end > start
+            if start != end and token_start < end and token_end > start
         }
         if overlapping:
-            return overlapping
-        if not tokens:
-            return set()
-        center = (start + end) / 2
-        return {
-            min(range(len(tokens)), key=lambda i: abs((tokens[i][1] + tokens[i][2]) / 2 - center))
-        }
+            return {
+                i: min(abs(i - target_i) for target_i in overlapping)
+                for i in range(len(tokens))
+                if i not in overlapping
+            }
+
+        left_count = sum(token_end <= start for _, _, token_end in tokens)
+        distances: dict[int, int] = {}
+        for i, (_, token_start, token_end) in enumerate(tokens):
+            if token_end <= start:
+                distances[i] = left_count - i
+            elif token_start >= end:
+                distances[i] = i - left_count + 1
+            elif start == end:
+                distances[i] = 1
+        return distances
 
     def context_domains(
         self,
@@ -502,15 +523,10 @@ class Lexicon:
         if not 0 <= start <= end <= len(text):
             raise ValueError("target must be a valid source span")
         tokens = [(match.group(0), match.start(), match.end()) for match in _WORD_RE.finditer(text)]
-        target_indices = self._target_indices(tokens, target)
+        token_distances = self._context_token_distances(tokens, target)
         if not tokens:
             return ()
-        candidate_indices = [
-            i
-            for i in range(len(tokens))
-            if i not in target_indices
-            and min(abs(i - target_i) for target_i in target_indices) <= window
-        ]
+        candidate_indices = [i for i, distance in token_distances.items() if distance <= window]
         words = tuple(dict.fromkeys(normalize_word(tokens[i][0]) for i in candidate_indices))
         rows: dict[str, list[sqlite3.Row]] = {word: [] for word in words}
         with closing(self._connect()) as connection:
@@ -531,7 +547,7 @@ class Lexicon:
         cues: dict[SemanticDomain, list[ContextCue]] = {}
         for index in candidate_indices:
             token, token_start, token_end = tokens[index]
-            distance = min(abs(index - target_i) for target_i in target_indices)
+            distance = token_distances[index]
             for row in rows.get(normalize_word(token), ()):
                 try:
                     domain = SemanticDomain(str(row["domain"]))

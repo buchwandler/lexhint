@@ -7,10 +7,9 @@ section: architecture_decisions
 title: Architecture Decisions
 order: 90
 status: accepted
-version: 8
+version: 9
 body_format: markdown
 ---
-
 The current architecture records these decisions.
 
 - **Use a self-describing SQLite artifact.** Schema, language, coverage, profile, capabilities, and provenance are validated at runtime.
@@ -18,6 +17,8 @@ The current architecture records these decisions.
 - **Treat frequency as enrichment.** Corpus rank improves segmentation and commonness evidence but does not define lexical capability.
 - **Build fresh artifacts atomically.** Capability-specific tables are created from the resolved build plan and replacements cannot expose partial output.
 - **Use stable semantic domains.** Raw source topics are projected into a small deterministic taxonomy at build time.
-- **Exclude the candidate from context evidence.** A target token cannot validate its own interpretation.
+- **Expose case attestation without weakening segmentation.** `word()` exposes normalized membership and stored case forms, while `segment()` retains surface-case acceptance so consumers can apply context-specific policy.
+- **Anchor semantic context to character spans.** Overlapping target tokens are excluded; a target with no lexical token is a virtual boundary whose adjacent cues remain eligible at distance 1.
+- **Treat semantic context as soft evidence.** Lexhint reports explainable hints, not sense disambiguation or semantic certainty.
 - **Keep the runtime read-only and offline by default.** Acquisition belongs to explicit build workflows.
 - **Keep a narrow consumer boundary.** Lexhint supplies evidence; downstream consumers own interpretation and speech rendering.

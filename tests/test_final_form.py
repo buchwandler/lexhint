@@ -47,7 +47,7 @@ def test_runtime_word_segmentation_and_rich_lookup_are_local(tmp_path: Path) -> 
                 {"word": word, "lang_code": "en", "pos": "noun", "senses": [{"glosses": [word]}]}
             )
             + "\n"
-            for word in ("chat", "GPT", "compiler", "word")
+            for word in ("chat", "Chat", "GPT", "compiler", "word")
         ),
         encoding="utf-8",
     )
@@ -63,6 +63,37 @@ def test_runtime_word_segmentation_and_rich_lookup_are_local(tmp_path: Path) -> 
         LexicalSegment("gpt", False),
     )
     assert lexicon.entries("compiler")[0].word == "compiler"
+
+    compiler = lexicon.word("compiler")
+    assert compiler.has_lowercase
+    assert not compiler.uppercase_only
+    gpt = lexicon.word("gpt")
+    assert gpt.known
+    assert gpt.has_uppercase
+    assert not gpt.has_lowercase
+    assert not gpt.has_titlecase
+    assert gpt.uppercase_only
+    chat = lexicon.word("chat")
+    assert chat.has_lowercase
+    assert chat.has_titlecase
+    assert not chat.uppercase_only
+    missing = lexicon.word("missing")
+    assert not missing.known
+    assert not missing.has_lowercase
+    assert not missing.has_titlecase
+    assert not missing.has_uppercase
+
+
+def test_cli_word_json_includes_case_attestation(
+    tmp_path: Path, capsys: pytest.CaptureFixture[str]
+) -> None:
+    lexicon = build(tmp_path)
+    assert main(["--json", "word", "compiler", "--path", str(lexicon.path)]) == 0
+    payload = json.loads(capsys.readouterr().out)
+    assert payload["known"] is True
+    assert payload["has_lowercase"] is True
+    assert payload["has_titlecase"] is False
+    assert payload["has_uppercase"] is False
 
 
 def test_partial_coverage_is_rejected(tmp_path: Path) -> None:

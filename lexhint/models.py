@@ -17,6 +17,15 @@ class WordEvidence:
     known: bool
     frequency_rank: int | None = None
     frequency_count: int | None = None
+    has_lowercase: bool = False
+    has_titlecase: bool = False
+    has_uppercase: bool = False
+
+    @property
+    def uppercase_only(self) -> bool:
+        return (
+            self.known and self.has_uppercase and not self.has_lowercase and not self.has_titlecase
+        )
 
 
 class SemanticDomain(str, Enum):

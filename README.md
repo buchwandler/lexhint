@@ -62,7 +62,7 @@ lexicon = Lexicon("en")  # highest installed compatible variant
 runtime = Lexicon("en", variant="runtime")
 pinned = Lexicon("en", variant="runtime", dataset_version="2026.08.20")
 info = lexicon.word("compiler")
-print(info.known, info.frequency_rank)
+print(info.known, info.frequency_rank, info.has_lowercase, info.has_titlecase, info.has_uppercase)
 print(lexicon.segment("compilerword"))
 ```
 
@@ -89,9 +89,11 @@ lexicon.supports_domain(text, target=(start, end), domain="computing")
 lexicon.entries("compiler")  # rich artifacts only
 ```
 
-Dictionary membership is authoritative. Frequency rank and count enrich existing lexemes but never create corpus-only words. Case evidence is retained, so an uppercase-only `GPT` entry does not validate lowercase `gpt`.
+Dictionary membership is authoritative. Frequency rank and count enrich existing lexemes but never create corpus-only words. `Lexicon.word()` reports normalized membership and the attested lowercase, titlecase, and uppercase forms. `uppercase_only` is true only for a known lexeme with uppercase attestation and no lowercase or titlecase attestation.
 
-Semantic results are explainable `DomainEvidence` values containing score and nearby `ContextCue` records. The target span is always excluded, and missing evidence is not negative evidence.
+`Lexicon.segment()` additionally applies surface-case acceptance rules. Therefore, an uppercase-only `GPT` entry does not validate lowercase `gpt`, and `segment("chatgpt")` can report `chat` as known and `gpt` as unknown. Consumers can use the richer `word()` evidence for context-specific policy without weakening segmentation.
+
+Semantic results are explainable `DomainEvidence` values containing score and nearby `ContextCue` records. Context is measured from the target character span: overlapping lexical tokens are excluded, while a target containing no lexical token acts as a virtual boundary and leaves adjacent words eligible at distance 1. These are soft hints, so missing evidence is not negative evidence and positive evidence is not semantic certainty.
 
 ## Build an artifact
 

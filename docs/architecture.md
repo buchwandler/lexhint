@@ -1,6 +1,6 @@
 ---
 title: "Architecture Documentation"
-version: 16
+version: 17
 generator: "archledger 0.4.0"
 arc42_template_version: "9.0-EN"
 ---
@@ -18,11 +18,12 @@ It does not decide how text is spoken. Spokenform and other consumers own tokeni
 ## Runtime contract
 
 - `word()` and `contains()` query dictionary-derived `lexemes`.
-- `segment()` uses authoritative full coverage, case flags, dynamic programming, and optional corpus rank.
+- `word()` reports normalized lexical membership and the lowercase, titlecase, and uppercase forms attested by the artifact. `uppercase_only` is a convenience property for a known uppercase-only lexeme.
+- `segment()` uses authoritative full coverage, case flags, dynamic programming, and optional corpus rank. It applies surface-case acceptance, so a case-folded word may be known to `word()` while its observed lowercase segment remains unknown.
 - `entries()` requires the `dictionary` capability.
-- `context_domains()` and `supports_domain()` require `semantic` and full coverage.
+- `context_domains()` and `supports_domain()` require `semantic` and full coverage. Their target is a character span: overlapping lexical tokens are excluded, while a target containing no lexical token acts as a virtual boundary and keeps adjacent words eligible at distance 1.
 
-Absence of semantic evidence is not semantic negation. Capability, coverage, schema, language, and missing-artifact failures have controlled public exceptions.
+Semantic context is soft evidence. Positive evidence is not semantic certainty, and missing evidence is not semantic negation. Capability, coverage, schema, language, and missing-artifact failures have controlled public exceptions.
 
 ## Requirements Overview
 
@@ -71,6 +72,8 @@ The consumer decides what an unknown run, version, or candidate should mean. Lex
 - FrequencyWords enriches existing lexemes with corpus fields.
 - A local SQLite artifact is the runtime boundary.
 - No service endpoint or daemon is required.
+
+
 
 ## Business Context
 
@@ -129,6 +132,8 @@ evidence = lexicon.supports_domain(
 
 The consumer decides what an unknown run, version, or candidate should mean. Lexhint ends at evidence.
 
+
+
 <!-- archledger: no accepted records for this section yet -->
 
 # Runtime View
@@ -138,15 +143,17 @@ The consumer decides what an unknown run, version, or candidate should mean. Lex
 1. The consumer constructs `Lexicon` from one local SQLite artifact, resolved from the vendored, configured cache, or schema-aware managed dataset path when no override is supplied.
 2. Construction validates exact schema version, base language, coverage, and explicit capabilities before queries.
 3. An optional locale such as `GB` or `US` is runtime presentation state. It does not change artifact resolution or physical English dataset identity.
-4. `word()` and `contains()` query dictionary-derived lexemes. `segment()` evaluates known spans using authoritative full coverage, case flags, dynamic programming, and optional corpus rank.
+4. `word()` and `contains()` query dictionary-derived lexemes. `word()` exposes casing attestation already stored in the lexeme row. `segment()` evaluates known spans using authoritative full coverage, case flags, dynamic programming, and optional corpus rank, while retaining strict surface-case acceptance.
 5. Runtime reads do not acquire missing data or write to the artifact.
 
 ## Semantic evidence
 
 1. `lexhint.semantics` maps supported raw source topics to stable `SemanticDomain` values at build time.
-2. Context tokenization excludes every token overlapping the target span.
-3. Nearby words are queried in batches. Domain weights receive configurable distance decay.
-4. Results preserve cue text, character spans, token distance, and contribution weight. The candidate cannot validate itself.
+2. Context distances are measured from the target character span. Every lexical token overlapping a non-empty target is excluded. If no lexical token overlaps, the target is a virtual insertion boundary and no real token is discarded.
+3. Nearby words are queried in batches. Domain weights receive configurable distance decay, with adjacent eligible tokens at distance 1.
+4. Results preserve cue text, character spans, token distance, and contribution weight. The candidate cannot validate itself. Domain results are hints rather than sense-disambiguated semantic certainty, and missing evidence is not negative evidence.
+
+
 
 <!-- archledger: no accepted records for this section yet -->
 
@@ -162,6 +169,8 @@ Lexhint is deployed as a local Python package and a local SQLite evidence artifa
 - Build downloads and replacements use temporary files and atomic rename.
 - Generated external datasets are distributed separately from code according to `DATA_SOURCES.md`.
 
+
+
 <!-- archledger: no accepted records for this section yet -->
 
 # Cross-cutting Concepts
@@ -170,7 +179,7 @@ Lexhint is deployed as a local Python package and a local SQLite evidence artifa
 
 Schema metadata is explicit and self-describing. `language`, `locale`, `variant`, `schema_version`, and `dataset_version` remain separate dimensions. Locale is optional and does not create `en-GB` or `en-US` artifacts. Strict equality, not a compatibility range, controls SQLite access.
 
-Schema 7 metadata is explicit and self-describing. `lexemes` is always present for lexical capability. `lexeme_domains` exists only for `semantic`; each row stores bounded deterministic weight and source-topic provenance. Rich `entries`, `senses`, `sense_topics`, forms, and pronunciations exist only for `dictionary`. Old partial-cache schemas are rejected and must be rebuilt.
+Schema 7 metadata is explicit and self-describing. `lexemes` is always present for lexical capability and already stores lowercase, titlecase, and uppercase attestation flags exposed by `WordEvidence`. `lexeme_domains` exists only for `semantic`; each row stores bounded deterministic weight and source-topic provenance. Rich `entries`, `senses`, `sense_topics`, forms, and pronunciations exist only for `dictionary`. Old partial-cache schemas are rejected and must be rebuilt.
 
 ### Provenance and data lifecycle
 
@@ -182,7 +191,9 @@ Capability, coverage, schema, language, and missing-artifact failures have contr
 
 ### Verification and licensing
 
-Tests cover read-only behavior, no-network guards, segmentation, schema and capability validation, frequency policy, semantic target exclusion, CLI contracts, and source extraction. External dictionary and corpus data remain subject to the obligations documented in `DATA_SOURCES.md`.
+Tests cover read-only behavior, no-network guards, segmentation, case attestation, virtual-boundary semantic target anchoring, schema and capability validation, frequency policy, semantic target exclusion, CLI contracts, and source extraction. External dictionary and corpus data remain subject to the obligations documented in `DATA_SOURCES.md`.
+
+
 
 ## Explicit immutable managed dataset artifacts
 
@@ -197,7 +208,9 @@ The current architecture records these decisions.
 - **Treat frequency as enrichment.** Corpus rank improves segmentation and commonness evidence but does not define lexical capability.
 - **Build fresh artifacts atomically.** Capability-specific tables are created from the resolved build plan and replacements cannot expose partial output.
 - **Use stable semantic domains.** Raw source topics are projected into a small deterministic taxonomy at build time.
-- **Exclude the candidate from context evidence.** A target token cannot validate its own interpretation.
+- **Expose case attestation without weakening segmentation.** `word()` exposes normalized membership and stored case forms, while `segment()` retains surface-case acceptance so consumers can apply context-specific policy.
+- **Anchor semantic context to character spans.** Overlapping target tokens are excluded; a target with no lexical token is a virtual boundary whose adjacent cues remain eligible at distance 1.
+- **Treat semantic context as soft evidence.** Lexhint reports explainable hints, not sense disambiguation or semantic certainty.
 - **Keep the runtime read-only and offline by default.** Acquisition belongs to explicit build workflows.
 - **Keep a narrow consumer boundary.** Lexhint supplies evidence; downstream consumers own interpretation and speech rendering.
 
@@ -213,6 +226,8 @@ The current architecture records these decisions.
 | Resilience        | Read-only runtime access, source hashes, temporary downloads, and atomic replacement                             | A failed build does not replace an existing artifact with partial output.                          |
 | Maintainability   | Focused runtime and build modules, capability-specific schema, and boundary tests                                | Schema, extraction, semantic projection, storage, and CLI behavior can be checked independently.   |
 | Compliance        | External resources remain separate from code and provenance is embedded in artifacts                             | A distributor can review data obligations before distributing generated artifacts.                 |
+
+
 
 ## Quality Requirements Overview
 
