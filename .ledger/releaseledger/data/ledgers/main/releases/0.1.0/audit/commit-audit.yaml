@@ -2,262 +2,98 @@ schema_version: 1
 object_type: commit_audit_sheet
 versioning:
   schema_version: 1
-  revision: 3
+  revision: 2
 release_version: v0.1.0
-git_base_ref: 4b825dc642cb6eb9a060e54bf8d69288fbee4904
-git_base_sha: 4b825dc642cb6eb9a060e54bf8d69288fbee4904
+git_base_ref: HEAD^
+git_base_sha: 3ac132eda9568fca627f848688e1110b8760e61c
 git_head_ref: HEAD
-git_head_sha: 29536a8d591d436c7ac34aad9f4b289bfe1a624d
-git_range: :root..29536a8d591d436c7ac34aad9f4b289bfe1a624d
-commit_count: 6
+git_head_sha: 37fbff5f3ce05aa681edc86a269c10835e38f891
+git_range: 3ac132eda9568fca627f848688e1110b8760e61c..37fbff5f3ce05aa681edc86a269c10835e38f891
+commit_count: 1
 rows:
-  - sha: 7ae61e6ad0c4eb90cac2be29b8d2f6e8e6cdabe4
-    source_ref: git:7ae61e6ad0c4eb90cac2be29b8d2f6e8e6cdabe4
-    short_sha: 7ae61e6
-    changed_paths: []
-    stats:
-      files_changed: 0
-      insertions: 0
-      deletions: 0
-    inspected: true
-    inspected_paths:
-      - .gitignore
-      - LICENSE
-      - README.md
-    observed_behavior:
-      The repository baseline adds Apache-2.0 licensing, standard project
-      ignore rules, and the initial user-facing README entry point.
-    public_impact: docs
-    decision: accepted
-    evidence_subject: Initial commit
-    target_entry_key: docs-foundation
-    target_entry_id: entry-0001
-    notes: Baseline documentation and licensing for the initial public release.
-  - sha: 096a28c06079479e02c75dea3d258cc663f9e586
-    source_ref: git:096a28c06079479e02c75dea3d258cc663f9e586
-    short_sha: 096a28c
+  - sha: 37fbff5f3ce05aa681edc86a269c10835e38f891
+    source_ref: git:37fbff5f3ce05aa681edc86a269c10835e38f891
+    short_sha: 37fbff5
     changed_paths:
-      - .codecrate.toml
-      - .gitignore
-      - .pre-commit-config.yaml
+      - .ledger/archledger/data/document-state.json
+      - .ledger/archledger/data/profiles/arc42/sections/content-0001.md
+      - .ledger/archledger/data/profiles/arc42/sections/content-0002.md
+      - .ledger/archledger/data/profiles/arc42/sections/content-0003.md
+      - .ledger/archledger/data/profiles/arc42/sections/content-0004.md
+      - .ledger/archledger/data/profiles/arc42/sections/content-0005.md
+      - .ledger/archledger/data/profiles/arc42/sections/content-0006.md
+      - .ledger/archledger/data/profiles/arc42/sections/content-0007.md
+      - .ledger/archledger/data/profiles/arc42/sections/content-0008.md
+      - .ledger/archledger/data/profiles/arc42/sections/content-0009.md
+      - .ledger/archledger/data/profiles/arc42/sections/content-0010.md
+      - .ledger/archledger/data/profiles/arc42/sections/content-0011.md
+      - .ledger/archledger/data/profiles/arc42/sections/content-0012.md
       - DATA_SOURCES.md
-      - MANIFEST.in
       - README.md
-      - lexhint/__init__.py
-      - lexhint/__main__.py
-      - lexhint/builder.py
-      - lexhint/cli.py
-      - lexhint/data/dictionaries/.gitkeep
-      - lexhint/data/words/.gitkeep
-      - lexhint/dictionary.py
-      - lexhint/download.py
-      - lexhint/lexicon.py
-      - lexhint/models.py
-      - pyproject.toml
-      - tests/fixtures/kaikki-mini.jsonl
-      - tests/test_builder.py
-      - tests/test_dictionary.py
-      - tests/test_download.py
-      - tests/test_lexicon.py
-      - tools/vendor_dictionary.py
-      - tools/vendor_wordlists.py
-    stats:
-      files_changed: 0
-      insertions: 1572
-      deletions: 3
-    inspected: true
-    inspected_paths:
-      - README.md
+      - docs/architecture.md
       - lexhint/__init__.py
       - lexhint/builder.py
       - lexhint/cli.py
       - lexhint/dictionary.py
-      - lexhint/download.py
-      - lexhint/lexicon.py
-      - lexhint/models.py
-      - pyproject.toml
-      - tests/test_builder.py
-      - tests/test_dictionary.py
-      - tests/test_download.py
-      - tests/test_lexicon.py
-    observed_behavior:
-      The package introduces the Lexicon and Dictionary APIs, language-aware
-      word lookup and segmentation, dictionary indexing from JSONL, download helpers,
-      a command-line interface, and test coverage for the initial workflows.
-    public_impact: public
-    decision: accepted
-    evidence_subject: "feat: initial version"
-    target_entry_key: lexical-api
-    target_entry_id: entry-0002
-    notes: Initial product implementation.
-  - sha: fbcd083d28169d0e85fcfaae8a6253494af8c0a5
-    source_ref: git:fbcd083d28169d0e85fcfaae8a6253494af8c0a5
-    short_sha: fbcd083
-    changed_paths:
-      - DATA_SOURCES.md
-      - README.md
-      - lexhint/builder.py
-      - lexhint/cli.py
-      - lexhint/lexicon.py
-      - tests/test_builder.py
-      - tests/test_cli.py
-      - tests/test_lexicon.py
-    stats:
-      files_changed: 0
-      insertions: 628
-      deletions: 108
-    inspected: true
-    inspected_paths:
-      - README.md
-      - lexhint/builder.py
-      - lexhint/cli.py
-      - lexhint/lexicon.py
-      - tests/test_builder.py
-      - tests/test_cli.py
-      - tests/test_lexicon.py
-    observed_behavior:
-      The command-line workflow gains default and explicit language
-      handling, stable JSON output support, and clearer setup and dictionary commands,
-      with matching lexicon and CLI tests.
-    public_impact: public
-    decision: accepted
-    evidence_subject: "feat: improved cli"
-    target_entry_key: lexical-api
-    target_entry_id: entry-0002
-    notes: CLI and documentation refinement for the initial release.
-  - sha: ec51301a5dceba9a3c048e6f94b08716fd53bfc8
-    source_ref: git:ec51301a5dceba9a3c048e6f94b08716fd53bfc8
-    short_sha: ec51301
-    changed_paths:
-      - .ledger/ledger.toml
-      - .ledger/taskledger/.ledger-project.toml
-      - .ledger/taskledger/config.toml
-      - DATA_SOURCES.md
-      - README.md
-      - lexhint/__init__.py
-      - lexhint/builder.py
-      - lexhint/cli.py
-      - lexhint/dictionary.py
-      - lexhint/lexicon.py
-      - lexhint/models.py
-      - pyproject.toml
-      - tests/fixtures/kaikki-mini.jsonl
-      - tests/test_builder.py
-      - tests/test_cli.py
-      - tests/test_dictionary.py
-    stats:
-      files_changed: 0
-      insertions: 361
-      deletions: 141
-    inspected: true
-    inspected_paths:
-      - README.md
-      - lexhint/builder.py
-      - lexhint/cli.py
-      - lexhint/dictionary.py
-      - lexhint/lexicon.py
-      - lexhint/models.py
-      - tests/test_builder.py
-      - tests/test_cli.py
-      - tests/test_dictionary.py
-    observed_behavior:
-      Dictionary extraction is refined to retain compact gloss and
-      explicit-topic sense data independently of the common-word lexicon, and the public
-      context API and CLI behavior are updated with tests.
-    public_impact: public
-    decision: accepted
-    evidence_subject: "feat: improved version"
-    target_entry_key: dictionary-context
-    target_entry_id: entry-0003
-    notes: Semantic dictionary behavior and context evidence.
-  - sha: 5d594c23c5ad1210c96cfc4b475238942359cf4a
-    source_ref: git:5d594c23c5ad1210c96cfc4b475238942359cf4a
-    short_sha: 5d594c2
-    changed_paths:
-      - .codecrate.toml
-      - DATA_SOURCES.md
-      - README.md
-      - lexhint/__init__.py
-      - lexhint/builder.py
-      - lexhint/cli.py
-      - lexhint/dictionary.py
-      - lexhint/kaikki.py
+      - lexhint/extract.py
       - lexhint/models.py
       - lexhint/store.py
+      - tests/fixtures/kaikki-rich.jsonl
       - tests/test_builder.py
+      - tests/test_cli.py
       - tests/test_cli_lazy.py
       - tests/test_dictionary.py
-      - tests/test_kaikki.py
+      - tests/test_extract.py
       - tests/test_lazy_dictionary.py
-      - tests/test_remote_context.py
+      - tests/test_rich_dictionary.py
     stats:
       files_changed: 0
-      insertions: 1212
-      deletions: 237
+      insertions: 947
+      deletions: 321
     inspected: true
     inspected_paths:
+      - .ledger/archledger/data/document-state.json
+      - .ledger/archledger/data/profiles/arc42/sections/content-0001.md
+      - .ledger/archledger/data/profiles/arc42/sections/content-0002.md
+      - .ledger/archledger/data/profiles/arc42/sections/content-0003.md
+      - .ledger/archledger/data/profiles/arc42/sections/content-0004.md
+      - .ledger/archledger/data/profiles/arc42/sections/content-0005.md
+      - .ledger/archledger/data/profiles/arc42/sections/content-0006.md
+      - .ledger/archledger/data/profiles/arc42/sections/content-0007.md
+      - .ledger/archledger/data/profiles/arc42/sections/content-0008.md
+      - .ledger/archledger/data/profiles/arc42/sections/content-0009.md
+      - .ledger/archledger/data/profiles/arc42/sections/content-0010.md
+      - .ledger/archledger/data/profiles/arc42/sections/content-0011.md
+      - .ledger/archledger/data/profiles/arc42/sections/content-0012.md
+      - DATA_SOURCES.md
       - README.md
-      - lexhint/dictionary.py
-      - lexhint/kaikki.py
-      - lexhint/store.py
-      - lexhint/cli.py
-      - tests/test_dictionary.py
-      - tests/test_kaikki.py
-      - tests/test_lazy_dictionary.py
-      - tests/test_remote_context.py
-    observed_behavior:
-      The dictionary gains lazy single-word Kaikki retrieval, persistent
-      SQLite partial caching, offline replay, and shared sense extraction for remote
-      and bulk paths, with coverage for cache and context behavior.
-    public_impact: public
-    decision: accepted
-    evidence_subject: "feat: improve dictionary words"
-    target_entry_key: dictionary-context
-    target_entry_id: entry-0003
-    notes: Lazy dictionary access and local cache support.
-  - sha: 29536a8d591d436c7ac34aad9f4b289bfe1a624d
-    source_ref: git:29536a8d591d436c7ac34aad9f4b289bfe1a624d
-    short_sha: 29536a8
-    changed_paths:
-      - .ledger/ledger.toml
-      - .ledger/releaseledger/.ledger-project.toml
-      - .ledger/releaseledger/config.toml
-      - .ledger/releaseledger/data/.ledger-project.toml
-      - MANIFEST.in
-      - RELEASING.md
+      - docs/architecture.md
+      - lexhint/__init__.py
+      - lexhint/builder.py
       - lexhint/cli.py
       - lexhint/dictionary.py
-      - lexhint/py.typed
+      - lexhint/extract.py
+      - lexhint/models.py
       - lexhint/store.py
-      - pyproject.toml
+      - tests/fixtures/kaikki-rich.jsonl
       - tests/test_builder.py
       - tests/test_cli.py
+      - tests/test_cli_lazy.py
       - tests/test_dictionary.py
+      - tests/test_extract.py
       - tests/test_lazy_dictionary.py
-    stats:
-      files_changed: 0
-      insertions: 191
-      deletions: 24
-    inspected: true
-    inspected_paths:
-      - MANIFEST.in
-      - RELEASING.md
-      - lexhint/cli.py
-      - lexhint/dictionary.py
-      - lexhint/py.typed
-      - lexhint/store.py
-      - pyproject.toml
-      - tests/test_builder.py
-      - tests/test_cli.py
-      - tests/test_dictionary.py
-      - tests/test_lazy_dictionary.py
+      - tests/test_rich_dictionary.py
     observed_behavior:
-      The package distribution includes the typing marker and release
-      documentation, while CLI, dictionary, and cache behavior receive final release-readiness
-      corrections covered by tests.
+      Dictionary extraction now groups same-word records into ordered
+      rich entries, stores schema v5 metadata including forms, pronunciations, examples,
+      related terms, and etymology, preserves semantic topic projections, and exposes
+      the richer structure through lookup and dictionary CLI JSON. Added fixtures and
+      regression coverage and synchronized the README, data-source, and architecture
+      documentation.
     public_impact: public
     decision: accepted
-    evidence_subject: "feat: prepare first release"
-    target_entry_key: release-readiness
-    target_entry_id: entry-0004
-    notes: Packaging and release preparation.
+    evidence_subject: "feat: improve dictionary fields"
+    target_entry_key: entry-0011
+    notes:
+      Generated architecture ledger files are documentation synchronization for
+      the public behavior change.

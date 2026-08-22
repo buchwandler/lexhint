@@ -3,19 +3,19 @@ schema_version: 2
 object_type: release_entry
 versioning:
   schema_version: 1
-  revision: 2
+  revision: 5
 entry_id: entry-0001
 release_version: 0.1.0
-kind: docs
-summary: Documented project licensing and established baseline user documentation
+kind: added
+summary:
+  Added CLI commands for lookup, segmentation, context evidence, artifact builds,
+  dictionary inspection, and status
 status: accepted
 audience: null
 scopes: []
-source_refs:
-  - git:7ae61e6ad0c4eb90cac2be29b8d2f6e8e6cdabe4
+source_refs: []
 paths:
-  - LICENSE
-  - README.md
+  - lexhint/cli.py
 issues: []
 prs: []
 sources: []

@@ -4,23 +4,22 @@ object_type: release_entry
 versioning:
   schema_version: 1
   revision: 4
-entry_id: entry-0001
-release_version: v0.1.0
-kind: added
-summary:
-  Added CLI commands for lookup, segmentation, context evidence, artifact builds,
-  dictionary inspection, and status
+entry_id: entry-0010
+release_version: 0.1.0
+kind: quality
+summary: Improved CI and publication checks for tests, static analysis, documentation,
+  distributions, and wheel smoke tests
 status: accepted
 audience: null
 scopes: []
 source_refs: []
 paths:
-  - lexhint/cli.py
+- .github/workflows/tests.yml
 issues: []
 prs: []
 sources: []
 contributors: []
 breaking: false
 internal: false
-order: 1
+order: 10
 ---

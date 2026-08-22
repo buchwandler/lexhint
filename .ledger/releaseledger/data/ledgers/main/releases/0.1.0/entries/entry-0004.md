@@ -3,25 +3,19 @@ schema_version: 2
 object_type: release_entry
 versioning:
   schema_version: 1
-  revision: 2
+  revision: 4
 entry_id: entry-0004
 release_version: 0.1.0
-kind: changed
+kind: added
 summary:
-  Added package distribution support with typing metadata, release guidance,
-  and final cache and CLI refinements
+  Added stable semantic-domain evidence that explains context cues while excluding
+  the target span
 status: accepted
 audience: null
 scopes: []
-source_refs:
-  - git:29536a8d591d436c7ac34aad9f4b289bfe1a624d
+source_refs: []
 paths:
-  - MANIFEST.in
-  - RELEASING.md
-  - lexhint/py.typed
-  - lexhint/cli.py
-  - lexhint/store.py
-  - pyproject.toml
+  - lexhint/dictionary.py
 issues: []
 prs: []
 sources: []

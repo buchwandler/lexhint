@@ -4,23 +4,22 @@ object_type: release_entry
 versioning:
   schema_version: 1
   revision: 3
-entry_id: entry-0002
-release_version: v0.1.0
-kind: added
-summary:
-  Added streamed Wiktextract and Kaikki dictionary builds that produce self-describing
-  SQLite artifacts
+entry_id: entry-0005
+release_version: 0.1.0
+kind: removed
+summary: Removed standalone word-list vendoring in favor of dictionary-derived lexical
+  membership
 status: accepted
 audience: null
 scopes: []
 source_refs: []
 paths:
-  - lexhint/dictionary.py
+- tools/vendor_wordlists.py
 issues: []
 prs: []
 sources: []
 contributors: []
 breaking: false
 internal: false
-order: 2
+order: 5
 ---
