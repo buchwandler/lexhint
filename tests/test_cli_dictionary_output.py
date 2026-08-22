@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import json
+import sys
 from pathlib import Path
 
 import pytest
@@ -32,6 +33,7 @@ def test_default_dictionary_output_is_standard(
     assert main(dictionary_args(rich_artifact)) == 0
 
     output = capsys.readouterr().out
+    assert "\x1b[" not in output
     assert "love" in output
     assert "    1. A strong feeling of affection." in output
     assert "    2. Zero score in tennis." in output
@@ -215,3 +217,37 @@ def test_dictionary_pos_empty_result_is_explained(
     assert main(dictionary_args(rich_artifact, "--pos", "adjective")) == 0
     output = capsys.readouterr().out
     assert "no dictionary entries matched --pos adjective" in output
+
+
+def test_dictionary_tty_output_uses_color(
+    rich_artifact: Path, capsys: pytest.CaptureFixture[str], monkeypatch: pytest.MonkeyPatch
+) -> None:
+    monkeypatch.delenv("NO_COLOR", raising=False)
+    monkeypatch.setattr(sys.stdout, "isatty", lambda: True)
+
+    assert main(dictionary_args(rich_artifact, "--detail", "full")) == 0
+    assert "\x1b[" in capsys.readouterr().out
+
+
+def test_dictionary_no_color_options_disable_tty_color(
+    rich_artifact: Path, capsys: pytest.CaptureFixture[str], monkeypatch: pytest.MonkeyPatch
+) -> None:
+    monkeypatch.setattr(sys.stdout, "isatty", lambda: True)
+
+    assert main(["--no-color", *dictionary_args(rich_artifact)]) == 0
+    assert "\x1b[" not in capsys.readouterr().out
+
+    monkeypatch.setenv("NO_COLOR", "1")
+    assert main(dictionary_args(rich_artifact)) == 0
+    assert "\x1b[" not in capsys.readouterr().out
+
+
+def test_dictionary_json_never_contains_ansi_on_tty(
+    rich_artifact: Path, capsys: pytest.CaptureFixture[str], monkeypatch: pytest.MonkeyPatch
+) -> None:
+    monkeypatch.setattr(sys.stdout, "isatty", lambda: True)
+
+    assert main(["--json", *dictionary_args(rich_artifact)]) == 0
+    raw = capsys.readouterr().out
+    assert "\x1b[" not in raw
+    assert json.loads(raw)["entries"]

@@ -8,6 +8,7 @@ from dataclasses import dataclass
 
 from .languages import locale_spec
 from .models import DictionaryEntry, Form, Pronunciation, RelatedTerm, Sense
+from .terminal import TerminalStyle
 
 DICTIONARY_FIELDS = frozenset(
     {
@@ -55,6 +56,7 @@ class DictionaryRenderOptions:
     exclude_pos: frozenset[str] = frozenset()
     width: int = 100
     locale: str | None = None
+    color: bool = False
 
 
 def split_csv(values: Sequence[str] | None) -> tuple[str, ...]:
@@ -244,8 +246,34 @@ def _append_block(lines: list[str], block: Sequence[str]) -> None:
     lines.extend(block)
 
 
-def _render_etymology(etymology: str, width: int) -> list[str]:
-    lines = ["    etymology"]
+def _style_sense_number(lines: list[str], number: int, style: TerminalStyle) -> list[str]:
+    if not lines:
+        return lines
+    prefix = f"    {number}. "
+    if lines[0].startswith(prefix):
+        lines[0] = "    " + style.cyan(f"{number}.") + " " + lines[0][len(prefix) :]
+    elif lines[0] == f"    {number}.":
+        lines[0] = "    " + style.cyan(f"{number}.")
+    return lines
+
+
+def _style_label(
+    lines: list[str],
+    *,
+    indent: str,
+    label: str,
+    style: TerminalStyle,
+) -> list[str]:
+    if not lines:
+        return lines
+    prefix = f"{indent}{label}: "
+    if lines[0].startswith(prefix):
+        lines[0] = indent + style.dim_cyan(f"{label}:") + " " + lines[0][len(prefix) :]
+    return lines
+
+
+def _render_etymology(etymology: str, width: int, style: TerminalStyle) -> list[str]:
+    lines = [f"    {style.cyan('etymology')}"]
     normalized = etymology.replace("\r\n", "\n").replace("\r", "\n")
     for source_line in normalized.split("\n"):
         if source_line.strip():
@@ -255,8 +283,8 @@ def _render_etymology(etymology: str, width: int) -> list[str]:
     return lines
 
 
-def _render_examples(sense: Sense, width: int) -> list[str]:
-    lines = ["       examples"]
+def _render_examples(sense: Sense, width: int, style: TerminalStyle) -> list[str]:
+    lines = [f"       {style.cyan('examples')}"]
     for example in sense.examples:
         lines.extend(
             _wrap(
@@ -267,7 +295,15 @@ def _render_examples(sense: Sense, width: int) -> list[str]:
             )
         )
         if example.translation:
-            lines.extend(_wrap_value(example.translation, width, "           translation: "))
+            translation = _wrap_value(example.translation, width, "           translation: ")
+            lines.extend(
+                _style_label(
+                    translation,
+                    indent="           ",
+                    label="translation",
+                    style=style,
+                )
+            )
     return lines
 
 
@@ -276,26 +312,32 @@ def _render_sense(
     number: int,
     fields: frozenset[str],
     width: int,
-    locale: str | None = None,
+    locale: str | None,
+    style: TerminalStyle,
 ) -> list[str]:
     lines: list[str] = []
     glosses = tuple(gloss for gloss in sense.glosses if gloss)
     if glosses:
-        lines.extend(_wrap(glosses[0], width, initial=f"    {number}. ", subsequent="       "))
+        sense_lines = _wrap(glosses[0], width, initial=f"    {number}. ", subsequent="       ")
+        lines.extend(_style_sense_number(sense_lines, number, style))
         for gloss in glosses[1:]:
             lines.extend(_wrap_value(gloss, width, "       "))
     else:
-        lines.append(f"    {number}.")
+        lines.extend(_style_sense_number([f"    {number}."], number, style))
     if "tags" in fields:
-        lines.extend(_wrap_labeled("tags", sense.tags, width, "       "))
+        tagged = _wrap_labeled("tags", sense.tags, width, "       ")
+        lines.extend(_style_label(tagged, indent="       ", label="tags", style=style))
     if "topics" in fields:
-        lines.extend(_wrap_labeled("topics", sense.topics, width, "       "))
+        topics = _wrap_labeled("topics", sense.topics, width, "       ")
+        lines.extend(_style_label(topics, indent="       ", label="topics", style=style))
     if "examples" in fields and sense.examples:
-        _append_block(lines, _render_examples(sense, width))
+        _append_block(lines, _render_examples(sense, width, style))
     if "synonyms" in fields:
-        lines.extend(_wrap_labeled("synonyms", sense.synonyms, width, "       ", locale))
+        synonyms = _wrap_labeled("synonyms", sense.synonyms, width, "       ", locale)
+        lines.extend(_style_label(synonyms, indent="       ", label="synonyms", style=style))
     if "antonyms" in fields:
-        lines.extend(_wrap_labeled("antonyms", sense.antonyms, width, "       ", locale))
+        antonyms = _wrap_labeled("antonyms", sense.antonyms, width, "       ", locale)
+        lines.extend(_style_label(antonyms, indent="       ", label="antonyms", style=style))
     return lines
 
 
@@ -306,10 +348,12 @@ def _render_entry(
     number: int,
     detail: str,
     locale: str | None,
+    style: TerminalStyle,
 ) -> list[str]:
-    lines = [f"  {entry.pos or 'entry'}"]
+    pos = entry.pos or "entry"
+    lines = [f"  {style.bold_magenta(pos)}"]
     if "etymology" in fields and entry.etymology:
-        _append_block(lines, _render_etymology(entry.etymology, width))
+        _append_block(lines, _render_etymology(entry.etymology, width, style))
     if "pronunciations" in fields and entry.pronunciations:
         if detail == "standard":
             block = ["    pronunciation: "]
@@ -318,8 +362,9 @@ def _render_entry(
                 f"      {_format_pronunciation(value, locale)}"
                 for value in entry.pronunciations[1:]
             )
+            block = _style_label(block, indent="    ", label="pronunciation", style=style)
         else:
-            block = ["    pronunciations"]
+            block = [f"    {style.cyan('pronunciations')}"]
             block.extend(
                 f"      {_format_pronunciation(value, locale)}" for value in entry.pronunciations
             )
@@ -328,12 +373,13 @@ def _render_entry(
         if detail == "standard":
             block = [f"    forms: {_format_form(entry.forms[0], locale)}"]
             block.extend(f"      {_format_form(value, locale)}" for value in entry.forms[1:])
+            block = _style_label(block, indent="    ", label="forms", style=style)
         else:
-            block = ["    forms"]
+            block = [f"    {style.cyan('forms')}"]
             block.extend(f"      {_format_form(value, locale)}" for value in entry.forms)
         _append_block(lines, block)
     for sense in entry.senses:
-        _append_block(lines, _render_sense(sense, number, fields, width, locale))
+        _append_block(lines, _render_sense(sense, number, fields, width, locale, style))
         number += 1
     return lines
 
@@ -342,17 +388,19 @@ def _render_compact(
     entries: Sequence[DictionaryEntry],
     fields: frozenset[str],
     width: int,
-    locale: str | None = None,
+    locale: str | None,
+    style: TerminalStyle,
 ) -> list[str]:
     lines: list[str] = []
     number = 1
     for entry in entries:
-        lines.append(f"  {entry.pos or 'entry'}")
+        pos = entry.pos or "entry"
+        lines.append(f"  {style.bold_magenta(pos)}")
         if not entry.senses:
             continue
         if fields:
             for sense in entry.senses:
-                _append_block(lines, _render_sense(sense, number, fields, width, locale))
+                _append_block(lines, _render_sense(sense, number, fields, width, locale, style))
                 number += 1
         else:
             gloss = next((value for value in entry.senses[0].glosses if value), "")
@@ -370,19 +418,28 @@ def render_dictionary_entries(
     options: DictionaryRenderOptions,
     detail: str = "standard",
 ) -> str:
-    lines = [word]
+    style = TerminalStyle(options.color)
+    lines = [style.bold_cyan(word)]
     if not entries:
-        lines.append("  no dictionary entries found")
+        lines.append(f"  {style.yellow('no dictionary entries found')}")
         return "\n".join(lines)
     if detail == "compact":
-        body = _render_compact(entries, options.fields, options.width, options.locale)
+        body = _render_compact(entries, options.fields, options.width, options.locale, style)
     else:
         body = []
         number = 1
         for entry in entries:
             _append_block(
                 body,
-                _render_entry(entry, options.fields, options.width, number, detail, options.locale),
+                _render_entry(
+                    entry,
+                    options.fields,
+                    options.width,
+                    number,
+                    detail,
+                    options.locale,
+                    style,
+                ),
             )
             number += len(entry.senses)
     lines.extend(body)

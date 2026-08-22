@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import os
+import re
 
 import pytest
 
@@ -108,3 +109,72 @@ def test_terminal_width_is_capped_and_explicit_width_is_validated(
     assert terminal_render_width(120) == 120
     with pytest.raises(ValueError, match="between 40 and 240"):
         terminal_render_width(39)
+
+
+ANSI_RE = re.compile(r"\x1b\[[0-9;]*m")
+
+
+def strip_ansi(value: str) -> str:
+    return ANSI_RE.sub("", value)
+
+
+def _color_test_entry() -> DictionaryEntry:
+    return DictionaryEntry(
+        "love",
+        "noun",
+        (
+            Sense(
+                glosses=("A strong feeling of affection.",),
+                tags=("uncountable",),
+                topics=("sports",),
+                examples=(Example("Their love grew over time.", "Ihre Liebe wuchs."),),
+                synonyms=("affection",),
+                antonyms=("hate",),
+            ),
+        ),
+        forms=(Form("loves", ("plural",)),),
+        pronunciations=(Pronunciation("/lʌv/", ("US",)),),
+        etymology="From Middle English love.",
+    )
+
+
+@pytest.mark.parametrize("detail", ["compact", "standard", "full"])
+def test_colored_dictionary_output_matches_plain_and_fits_visible_width(detail: str) -> None:
+    entry = _color_test_entry()
+    fields = resolve_dictionary_fields(detail)
+    plain = render_dictionary_entries(
+        "love",
+        (entry,),
+        options=DictionaryRenderOptions(fields=fields, width=60, color=False),
+        detail=detail,
+    )
+    colored = render_dictionary_entries(
+        "love",
+        (entry,),
+        options=DictionaryRenderOptions(fields=fields, width=60, color=True),
+        detail=detail,
+    )
+
+    assert "\x1b[" in colored
+    assert strip_ansi(colored) == plain
+    assert all(len(strip_ansi(line)) <= 60 for line in colored.splitlines())
+
+
+def test_colored_dictionary_output_uses_semantic_styles() -> None:
+    entry = _color_test_entry()
+    colored = render_dictionary_entries(
+        "love",
+        (entry,),
+        options=DictionaryRenderOptions(
+            fields=resolve_dictionary_fields("full"), width=60, color=True
+        ),
+        detail="full",
+    )
+
+    assert "\033[1;36mlove\033[0m" in colored
+    assert "\033[1;35mnoun\033[0m" in colored
+    assert "\033[36m1.\033[0m" in colored
+    assert "\033[2;36mtags:\033[0m" in colored
+    assert "\033[2;36mtranslation:\033[0m" in colored
+    assert "\033[36metymology\033[0m" in colored
+    assert "\033[36mexamples\033[0m" in colored

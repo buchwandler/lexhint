@@ -47,6 +47,7 @@ from .render import (
 from .schema import PROFILES, normalize_capabilities
 from .status import ArtifactStatus, read_artifact_status
 from .store import normalize_word
+from .terminal import TerminalStyle
 
 _DEFAULT_LANGUAGE = "en"
 _DICTIONARY_DETAILS = ("compact", "standard", "full")
@@ -56,30 +57,6 @@ class _ArgumentParser(argparse.ArgumentParser):
     def error(self, message: str) -> NoReturn:
         self.print_usage(sys.stderr)
         self.exit(2, f"\nerror: {message}\nTry '{self.prog} --help' for help.\n")
-
-
-class _Style:
-    def __init__(self, enabled: bool) -> None:
-        self.enabled = enabled
-
-    def _wrap(self, code: str, value: object) -> str:
-        text = str(value)
-        return f"\033[{code}m{text}\033[0m" if self.enabled else text
-
-    def bold(self, value: object) -> str:
-        return self._wrap("1", value)
-
-    def dim(self, value: object) -> str:
-        return self._wrap("2", value)
-
-    def green(self, value: object) -> str:
-        return self._wrap("32", value)
-
-    def yellow(self, value: object) -> str:
-        return self._wrap("33", value)
-
-    def cyan(self, value: object) -> str:
-        return self._wrap("36", value)
 
 
 def _default_language() -> str:
@@ -279,7 +256,7 @@ def _json(payload: object) -> None:
     print(json.dumps(payload, ensure_ascii=False))
 
 
-def _word(info: WordEvidence, style: _Style) -> None:
+def _word(info: WordEvidence, style: TerminalStyle) -> None:
     status = style.green("known") if info.known else style.yellow("unknown")
     print(f"{style.bold(info.text)}  {status}")
     if info.known:
@@ -289,21 +266,21 @@ def _word(info: WordEvidence, style: _Style) -> None:
             print(f"count     {info.frequency_count:,}")
 
 
-def _segments(text: str, values: Sequence[LexicalSegment], style: _Style) -> None:
+def _segments(text: str, values: Sequence[LexicalSegment], style: TerminalStyle) -> None:
     print(style.bold(text))
     for value in values:
         status = style.green("known") if value.known else style.yellow("unknown")
         print(f"  {style.cyan(value.text)}  {status}")
 
 
-def _context(values: Sequence[DomainEvidence], style: _Style) -> None:
+def _context(values: Sequence[DomainEvidence], style: TerminalStyle) -> None:
     for evidence in values:
         print(f"{style.bold(evidence.domain.value)}  {evidence.score:.2f}")
         for cue in evidence.cues:
             print(f"  {cue.text}  distance={cue.distance}  weight={cue.weight:.2f}")
 
 
-def _status(info: ArtifactStatus, style: _Style) -> None:
+def _status(info: ArtifactStatus, style: TerminalStyle) -> None:
     values = info.as_dict()
     counts = values["counts"]
     print(style.bold("Lexhint database"))
@@ -454,7 +431,7 @@ def _run_dataset(args: argparse.Namespace, *, json_output: bool) -> int:
     raise AssertionError("unreachable")
 
 
-def _run(args: argparse.Namespace, *, style: _Style, json_output: bool) -> int:
+def _run(args: argparse.Namespace, *, style: TerminalStyle, json_output: bool) -> int:
     if args.command == "dataset":
         return _run_dataset(args, json_output=json_output)
     if args.command == "word":
@@ -655,6 +632,7 @@ def _run(args: argparse.Namespace, *, style: _Style, json_output: bool) -> int:
                     exclude_pos=exclude_pos,
                     width=terminal_render_width(args.width),
                     locale=lexicon.locale,
+                    color=style.enabled,
                 )
                 print(render_dictionary_entries(word, entries, options=options, detail=detail))
         return 0
@@ -677,7 +655,7 @@ def _run(args: argparse.Namespace, *, style: _Style, json_output: bool) -> int:
 def main(argv: Sequence[str] | None = None) -> int:
     args = _parser().parse_args(list(sys.argv[1:] if argv is None else argv))
     json_output = args.json
-    style = _Style(
+    style = TerminalStyle(
         not args.no_color
         and not json_output
         and os.environ.get("NO_COLOR") is None
