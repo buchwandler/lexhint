@@ -8,7 +8,6 @@ import sqlite3
 from collections.abc import Mapping
 from contextlib import closing
 from dataclasses import replace
-from difflib import SequenceMatcher
 from importlib.resources import files
 from pathlib import Path
 
@@ -70,6 +69,19 @@ def _locale_rank(tags: tuple[str, ...], locale: str | None) -> int:
     if normalized & _REGIONAL_TAGS:
         return 2
     return 1
+
+
+def _prefix_upper_bound(prefix: str) -> str | None:
+    """Return the exclusive upper bound for strings beginning with *prefix*."""
+    for index in range(len(prefix) - 1, -1, -1):
+        codepoint = ord(prefix[index])
+        if codepoint >= 0x10FFFF:
+            continue
+        next_codepoint = codepoint + 1
+        if 0xD800 <= next_codepoint <= 0xDFFF:
+            next_codepoint = 0xE000
+        return prefix[:index] + chr(next_codepoint)
+    return None
 
 
 class Lexicon:
@@ -264,54 +276,57 @@ class Lexicon:
     def contains(self, word: str) -> bool:
         return self.word(word).known
 
-    def suggest(self, query: str, *, limit: int = 20) -> tuple[str, ...]:
-        """Return deterministic, bounded headword suggestions for *query*.
+    def complete(self, prefix: str, *, limit: int = 20) -> tuple[str, ...]:
+        """Return deterministic normalized lexical-key completions for *prefix*.
 
-        Suggestions are generated from the indexed lexeme table. Exact and
-        prefix matches are preferred; candidates from a short prefix window
-        are then ranked by normalized similarity and corpus rank. The bounded
-        candidate pool keeps this suitable for live input without exposing
-        storage details to callers.
+        Matching uses the same NFC + casefold normalization as lexical membership.
+        An exact normalized key is returned first. Remaining results begin with the
+        full normalized prefix and are ranked by corpus commonness when frequency
+        data is available, with deterministic lexical fallback ordering.
+
+        This operation is local, read-only, and is not spelling correction.
         """
         self._require("lexical")
         if limit < 0:
             raise ValueError("limit must be >= 0")
-        normalized = normalize_word(query.strip())
+        normalized = normalize_word(prefix.strip())
         if not normalized or limit == 0:
             return ()
 
-        prefix_length = min(3, len(normalized))
-        prefix = normalized[:prefix_length]
-        pool_limit = max(limit * 8, 64)
+        upper = _prefix_upper_bound(normalized)
         with closing(self._connect()) as connection:
-            rows = connection.execute(
-                "SELECT word, corpus_rank FROM lexemes "
-                "WHERE word LIKE ? ESCAPE '\\' "
-                "ORDER BY corpus_rank IS NULL, corpus_rank, word LIMIT ?",
-                (prefix.replace("%", "\\%").replace("_", "\\_") + "%", pool_limit),
-            ).fetchall()
+            exact = connection.execute(
+                "SELECT word FROM lexemes WHERE word=?",
+                (normalized,),
+            ).fetchone()
 
-        ranked: list[tuple[tuple[object, ...], str]] = []
-        for row in rows:
-            word = str(row["word"])
-            exact = word == normalized
-            direct_prefix = word.startswith(normalized)
-            similarity = SequenceMatcher(None, normalized, word).ratio()
-            corpus_rank = row["corpus_rank"]
-            ranked.append(
-                (
-                    (
-                        0 if exact else 1 if direct_prefix else 2,
-                        -similarity,
-                        corpus_rank is None,
-                        corpus_rank if corpus_rank is not None else 0,
-                        word,
-                    ),
-                    word,
-                )
-            )
-        ranked.sort(key=lambda item: item[0])
-        return tuple(word for _, word in ranked[:limit])
+            result: list[str] = []
+            if exact is not None:
+                result.append(str(exact["word"]))
+                if len(result) == limit:
+                    return tuple(result)
+
+            if upper is None:
+                return tuple(result)
+
+            remaining = limit - len(result)
+            if self.has_frequency_data:
+                rows = connection.execute(
+                    "SELECT word FROM lexemes "
+                    "WHERE word >= ? AND word < ? AND word != ? "
+                    "ORDER BY corpus_rank IS NULL, corpus_rank, word LIMIT ?",
+                    (normalized, upper, normalized, remaining),
+                ).fetchall()
+            else:
+                rows = connection.execute(
+                    "SELECT word FROM lexemes "
+                    "WHERE word >= ? AND word < ? AND word != ? "
+                    "ORDER BY word LIMIT ?",
+                    (normalized, upper, normalized, remaining),
+                ).fetchall()
+
+        result.extend(str(row["word"]) for row in rows)
+        return tuple(result)
 
     def _lexeme_candidates(self, values: set[str]) -> dict[str, sqlite3.Row]:
         result: dict[str, sqlite3.Row] = {}

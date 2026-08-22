@@ -34,6 +34,10 @@
 
 ## [0.1.2] - Unreleased
 
+### Added
+
+- Added deterministic local lexical prefix completion through Lexicon.complete() and lexhint complete
+
 ### Changed
 
 - Changed WordEvidence to expose lexical case attestation and uppercase-only evidence

@@ -7,13 +7,13 @@ section: building_block_view
 title: Building Block View
 order: 50
 status: accepted
-version: 11
+version: 13
 body_format: markdown
 ---
 
 The package is organized around a local artifact runtime and focused build modules.
 
-- `lexhint.lexicon.Lexicon` owns read-only artifact access, lexical lookup, segmentation, dictionary inspection, and semantic evidence queries.
+- `lexhint.lexicon.Lexicon` owns read-only artifact access, lexical lookup, prefix completion, segmentation, dictionary inspection, and semantic evidence queries.
 - `lexhint.schema` defines schema and capability validation for the self-describing SQLite artifact.
 - `lexhint.builder` creates fresh atomic artifacts from streamed source data and applies the immutable build plan.
 - `lexhint.extract` converts source records into curated lexical and dictionary data.
@@ -30,6 +30,7 @@ The public package exports `Lexicon` and `SemanticDomain` as the principal consu
 from lexhint import Lexicon, SemanticDomain
 
 lexicon = Lexicon.from_path("en.sqlite3")
+completions = lexicon.complete("comp")
 segments = lexicon.segment("chatgpt")
 text = "The compiler is 8.3.2."
 start = text.index("8.3.2")

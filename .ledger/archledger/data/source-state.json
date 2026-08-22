@@ -1,24 +1,24 @@
 {
   "directories": {
     ".": {
-      "file_count": 32,
-      "sha256": "e5df3ad619a219e77b6f0613cd7be317690e0a7aaec49648bccb966011cb2e66"
+      "file_count": 48,
+      "sha256": "0c91a3f87cac946f4e4ba49a4632dbc668e0c6b2915ec9983b2932e55e36ed12"
     },
     ".github": {
       "file_count": 4,
-      "sha256": "a4c4f06aceb8bc41cc46f7d0838cf761b5ccc9bd86b808cb2da33884e5a7cef5"
+      "sha256": "a23e6b8086e097d6eec55c1848c2a296d789af357a5195f806c2ff5d115a6f92"
     },
     ".github/workflows": {
       "file_count": 4,
-      "sha256": "78cbc8a38e1d584a878730c03471b1c4784e37cf61a86c206259871afd9394e8"
+      "sha256": "9ec93e967cb920999c1fcf0b4e249ccdcd2f7556f46224d87e71ca1b876ef376"
     },
     "lexhint": {
-      "file_count": 15,
-      "sha256": "5ac2d86d8f510c09966b4c3ad445ed6c5f1564983a3e60cb369f1b499ba96dda"
+      "file_count": 18,
+      "sha256": "6e7622eb146266e7566ce46fdd6d20233225c6aed510d89e14d6d544749abb22"
     },
     "tests": {
-      "file_count": 6,
-      "sha256": "d8600d27cd79b2381cf78e36eb0579dc414fccf1d2178f5dd1a3874edb992111"
+      "file_count": 18,
+      "sha256": "c84cc4987ba8977f584ff4e8d6f9448fc96738f1388ea9eabce2e6f8dd345ac4"
     },
     "tools": {
       "file_count": 1,
@@ -30,46 +30,49 @@
       "sha256": "7ee0042ff0356a97575a131240cdb4da0c5b99de2a5348ca3c87ae01776e0b59"
     },
     ".github/workflows/codecov.yml": {
-      "sha256": "78f3daf08a657fdcae57ce8b10da448096e26debeb6b4de3e8c92d68d987c86b"
+      "sha256": "7fa4c3fa01d56b903246b2b73d5784879b12e0512ae070dd4d1fa095ea7c9ced"
     },
     ".github/workflows/pre-commit.yml": {
       "sha256": "4fc502e5ff0814b0c58333a0a7a0a3df20a5bd5ec11ad1abe6b3f05175c3c859"
     },
     ".github/workflows/python-publish.yml": {
-      "sha256": "59b5041871296efb0d32b1ecf12be66573ef92a39bd9aac5fea89f09fb45edca"
+      "sha256": "19db7d1dcc81df9d620673d1e3a99d06f245e27b47b1e6ff05557601c6b8df5c"
     },
     ".github/workflows/tests.yml": {
-      "sha256": "a4675a25c7ea10bb51e9f2823cc703676671db95b98b0f5449e224b60d6f1028"
+      "sha256": "4343ba1633167eba521663ababfcdf685debf1c165f18df98403b7c5e9c1456f"
     },
     ".pre-commit-config.yaml": {
       "sha256": "024cd86abd09a54e772b9118c2bf5384fbdaee07835532b2dd90011dcbeabbab"
     },
     "DATA_SOURCES.md": {
-      "sha256": "7d557cc412975b0f8c1bcc40aff3cb4ada2183d59cda71fd75cb5288d9eb5c37"
+      "sha256": "26725b91bd4844d0369c0b0b42b987d6f7b81d086e2d82dbe18e1c7b89baf0a1"
     },
     "README.md": {
-      "sha256": "c4ea04be1de70d3d59c340a71ec3fca8d8cee0ad69a6502201174313a8878b1a"
+      "sha256": "bfb0be20c3c88ac7485558029a4ad92b1ef62b21acf8640ebe114699fba4cae9"
     },
     "RELEASING.md": {
-      "sha256": "04f06b687fd8fd8d5926612e63e3d1ce62993c15ec15450ac8dec36e2eba4daa"
+      "sha256": "80c7c983d2edbf2107227947eac24535d3dbfa2997426bc8c323a84546e374fd"
     },
     "lexhint/__init__.py": {
-      "sha256": "8091818e3bc16d92be8aaf903f96699883594b389247125ba1f7f01b18242402"
+      "sha256": "4de6ef9b79513b5186e39d29e8ca5e57e2d178a37b5e1ad58feb978043014023"
     },
     "lexhint/__main__.py": {
       "sha256": "935a1c1166b0c1ea35a82256345000bf2c73ded718d77773bc27a71ecce28f7d"
     },
     "lexhint/builder.py": {
-      "sha256": "80355ad7844c58dcb60ad470f0af0276b9d9d666226c3db4ddd04532715ac2d4"
+      "sha256": "d39d8203dbf1c4a074c42a38ec800759c17a4527f4118b57ba25bf01c09b9a7d"
     },
     "lexhint/cli.py": {
-      "sha256": "f7eccd742750e3f395307dac17007936959f23943775e7bc09ccb5a7cb9947d5"
+      "sha256": "ecf8eeed98758d3d7142fc53e78429768c236bb80e5ab2189de69ba1f29e4c05"
+    },
+    "lexhint/datasets.py": {
+      "sha256": "cee5313abfd7f4485222c719a568cbc8f7c256aadd13aaa1072f94355021557e"
     },
     "lexhint/download.py": {
-      "sha256": "f925351e86bd6711e9c45c24f1eda6988409ec29df9e8d4bbe9e8da409ddf93e"
+      "sha256": "258a84d283800faf89f928dae9b34dac82155346db9b80d216aab993ff792285"
     },
     "lexhint/extract.py": {
-      "sha256": "2b9b93408bcf0bca802de51a8e3c98235ebd2993a7009b28ee6ab668d4706f33"
+      "sha256": "b668e8dfdea5e0857374372779d950f881c9159f1cd5c653ccba22d05dfed7a9"
     },
     "lexhint/frequency.py": {
       "sha256": "eb6c6c10449bc1652bc30819e2b684c33820060688d2edb686ed124ca1ba95fd"
@@ -77,11 +80,17 @@
     "lexhint/kaikki.py": {
       "sha256": "fc1a3d02c9dc29345077cbde05f11d52707bda99508a3dfc4e49f562653d8515"
     },
+    "lexhint/languages.py": {
+      "sha256": "6e68ca3dd2669fc15f2655df876ecd0d77fd8a6b8b9b0372f2d692d0ef4ccba5"
+    },
     "lexhint/lexicon.py": {
-      "sha256": "1b2e3e23a296f1594d92cac3f8dd2f4d87b6c42fa05289273f6598c7106b3676"
+      "sha256": "2c66eee83ffb994c43408fee40abb055a7fbedf0b273662c4c474e67146d3be9"
     },
     "lexhint/models.py": {
-      "sha256": "974dbaaabe77c91fd13571517467f2a28455cdc6dbedc57ad519be05c1b89068"
+      "sha256": "24ccbd88e0c47b63935dd0e5f9f2d5f4f02a686de7556ac5890ce18070e34a00"
+    },
+    "lexhint/render.py": {
+      "sha256": "f6fab4e10f997d9bd22d752b55bec5904f81382d4a4f579f547af69d77f3bb1b"
     },
     "lexhint/schema.py": {
       "sha256": "1ae5c396af07272f7f103ecdc49a2aa4759e49503d4a2b033d6774575e0624d4"
@@ -90,16 +99,46 @@
       "sha256": "9924068890fc5d6887da4ef41af73285808d06251f05551d95204e9b37f3a7cd"
     },
     "lexhint/sources.py": {
-      "sha256": "dfa1fbf17b79eaeb9dc3ba9ed281582b78339977d870cfdafe069c39acb724e9"
+      "sha256": "54e98f52e38cf406ebbf51cf71db246afdddd87b96a98718c015bf956c84a97a"
     },
     "lexhint/status.py": {
-      "sha256": "26b61a9f25451123017b50206bc13031bc8ca8f3b52825d8ebf8199260ed47d9"
+      "sha256": "fcb50c36cfb69968bbb583115ebc43b76230ed5de88271476d58b8dc177d7424"
     },
     "lexhint/store.py": {
-      "sha256": "addbf6257ec10cbd3fc4d11d8053e181ab3351794afbf4544062fe9617161f95"
+      "sha256": "06a4c35eb630e889d26fb55cdfdfcb54b95d961c49fb949a82826e8545db50f2"
+    },
+    "lexhint_suggest_api_review.md": {
+      "sha256": "796a4a4847c26fdcdff695b189fd7360705396d53bee6321218b625609f65e07"
     },
     "pyproject.toml": {
-      "sha256": "9afcbb9198b090566d1049a8c5338dcabb5a73ba30a8fce3ac7982cdef3f0664"
+      "sha256": "e22abc510f0ac140f41cf07f590c185385b311673f9bd855aedcf62a67860688"
+    },
+    "tests/test_cli_dataset.py": {
+      "sha256": "ce45926c424cf35430b177e75257dc27c0716aaddfce99ccb40b1146ffbe2524"
+    },
+    "tests/test_cli_dictionary_output.py": {
+      "sha256": "52545e6dce039351b428af6ca78d3eaa615d5b6c1b8487cad121d6ff387c1727"
+    },
+    "tests/test_cli_release_contract.py": {
+      "sha256": "4458701c25b11464402b618bd7362fe3270f0441ac0379d072bffdda36135302"
+    },
+    "tests/test_completion.py": {
+      "sha256": "4f2bdceda445a3e33623c361569b44c5164911aec4df68ae5588e44918fad0d8"
+    },
+    "tests/test_context_targets.py": {
+      "sha256": "cf9f16707587d1d4d9a8e7ee07e04cef82cdf8237ab325797895957402b3f23b"
+    },
+    "tests/test_dataset_catalog.py": {
+      "sha256": "c2d7e5dfdef46bc71d5299a7bdb1bab9d9188366e1b68201954bb76001f1a86b"
+    },
+    "tests/test_dataset_install.py": {
+      "sha256": "0389cabf3cab6a4f6e352a78be3ae9b282c35eae6892732c77993565d0280920"
+    },
+    "tests/test_dataset_resolver.py": {
+      "sha256": "833b831448da5e120acf91e48eff2ef86b1ee57d56d4dfb356b7dc0534d292a1"
+    },
+    "tests/test_dictionary_render.py": {
+      "sha256": "484b39dee53e08d49825d5d44d9a197104e610aa58be819f96a5719c9ae45896"
     },
     "tests/test_download.py": {
       "sha256": "85580eba011d6e90f3307075cb2f092149369d70b855fa0c8ed06ef86cfd04df"
@@ -108,16 +147,25 @@
       "sha256": "898dbac76d8bf5e860cfea077a9f01a3b23ba14a1cc151918eca5a40f1e138f6"
     },
     "tests/test_final_form.py": {
-      "sha256": "e7f4fa685cb3648cd1c4da629877eae52af48d54251074f1b367a7a78e605c0b"
+      "sha256": "465093f9c1639e8fcaa68e56eaea2b6fb5bae86d5af808ff56344e53ea1ace67"
     },
     "tests/test_frequency.py": {
-      "sha256": "83fc2a5612a61db48105a1db65cc19cf6336a1ffe9ac87b5ca9fa5bb59c6468c"
+      "sha256": "1529ff7687e0aa52c87d83044e0f821543040d41bec0088cecfa015c94d34703"
     },
     "tests/test_kaikki.py": {
       "sha256": "03f090683ccb11bc1c8aada320c0bde0442f058705338dd833bbb22123d01e89"
     },
+    "tests/test_locales.py": {
+      "sha256": "d5fcfe61cc243a2b3a989564aeffcab89f5a534a8d6b48f6961586ba662aa51b"
+    },
+    "tests/test_projection.py": {
+      "sha256": "9b54cebcd883814a81fec977302d427a8c8e33282dcaebf75c3e1ea3b41a9f3e"
+    },
+    "tests/test_schema_contract.py": {
+      "sha256": "dc34a24f55b16f5e7ceb048563c9538b1b923629202b17d0693b6ded7e3c9618"
+    },
     "tests/test_sources.py": {
-      "sha256": "520643a9c65e6a9c353fa4fd6ac5cc5ce503c2b696b0b0866548b226ef7945fd"
+      "sha256": "5a95d8a55f2407e16b47dac85b6e89605bf67fd85fac3b7ec2416415aebc81cb"
     },
     "tools/vendor_dictionary.py": {
       "sha256": "8cf7ff067eb2137e1de40f4f14569c76066d62cd699edbe55d393d2dfcdbe3e0"
@@ -125,7 +173,7 @@
   },
   "project_name": "lexhint",
   "project_uuid": "5d725985-8f02-4666-8425-feec381a655e",
-  "reason": "after-archledger-update",
+  "reason": "after-final-implementation",
   "scanner": {
     "exclude": [
       ".git/**",
@@ -156,5 +204,5 @@
     "used": "git"
   },
   "schema": "archledger.source-state.v3",
-  "version": 2
+  "version": 4
 }

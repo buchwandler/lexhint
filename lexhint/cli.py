@@ -46,6 +46,7 @@ from .render import (
 )
 from .schema import PROFILES, normalize_capabilities
 from .status import ArtifactStatus, read_artifact_status
+from .store import normalize_word
 
 _DEFAULT_LANGUAGE = "en"
 _DICTIONARY_DETAILS = ("compact", "standard", "full")
@@ -137,6 +138,7 @@ def _parser() -> argparse.ArgumentParser:
     for name, help_text in (
         ("word", "show lexical membership and commonness"),
         ("segment", "segment a compact alphabetic string"),
+        ("complete", "complete known lexical keys by prefix"),
     ):
         command = sub.add_parser(name, help=help_text)
         command.add_argument("values", nargs="+")
@@ -146,6 +148,8 @@ def _parser() -> argparse.ArgumentParser:
             command.add_argument(
                 "--locale", help="optional regional presentation preference, such as GB or en-US"
             )
+        if name == "complete":
+            command.add_argument("--limit", type=int, default=20)
 
     context = sub.add_parser("context", help="show semantic-domain evidence around a target")
     context.add_argument("text", nargs="+")
@@ -468,6 +472,24 @@ def _run(args: argparse.Namespace, *, style: _Style, json_output: bool) -> int:
             _json({"language": language, "locale": locale, **asdict(info)})
         else:
             _word(info, style)
+        return 0
+    if args.command == "complete":
+        language, prefix = _language(args.values, args.language)
+        lexicon = Lexicon(
+            language, variant=args.variant, dataset_version=args.dataset_version, path=args.path
+        )
+        completions = lexicon.complete(prefix, limit=args.limit)
+        if json_output:
+            _json(
+                {
+                    "language": language,
+                    "prefix": normalize_word(prefix.strip()),
+                    "completions": list(completions),
+                }
+            )
+        else:
+            for completion in completions:
+                print(completion)
         return 0
     if args.command == "segment":
         language, text = _language(args.values, args.language)

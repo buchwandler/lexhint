@@ -7,7 +7,7 @@ section: cross_cutting_concepts
 title: Cross-cutting Concepts
 order: 80
 status: accepted
-version: 11
+version: 13
 body_format: markdown
 ---
 
@@ -15,7 +15,7 @@ body_format: markdown
 
 Schema metadata is explicit and self-describing. `language`, `locale`, `variant`, `schema_version`, and `dataset_version` remain separate dimensions. Locale is optional and does not create `en-GB` or `en-US` artifacts. Strict equality, not a compatibility range, controls SQLite access.
 
-Schema 7 metadata is explicit and self-describing. `lexemes` is always present for lexical capability and already stores lowercase, titlecase, and uppercase attestation flags exposed by `WordEvidence`. `lexeme_domains` exists only for `semantic`; each row stores bounded deterministic weight and source-topic provenance. Rich `entries`, `senses`, `sense_topics`, forms, and pronunciations exist only for `dictionary`. Old partial-cache schemas are rejected and must be rebuilt.
+Schema 7 metadata is explicit and self-describing. `lexemes` is always present for lexical capability and already stores lowercase, titlecase, and uppercase attestation flags exposed by `WordEvidence`. `lexeme_domains` exists only for `semantic`; each row stores bounded deterministic weight and source-topic provenance. Rich `entries`, `senses`, `sense_topics`, forms, and pronunciations exist only for `dictionary`. Old partial-cache schemas are rejected and must be rebuilt. Prefix completion uses the existing `lexemes.word` primary-key range and does not require a schema change.
 
 ### Provenance and data lifecycle
 

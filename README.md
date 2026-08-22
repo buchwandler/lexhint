@@ -22,6 +22,7 @@ lexhint dataset download en
 lexhint dataset list
 lexhint word compiler -l en
 lexhint context "The compiler is 8.3.2." -l en --target 16:21
+lexhint complete comp -l en
 ```
 
 `lexhint dataset download` is the only networked step. `Lexicon`, query commands, and dataset inventory commands use installed files and do not silently contact GitHub.
@@ -76,7 +77,7 @@ american = Lexicon("en", locale="en-US")
 
 `locale` accepts the canonical `GB` and `US` values plus their supported aliases. Without a locale, English remains region-neutral. Locale-aware ordering and labels use only regional tags retained from source data. Frequency remains base-language English data, not British or American frequency.
 
-Runtime access is local-only, deterministic, read-only, and never fetches missing entries or mutates the database. `segment()` and semantic context operations require full authoritative coverage.
+Runtime access is local-only, deterministic, read-only, and never fetches missing entries or mutates the database. `complete()` performs deterministic normalized lexical-key prefix completion and is not a spelling corrector. It requires only the `lexical` capability, returns an exact key first, and ranks remaining full-prefix matches by corpus rank when available or lexical order otherwise. `segment()` and semantic context operations require full authoritative coverage.
 
 The public runtime operations are:
 
@@ -125,6 +126,8 @@ lexhint word compiler -l en
 lexhint word compiler -l en --variant runtime
 lexhint segment chatgpt -l en --dataset-version 2026.08.20
 lexhint context "The compiler is 8.3.2." -l en --target 16:21
+lexhint complete comp -l en --limit 10
+lexhint --json complete comp -l en --limit 10
 lexhint dictionary word compiler -l en --variant rich
 lexhint dictionary status en --variant runtime
 ```

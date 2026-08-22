@@ -3,15 +3,337 @@ doc_path: docs/architecture.md
 linked_sources:
   - lexhint/lexicon.py
 sections:
+  - section_id: md:section:docs/architecture.md::architecture-documentation
+    doc_path: docs/architecture.md
+    heading_path:
+      - Architecture Documentation
+    heading_slug: architecture-documentation
+    line_span:
+      - 8
+      - 11
+    section_hash: 6e8d115551eeedeb145bbefd3ee05c9ed295bcd35a7a27f8756b7f0b8e58b3d2
+    summary: Architecture Documentation
+    text: "# Architecture Documentation
+
+
+      Generated from archledger records. Do not edit this generated file directly."
+    links: []
+  - section_id: md:section:docs/architecture.md::introduction-and-goals
+    doc_path: docs/architecture.md
+    heading_path:
+      - Introduction and Goals
+    heading_slug: introduction-and-goals
+    line_span:
+      - 12
+      - 17
+    section_hash: 77c84f2d9a1c5592669d4fdb1095de5d57e54575d0f71773b90860074e338cc7
+    summary: Introduction and Goals
+    text: "# Introduction and Goals
+
+
+      Lexhint is a small Python runtime plus prebuilt SQLite evidence artifacts. It
+      supplies lexical membership, optional corpus commonness, compact-string segmentation,
+      stable semantic-domain evidence, and optional rich dictionary inspection.
+
+
+      It does not decide how text is spoken. Spokenform and other consumers own tokenization
+      policy, URLs, numbers, versions, acronyms, pronunciation, and interpretation precedence.
+      Dataset publication is outside this repository."
+    links: []
+  - section_id: md:section:docs/architecture.md::runtime-contract
+    doc_path: docs/architecture.md
+    heading_path:
+      - Introduction and Goals
+      - Runtime contract
+    heading_slug: runtime-contract
+    line_span:
+      - 18
+      - 27
+    section_hash: 2a4ffc9a339bb2262bdd7b01aa261b86051f29e028e88212d90b0f050c311d4d
+    summary: Runtime contract
+    text: "## Runtime contract
+
+
+      - `word()` and `contains()` query dictionary-derived `lexemes`.
+
+      - `word()` reports normalized lexical membership and the lowercase, titlecase,
+      and uppercase forms attested by the artifact. `uppercase_only` is a convenience
+      property for a known uppercase-only lexeme.
+
+      - `segment()` uses authoritative full coverage, case flags, dynamic programming,
+      and optional corpus rank. It applies surface-case acceptance, so a case-folded
+      word may be known to `word()` while its observed lowercase segment remains unknown.
+
+      - `entries()` requires the `dictionary` capability.
+
+      - `context_domains()` and `supports_domain()` require `semantic` and full coverage.
+      Their target is a character span: overlapping lexical tokens are excluded, while
+      a target containing no lexical token acts as a virtual boundary and keeps adjacent
+      words eligible at distance 1.
+
+
+      Semantic context is soft evidence. Positive evidence is not semantic certainty,
+      and missing evidence is not semantic negation. Capability, coverage, schema, language,
+      and missing-artifact failures have controlled public exceptions."
+    links: []
+  - section_id: md:section:docs/architecture.md::requirements-overview
+    doc_path: docs/architecture.md
+    heading_path:
+      - Introduction and Goals
+      - Requirements Overview
+    heading_slug: requirements-overview
+    line_span:
+      - 28
+      - 31
+    section_hash: 3be1875ce3a3f50220e0dab229b7ccb0a5618de4393664b5537b8574853f7ad2
+    summary: Requirements Overview
+    text: "## Requirements Overview
+
+
+      <!-- archledger: no accepted records for this section yet -->"
+    links: []
+  - section_id: md:section:docs/architecture.md::quality-goals
+    doc_path: docs/architecture.md
+    heading_path:
+      - Introduction and Goals
+      - Quality Goals
+    heading_slug: quality-goals
+    line_span:
+      - 32
+      - 35
+    section_hash: c96cb0352c5ea0e1254e2ad2a02ff763696e4b967cb9757a13bcd6f7694bc41a
+    summary: Quality Goals
+    text: "## Quality Goals
+
+
+      <!-- archledger: no accepted records for this section yet -->"
+    links: []
+  - section_id: md:section:docs/architecture.md::stakeholders
+    doc_path: docs/architecture.md
+    heading_path:
+      - Introduction and Goals
+      - Stakeholders
+    heading_slug: stakeholders
+    line_span:
+      - 36
+      - 39
+    section_hash: 5bf2c464abc0e9d6bb929ccbab059f3fd1ba72adeba8b125affe5918bd7b9f89
+    summary: Stakeholders
+    text: "## Stakeholders
+
+
+      <!-- archledger: no accepted records for this section yet -->"
+    links: []
+  - section_id: md:section:docs/architecture.md::architecture-constraints
+    doc_path: docs/architecture.md
+    heading_path:
+      - Architecture Constraints
+    heading_slug: architecture-constraints
+    line_span:
+      - 40
+      - 55
+    section_hash: 0e8a5d900e90c1bb48298a54091d4a9527f6db96b719a8cc9b973104624c0af7
+    summary: Architecture Constraints
+    text: "# Architecture Constraints
+
+
+      The architecture is constrained by a local, self-describing SQLite artifact and
+      by the external sources used to build it.
+
+
+      - `lexhint.Lexicon` opens artifacts through SQLite read-only mode.
+
+      - Runtime operations never fetch network resources, create missing lexemes, or
+      write partial caches.
+
+      - The CLI resolves default cached or vendored artifacts for ordinary reads and
+      exposes `dictionary status` for current SQL counts.
+
+      - `SCHEMA_VERSION` is an exact artifact compatibility key. Current schema 7 clients
+      select and open only schema 7 artifacts; schema families are stored side by side
+      under `s<schema>` paths.
+
+      - Metadata records schema version, base language, coverage, profile, capabilities,
+      creation time, builder version, and source provenance.
+
+      - `lexemes` is present for the lexical capability. Semantic and dictionary tables
+      are capability-specific.
+
+      - Default builds select `lexical,semantic,dictionary` and automatic pinned full
+      FrequencyWords enrichment.
+
+      - Frequency is enrichment, not a capability.
+
+      - External dictionary and corpus data remain separate from the Apache-2.0 code
+      and retain their licensing obligations.
+
+
+      <!-- archledger: no accepted records for this section yet -->"
+    links: []
+  - section_id: md:section:docs/architecture.md::context-and-scope
+    doc_path: docs/architecture.md
+    heading_path:
+      - Context and Scope
+    heading_slug: context-and-scope
+    line_span:
+      - 56
+      - 59
+    section_hash: a7ca364b5483b1ef18d844fd9fd04f8e1601068348542bcab5b5ead068481073
+    summary: Context and Scope
+    text: "# Context and Scope
+
+
+      Lexhint sits between lexical data artifacts and a text-normalization or speech
+      consumer."
+    links: []
+  - section_id: md:section:docs/architecture.md::business-context
+    doc_path: docs/architecture.md
+    heading_path:
+      - Context and Scope
+      - Business context
+    heading_slug: business-context
+    line_span:
+      - 60
+      - 68
+    section_hash: 686bbcf24f4e70b0625498689388ea2f1bbce60ef3187c3e161772ec68bb446b
+    summary: Business context
+    text: "## Business context
+
+
+      ```text
+
+      Lexical and semantic evidence ──> lexhint ──> consumer interpretation and speech
+      policy
+
+      Corpus frequency enrichment ────> lexhint ──> lexical ranking and evidence
+
+      ```
+
+
+      The consumer decides what an unknown run, version, or candidate should mean. Lexhint
+      ends at evidence and does not own tokenization, pronunciation, or interpretation
+      precedence."
+    links: []
+  - section_id: md:section:docs/architecture.md::technical-context
+    doc_path: docs/architecture.md
+    heading_path:
+      - Context and Scope
+      - Technical context
+    heading_slug: technical-context
+    line_span:
+      - 69
+      - 77
+    section_hash: 985ba3847a0ed4bd1694ae1d21a3735dbd01f400c87d8ae567b35ecffd40ecc2
+    summary: Technical context
+    text: "## Technical context
+
+
+      - Wiktextract/Kaikki JSONL supplies lexical and semantic data during builds.
+
+      - FrequencyWords enriches existing lexemes with corpus fields.
+
+      - A local SQLite artifact is the runtime boundary.
+
+      - No service endpoint or daemon is required."
+    links: []
+  - section_id: md:section:docs/architecture.md::business-context-2
+    doc_path: docs/architecture.md
+    heading_path:
+      - Context and Scope
+      - Business Context
+    heading_slug: business-context-2
+    line_span:
+      - 78
+      - 81
+    section_hash: 192e6f8f23e13bb25a7e3d93211002aa48a30ec4fab5863449c28ecca403029f
+    summary: Business Context
+    text: "## Business Context
+
+
+      <!-- archledger: no accepted records for this section yet -->"
+    links: []
+  - section_id: md:section:docs/architecture.md::technical-context-2
+    doc_path: docs/architecture.md
+    heading_path:
+      - Context and Scope
+      - Technical Context
+    heading_slug: technical-context-2
+    line_span:
+      - 82
+      - 85
+    section_hash: 5b91554f689baf6bcc85dfa374c35a9f3ff4e2dc636eb9ae39236411eb130aa1
+    summary: Technical Context
+    text: "## Technical Context
+
+
+      <!-- archledger: no accepted records for this section yet -->"
+    links: []
+  - section_id: md:section:docs/architecture.md::solution-strategy
+    doc_path: docs/architecture.md
+    heading_path:
+      - Solution Strategy
+    heading_slug: solution-strategy
+    line_span:
+      - 86
+      - 99
+    section_hash: 9f82b00a99c7fc9d417f87edbd4c41abfac67ef07ca66da77c3263065dbc453c
+    summary: Solution Strategy
+    text: "# Solution Strategy
+
+
+      The solution is organized around a small, explicit evidence pipeline.
+
+
+      1. Resolve canonical capabilities, profile, frequency mode, source paths, and
+      offline or refresh policy in an immutable build plan before schema creation.
+
+      2. Keep lexical membership and corpus frequency evidence independent from semantic
+      dictionary evidence.
+
+      3. Build rich dictionary tables only for the `dictionary` capability and materialize
+      topic projections only for `semantic`.
+
+      4. Use authoritative full coverage, case flags, and dynamic programming for compact-string
+      segmentation.
+
+      5. Exclude every token overlapping the target span from semantic context scoring.
+
+      6. Query nearby context words in batches and apply bounded distance decay to explicit
+      domain evidence.
+
+      7. Validate pinned source hashes and use temporary files followed by atomic rename
+      for downloaded and rebuilt artifacts.
+
+      8. Keep the consumer boundary narrow. Speech pronunciation rules remain downstream.
+
+      9. Emit build configuration and progress on stderr so successful JSON output remains
+      a single stdout document."
+    links: []
+  - section_id: md:section:docs/architecture.md::strategy-items
+    doc_path: docs/architecture.md
+    heading_path:
+      - Solution Strategy
+      - Strategy Items
+    heading_slug: strategy-items
+    line_span:
+      - 100
+      - 103
+    section_hash: e31c139a95abf895c0a65f82aeed6b073a7cf0e66ea24d13f953476d66233d9e
+    summary: Strategy Items
+    text: "## Strategy Items
+
+
+      <!-- archledger: no accepted records for this section yet -->"
+    links: []
   - section_id: md:section:docs/architecture.md::building-block-view
     doc_path: docs/architecture.md
     heading_path:
       - Building Block View
     heading_slug: building-block-view
     line_span:
-      - 100
-      - 114
-    section_hash: 201aa53223c34b7217d6779a15ccee2aeb645fb29d979d5fbff8c0f9ef13ae0f
+      - 104
+      - 118
+    section_hash: d8459a6c44a45d0c5a49b197ae97120e8dc24e6fe80761d1008ef5f69a9d3a2a
     summary: Building Block View
     text: "# Building Block View
 
@@ -19,8 +341,8 @@ sections:
       The package is organized around a local artifact runtime and focused build modules.
 
 
-      - `lexhint.lexicon.Lexicon` owns read-only artifact access, lexical lookup, segmentation,
-      dictionary inspection, and semantic evidence queries.
+      - `lexhint.lexicon.Lexicon` owns read-only artifact access, lexical lookup, prefix
+      completion, segmentation, dictionary inspection, and semantic evidence queries.
 
       - `lexhint.schema` defines schema and capability validation for the self-describing
       SQLite artifact.
@@ -45,7 +367,10 @@ sections:
 
 
       The public package exports `Lexicon` and `SemanticDomain` as the principal consumer
-      interface. Build and source helpers remain available from their owning modules."
+      interface. It also exports `SCHEMA_VERSION`, `DATASET_VARIANTS`, `DATASET_VARIANT_NAMES`,
+      `DEFAULT_DATASET_VARIANT`, and `supported_base_languages()` for the separate dataset
+      publisher contract. Build and source helpers remain available from their owning
+      modules."
     links:
       - source_id: py:class:lexhint/lexicon.py::Lexicon
         source_path: lexhint/lexicon.py
@@ -53,49 +378,505 @@ sections:
         impact: unknown
         reason: The building-block view names the Lexicon component.
         tracked_hashes:
-          body_hash: b0d05e0c6ea4ae5bda0bae2759ae4d33985dbcd7d6746049867005bff80f25bb
-  - section_id: md:section:docs/architecture.md::bulk-dictionary-build
+          body_hash: fbd7a21e82b0f2e75590145c32bf1ed906af4584856301a2d60a8d8a655a6bcb
+  - section_id: md:section:docs/architecture.md::consumer-interface
     doc_path: docs/architecture.md
     heading_path:
-      - Glossary
-      - Runtime View
-      - Bulk dictionary build
-    heading_slug: bulk-dictionary-build
+      - Building Block View
+      - Consumer interface
+    heading_slug: consumer-interface
     line_span:
-      - 249
-      - 250
-    section_hash: 968527f0d7cb552a870fb773e0ae8897f657becbaca83eeb4a84c8938efe7bb1
-    summary: Bulk dictionary build
+      - 119
+      - 139
+    section_hash: d740aa00b9c7bcf19c871dc2c80e72230462bdd71935d75538a2e0c70caf625d
+    summary: Consumer interface
+    text:
+      "## Consumer interface\n\n```python\nfrom lexhint import Lexicon, SemanticDomain\n\
+      \nlexicon = Lexicon.from_path(\"en.sqlite3\")\ncompletions = lexicon.complete(\"\
+      comp\")\nsegments = lexicon.segment(\"chatgpt\")\ntext = \"The compiler is 8.3.2.\"\
+      \nstart = text.index(\"8.3.2\")\nevidence = lexicon.supports_domain(\n    text,\
+      \ target=(start, start + len(\"8.3.2\")), domain=SemanticDomain.COMPUTING\n)\n\
+      ```\n\nThe consumer decides what an unknown run, version, or candidate should\
+      \ mean. Lexhint ends at evidence.\n\n\n\n<!-- archledger: no accepted records\
+      \ for this section yet -->"
     links: []
-  - section_id: md:section:docs/architecture.md::lazy-dictionary-context
+  - section_id: md:section:docs/architecture.md::runtime-view
     doc_path: docs/architecture.md
     heading_path:
-      - Glossary
       - Runtime View
-      - Lazy dictionary context
-    heading_slug: lazy-dictionary-context
+    heading_slug: runtime-view
+    line_span:
+      - 140
+      - 141
+    section_hash: 0ba1bc07231883ae7704c4c555be5db38e24a36949655efbda1f3efc4e9eb657
+    summary: Runtime View
+    text: "# Runtime View"
+    links: []
+  - section_id: md:section:docs/architecture.md::lexical-lookup-and-segmentation
+    doc_path: docs/architecture.md
+    heading_path:
+      - Runtime View
+      - Lexical lookup and segmentation
+    heading_slug: lexical-lookup-and-segmentation
+    line_span:
+      - 142
+      - 149
+    section_hash: a762ea2edf272558e73dc014499d66057b2fc02330adadc542e6361bcd4f5936
+    summary: Lexical lookup and segmentation
+    text: "## Lexical lookup and segmentation
+
+
+      1. The consumer constructs `Lexicon` from one local SQLite artifact, resolved
+      from the vendored, configured cache, or schema-aware managed dataset path when
+      no override is supplied.
+
+      2. Construction validates exact schema version, base language, coverage, and explicit
+      capabilities before queries.
+
+      3. An optional locale such as `GB` or `US` is runtime presentation state. It does
+      not change artifact resolution or physical English dataset identity.
+
+      4. `word()` and `contains()` query dictionary-derived lexemes. `word()` exposes
+      casing attestation already stored in the lexeme row. `complete()` performs bounded
+      normalized prefix completion through exact lookup and indexed lexical range queries.
+      `segment()` evaluates known spans using authoritative full coverage, case flags,
+      dynamic programming, and optional corpus rank, while retaining strict surface-case
+      acceptance.
+
+      5. Runtime reads do not acquire missing data or write to the artifact."
+    links: []
+  - section_id: md:section:docs/architecture.md::semantic-evidence
+    doc_path: docs/architecture.md
+    heading_path:
+      - Runtime View
+      - Semantic evidence
+    heading_slug: semantic-evidence
+    line_span:
+      - 150
+      - 160
+    section_hash: 8343183ccbeafc219e77f36f8d6279522f0683c8c53910c0835fa8a91d14f857
+    summary: Semantic evidence
+    text: "## Semantic evidence
+
+
+      1. `lexhint.semantics` maps supported raw source topics to stable `SemanticDomain`
+      values at build time.
+
+      2. Context distances are measured from the target character span. Every lexical
+      token overlapping a non-empty target is excluded. If no lexical token overlaps,
+      the target is a virtual insertion boundary and no real token is discarded.
+
+      3. Nearby words are queried in batches. Domain weights receive configurable distance
+      decay, with adjacent eligible tokens at distance 1.
+
+      4. Results preserve cue text, character spans, token distance, and contribution
+      weight. The candidate cannot validate itself. Domain results are hints rather
+      than sense-disambiguated semantic certainty, and missing evidence is not negative
+      evidence.
+
+
+
+
+      <!-- archledger: no accepted records for this section yet -->"
+    links: []
+  - section_id: md:section:docs/architecture.md::deployment-view
+    doc_path: docs/architecture.md
+    heading_path:
+      - Deployment View
+    heading_slug: deployment-view
+    line_span:
+      - 161
+      - 176
+    section_hash: a8fcebb99b3edbc7f95088530e92cac94234f7b77f4afe941d37d9a7eb49244f
+    summary: Deployment View
+    text: "# Deployment View
+
+
+      Lexhint is deployed as a local Python package and a local SQLite evidence artifact.
+      There is no application server, worker, or persistent service.
+
+
+      - Consumers install the package and open an artifact with `Lexicon.from_path()`
+      or the default `Lexicon` resolution.
+
+      - Artifact paths are selected by the caller or build workflow; CLI `--path` is
+      an explicit override.
+
+      - `dictionary status` reports current row counts and metadata without rebuilding
+      the artifact.
+
+      - A complete local artifact supports offline lexical, segmentation, dictionary,
+      and semantic reads when the corresponding capabilities are present.
+
+      - Generated artifacts contain source and hash provenance for dictionary and corpus
+      inputs.
+
+      - Build downloads and replacements use temporary files and atomic rename.
+
+      - Generated external datasets are distributed separately from code according to
+      `DATA_SOURCES.md`.
+
+
+
+
+      <!-- archledger: no accepted records for this section yet -->"
+    links: []
+  - section_id: md:section:docs/architecture.md::cross-cutting-concepts
+    doc_path: docs/architecture.md
+    heading_path:
+      - Cross-cutting Concepts
+    heading_slug: cross-cutting-concepts
+    line_span:
+      - 177
+      - 178
+    section_hash: 123dcca719a6d5f1dcd7fb73e8ea138a9470d204bbb7291e5c6e0cbcf99201de
+    summary: Cross-cutting Concepts
+    text: "# Cross-cutting Concepts"
+    links: []
+  - section_id: md:section:docs/architecture.md::capability-specific-schema
+    doc_path: docs/architecture.md
+    heading_path:
+      - Cross-cutting Concepts
+      - Capability-specific schema
+    heading_slug: capability-specific-schema
+    line_span:
+      - 179
+      - 184
+    section_hash: 66a32be1ab7c0195ddc98b94a1fa9984c1d0148acb21dc6459150c4367a3984e
+    summary: Capability-specific schema
+    text: "### Capability-specific schema
+
+
+      Schema metadata is explicit and self-describing. `language`, `locale`, `variant`,
+      `schema_version`, and `dataset_version` remain separate dimensions. Locale is
+      optional and does not create `en-GB` or `en-US` artifacts. Strict equality, not
+      a compatibility range, controls SQLite access.
+
+
+      Schema 7 metadata is explicit and self-describing. `lexemes` is always present
+      for lexical capability and already stores lowercase, titlecase, and uppercase
+      attestation flags exposed by `WordEvidence`. `lexeme_domains` exists only for
+      `semantic`; each row stores bounded deterministic weight and source-topic provenance.
+      Rich `entries`, `senses`, `sense_topics`, forms, and pronunciations exist only
+      for `dictionary`. Old partial-cache schemas are rejected and must be rebuilt.
+      Prefix completion uses the existing `lexemes.word` primary-key range and does
+      not require a schema change."
+    links: []
+  - section_id: md:section:docs/architecture.md::provenance-and-data-lifecycle
+    doc_path: docs/architecture.md
+    heading_path:
+      - Cross-cutting Concepts
+      - Provenance and data lifecycle
+    heading_slug: provenance-and-data-lifecycle
+    line_span:
+      - 185
+      - 188
+    section_hash: f02f8586fca72897baa47963fd0ce17dfb0d1e6f0a0ad8ed0b242f4a24e3c64c
+    summary: Provenance and data lifecycle
+    text: "### Provenance and data lifecycle
+
+
+      Metadata records `dictionary_source`, `dictionary_source_sha256`, `frequency_source`,
+      and `frequency_source_sha256`, alongside profile, capabilities, creation time,
+      and builder version. Remote dictionary input is hashed while streamed. Automatic
+      FrequencyWords sources are cached by pinned revision and language, validated against
+      an atomic SHA-256 sidecar, and downloaded through temporary files followed by
+      atomic rename."
+    links: []
+  - section_id: md:section:docs/architecture.md::errors-and-offline-behavior
+    doc_path: docs/architecture.md
+    heading_path:
+      - Cross-cutting Concepts
+      - Errors and offline behavior
+    heading_slug: errors-and-offline-behavior
+    line_span:
+      - 189
+      - 192
+    section_hash: 504b258446748da0fd3736a54fbb2ef1c4a4c78ae59ad20ec313a94a8b69182d
+    summary: Errors and offline behavior
+    text: "### Errors and offline behavior
+
+
+      Capability, coverage, schema, language, and missing-artifact failures have controlled
+      public exceptions. Offline mode rejects every HTTP(S) build source and permits
+      only local or already validated cached inputs. Frequency acquisition fails the
+      build unless the caller explicitly selects `--no-frequency` or a custom source.
+      Missing semantic evidence is not semantic negation."
+    links: []
+  - section_id: md:section:docs/architecture.md::verification-and-licensing
+    doc_path: docs/architecture.md
+    heading_path:
+      - Cross-cutting Concepts
+      - Verification and licensing
+    heading_slug: verification-and-licensing
+    line_span:
+      - 193
+      - 198
+    section_hash: 849b2f2474ae43b5b85e951ed30f0b003a341d5ad2c23aa857173adcb20ac908
+    summary: Verification and licensing
+    text: "### Verification and licensing
+
+
+      Tests cover read-only behavior, no-network guards, segmentation, case attestation,
+      virtual-boundary semantic target anchoring, schema and capability validation,
+      frequency policy, semantic target exclusion, CLI contracts, and source extraction.
+      External dictionary and corpus data remain subject to the obligations documented
+      in `DATA_SOURCES.md`."
+    links: []
+  - section_id: md:section:docs/architecture.md::explicit-immutable-managed-dataset-artifacts
+    doc_path: docs/architecture.md
+    heading_path:
+      - Cross-cutting Concepts
+      - Explicit immutable managed dataset artifacts
+    heading_slug: explicit-immutable-managed-dataset-artifacts
+    line_span:
+      - 199
+      - 202
+    section_hash: 01498a6f9d821ccf3a15b54b530dc5bc67b319e08a5abd35df8c5d7a3068875e
+    summary: Explicit immutable managed dataset artifacts
+    text: "## Explicit immutable managed dataset artifacts
+
+
+      Lexhint treats published datasets as explicit, immutable local artifacts rather
+      than package-installed Python models. The dataset manager stores artifacts by
+      normalized base language, capability variant, exact schema family, and exact release
+      version under the persistent data directory. Downloads stream gzip data, verify
+      manifest hashes, sizes, schema, language, coverage, and capabilities, then atomically
+      install the database and sidecar metadata. Runtime Lexicon construction resolves
+      only installed files and never contacts the network automatically. The highest-capability
+      compatible installed variant is selected by default, while callers may pin a variant
+      and release version."
+    links: []
+  - section_id: md:section:docs/architecture.md::architecture-decisions
+    doc_path: docs/architecture.md
+    heading_path:
+      - Architecture Decisions
+    heading_slug: architecture-decisions
+    line_span:
+      - 203
+      - 220
+    section_hash: fc21bdbe862a02eb2ebb8a1f23b88a8146c2d5326c84f8a89bab6ad3f2067699
+    summary: Architecture Decisions
+    text: "# Architecture Decisions
+
+
+      The current architecture records these decisions.
+
+
+      - **Use a self-describing SQLite artifact.** Schema, language, coverage, profile,
+      capabilities, and provenance are validated at runtime.
+
+      - **Separate lexical, semantic, and dictionary capabilities.** Consumers can select
+      the evidence they need without allowing data from an older artifact to leak into
+      a fresh build.
+
+      - **Use indexed lexical ranges for completion.** `complete()` is a local read-only
+      normalized prefix query with exact-match priority and explicit frequency or lexical
+      ordering.
+
+      - **Treat frequency as enrichment.** Corpus rank improves segmentation and commonness
+      evidence but does not define lexical capability.
+
+      - **Build fresh artifacts atomically.** Capability-specific tables are created
+      from the resolved build plan and replacements cannot expose partial output.
+
+      - **Use stable semantic domains.** Raw source topics are projected into a small
+      deterministic taxonomy at build time.
+
+      - **Expose case attestation without weakening segmentation.** `word()` exposes
+      normalized membership and stored case forms, while `segment()` retains surface-case
+      acceptance so consumers can apply context-specific policy.
+
+      - **Anchor semantic context to character spans.** Overlapping target tokens are
+      excluded; a target with no lexical token is a virtual boundary whose adjacent
+      cues remain eligible at distance 1.
+
+      - **Treat semantic context as soft evidence.** Lexhint reports explainable hints,
+      not sense disambiguation or semantic certainty.
+
+      - **Keep the runtime read-only and offline by default.** Acquisition belongs to
+      explicit build workflows.
+
+      - **Keep a narrow consumer boundary.** Lexhint supplies evidence; downstream consumers
+      own interpretation and speech rendering.
+
+
+      <!-- archledger: no accepted records for this section yet -->"
+    links: []
+  - section_id: md:section:docs/architecture.md::quality-requirements
+    doc_path: docs/architecture.md
+    heading_path:
+      - Quality Requirements
+    heading_slug: quality-requirements
+    line_span:
+      - 221
+      - 233
+    section_hash: 61548126e8f7083475a2b2f666ba38b82c68723bb20e6824ec92ede370148d13
+    summary: Quality Requirements
+    text: "# Quality Requirements
+
+
+      | Quality attribute | Architectural response                                                                                           |
+      Observable scenario                                                                                |
+
+      | ----------------- | ----------------------------------------------------------------------------------------------------------------
+      | --------------------------------------------------------------------------------------------------
+      |
+
+      | Correctness       | Explicit schema and capability validation, case-aware lexemes,
+      authoritative full coverage, and target exclusion | A candidate is never used
+      as its own semantic cue and incompatible artifacts fail at construction. |
+
+      | Determinism       | Stable source projections, bounded weights, immutable build
+      plans, and explicit result fields                    | Repeating a local query
+      returns the same segments and evidence ordering.                           |
+
+      | Performance       | Indexed SQLite lookups, bounded context windows, batched
+      nearby-word queries, and streamed builds                | A context query evaluates
+      only the bounded local evidence window.                                  |
+
+      | Resilience        | Read-only runtime access, source hashes, temporary downloads,
+      and atomic replacement                             | A failed build does not replace
+      an existing artifact with partial output.                          |
+
+      | Maintainability   | Focused runtime and build modules, capability-specific schema,
+      and boundary tests                                | Schema, extraction, semantic
+      projection, storage, and CLI behavior can be checked independently.   |
+
+      | Compliance        | External resources remain separate from code and provenance
+      is embedded in artifacts                             | A distributor can review
+      data obligations before distributing generated artifacts.                 |"
+    links: []
+  - section_id: md:section:docs/architecture.md::quality-requirements-overview
+    doc_path: docs/architecture.md
+    heading_path:
+      - Quality Requirements
+      - Quality Requirements Overview
+    heading_slug: quality-requirements-overview
+    line_span:
+      - 234
+      - 237
+    section_hash: e4fcba446f1815baef2891cdcd035305de881546ee296ca1f1e16acaa478cd6e
+    summary: Quality Requirements Overview
+    text: "## Quality Requirements Overview
+
+
+      <!-- archledger: no accepted records for this section yet -->"
+    links: []
+  - section_id: md:section:docs/architecture.md::quality-scenarios
+    doc_path: docs/architecture.md
+    heading_path:
+      - Quality Requirements
+      - Quality Scenarios
+    heading_slug: quality-scenarios
+    line_span:
+      - 238
+      - 241
+    section_hash: 5918e1b96bf6890315337575fcda0c066866631fa21b35d215e3de0a6ee771c7
+    summary: Quality Scenarios
+    text: "## Quality Scenarios
+
+
+      <!-- archledger: no accepted records for this section yet -->"
+    links: []
+  - section_id: md:section:docs/architecture.md::risks-and-technical-debt
+    doc_path: docs/architecture.md
+    heading_path:
+      - Risks and Technical Debt
+    heading_slug: risks-and-technical-debt
+    line_span:
+      - 242
+      - 250
+    section_hash: d809a5ae7d5c4f9234675f80188a63ee2ba6dce5414e6463d76a1f2d2e173c66
+    summary: Risks and Technical Debt
+    text: "# Risks and Technical Debt
+
+
+      - **Upstream availability and format drift.** FrequencyWords and Wiktextract/Kaikki
+      remain external inputs. Hash validation and source checks reduce silent corruption,
+      but upstream changes can still prevent builds.
+
+      - **External data licensing.** Generated artifacts inherit obligations from their
+      dictionary and corpus sources. Redistribution must follow `DATA_SOURCES.md`.
+
+      - **Heuristic segmentation.** Dynamic-programming segmentation is evidence, not
+      linguistic analysis, and may need tuning for new languages or identifier styles.
+
+      - **Incomplete capability coverage.** A consumer cannot use dictionary or semantic
+      operations when the artifact lacks those capabilities. Missing evidence must not
+      be treated as semantic negation.
+
+      - **Schema evolution.** Incompatible schema or capability changes require rebuilding
+      artifacts.
+
+      - **Scope boundary.** Lexhint does not pronounce text, tokenize all consumer inputs,
+      or resolve interpretation precedence. Those responsibilities remain downstream."
+    links: []
+  - section_id: md:section:docs/architecture.md::risk-overview
+    doc_path: docs/architecture.md
+    heading_path:
+      - Risks and Technical Debt
+      - Risk Overview
+    heading_slug: risk-overview
     line_span:
       - 251
-      - 252
-    section_hash: 822cde38aa8c591f9ca72337aebce09547ee8cc13f0c3863e9786f24c55b9b77
-    summary: Lazy dictionary context
+      - 254
+    section_hash: b63ad8bc76454d7710f7779bd73eff44171dc04156e15276a7a483c8dd40e1f1
+    summary: Risk Overview
+    text: "## Risk Overview
+
+
+      <!-- archledger: no accepted records for this section yet -->"
     links: []
-  - section_id: md:section:docs/architecture.md::word-membership-and-segmentation
+  - section_id: md:section:docs/architecture.md::glossary
     doc_path: docs/architecture.md
     heading_path:
       - Glossary
-      - Runtime View
-      - Word membership and segmentation
-    heading_slug: word-membership-and-segmentation
+    heading_slug: glossary
     line_span:
-      - 253
-      - 254
-    section_hash: ebacd4cc3ac7f2734b899e10b0cd9190e4eabd63b39ea63228bff584487e3f2b
-    summary: Word membership and segmentation
+      - 255
+      - 268
+    section_hash: b3ad228bcf1e660359958b0af10c9d15d81a27bed1416785f43fceef6b2600c3
+    summary: Glossary
+    text: "# Glossary
+
+
+      - **Lexicon:** The read-only runtime that opens one self-describing SQLite evidence
+      artifact.
+
+      - **Lexeme:** A dictionary-derived lexical row with case flags and optional corpus
+      fields.
+
+      - **SemanticDomain:** A stable taxonomy value projected from supported source
+      topics.
+
+      - **Capability:** An explicit artifact feature such as `lexical`, `semantic`,
+      or `dictionary`.
+
+      - **Full coverage:** An authoritative artifact suitable for segmentation and semantic
+      context queries.
+
+      - **Context cue:** A nearby non-target token whose domain evidence contributes
+      a bounded score.
+
+      - **Target span:** The source character interval excluded from semantic context
+      evidence.
+
+      - **Wiktextract/Kaikki:** The upstream dictionary data used for lexical, semantic,
+      and rich dictionary builds.
+
+      - **FrequencyWords:** The upstream corpus source used to enrich existing lexemes
+      with commonness fields.
+
+      - **Spokenform:** A downstream consumer that owns tokenization, interpretation,
+      pronunciation, and speech policy.
+
+
+      <!-- archledger: no accepted records for this section yet -->"
     links: []
-last_fresh_scan_version: 9
-last_fresh_hash: 88a18f21b6270bfb6ecf6e3e4a37da33a4045a726952138c5576a5a0222972b4
+last_fresh_scan_version: 12
+last_fresh_hash: 8928486b7b64d41dc638c34517528930ddc4b1fecb30fc165139dc342217c194
 notes:
-  Documentation updated and Sphinx validation passed after release-readiness
-  changes.
-version: 33
+  Final completion implementation validated; linked runtime and architecture
+  docs remain current.
+version: 44
