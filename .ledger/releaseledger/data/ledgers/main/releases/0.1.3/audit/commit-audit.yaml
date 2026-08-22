@@ -1,0 +1,119 @@
+schema_version: 1
+object_type: commit_audit_sheet
+versioning:
+  schema_version: 1
+  revision: 3
+release_version: 0.1.3
+git_base_ref: v0.1.2
+git_base_sha: baa2ddddb6211c89fbcee44790796159d47ca5c9
+git_head_ref: HEAD
+git_head_sha: 0e7f8d4d435222a1f3f8109d7089b6fd181315ee
+git_range: baa2ddddb6211c89fbcee44790796159d47ca5c9..0e7f8d4d435222a1f3f8109d7089b6fd181315ee
+commit_count: 3
+rows:
+  - sha: f2f1c7838f01adbc79eaf2481aa968851acb1a6d
+    source_ref: git:f2f1c7838f01adbc79eaf2481aa968851acb1a6d
+    short_sha: f2f1c78
+    changed_paths:
+      - lexhint/lexicon.py
+      - tests/test_suggestions.py
+    stats:
+      files_changed: 0
+      insertions: 97
+      deletions: 0
+    inspected: true
+    inspected_paths:
+      - lexhint/lexicon.py
+      - tests/test_suggestions.py
+    observed_behavior:
+      Added deterministic bounded lexical prefix candidate lookup with
+      exact-match priority, similarity ranking, corpus-rank tie-breaking, input validation,
+      and focused tests; the later completion implementation supersedes the public name
+      and matching contract.
+    public_impact: public
+    decision: grouped
+    evidence_subject: "feat: suggestions added"
+    target_entry_key: completion
+    target_entry_id: entry-0001
+    notes: Group with the finalized complete API entry from 9946e356.
+  - sha: 9946e356111481e41352b0167c01f88a299d69f5
+    source_ref: git:9946e356111481e41352b0167c01f88a299d69f5
+    short_sha: 9946e35
+    changed_paths:
+      - .ledger/archledger/data/document-state.json
+      - .ledger/archledger/data/profiles/arc42/sections/content-0005.md
+      - .ledger/archledger/data/profiles/arc42/sections/content-0006.md
+      - .ledger/archledger/data/profiles/arc42/sections/content-0008.md
+      - .ledger/archledger/data/profiles/arc42/sections/content-0009.md
+      - .ledger/archledger/data/source-state.json
+      - .ledger/documentledger/data/docs/docs-architecture-md-140eef3b.yaml
+      - .ledger/documentledger/data/docs/docs-changelog-md-77f023b9.yaml
+      - .ledger/documentledger/data/docs/docs-index-md-b4d68dc8.yaml
+      - .ledger/documentledger/data/docs/readme-md-b3356305.yaml
+      - .ledger/documentledger/data/scan.yaml
+      - .ledger/documentledger/data/source-index.json
+      - .ledger/documentledger/data/storage.yaml
+      - .ledger/releaseledger/data/ledgers/main/events/events.jsonl
+      - .ledger/releaseledger/data/ledgers/main/releases/0.1.2/entries/entry-0003.md
+      - .ledger/releaseledger/data/ledgers/main/releases/0.1.2/release.md
+      - README.md
+      - docs/architecture.md
+      - docs/changelog.md
+      - lexhint/cli.py
+      - lexhint/lexicon.py
+      - tests/test_completion.py
+      - tests/test_suggestions.py
+    stats:
+      files_changed: 0
+      insertions: 4480
+      deletions: 1074
+    inspected: true
+    inspected_paths:
+      - README.md
+      - docs/architecture.md
+      - lexhint/cli.py
+      - lexhint/lexicon.py
+      - tests/test_completion.py
+    observed_behavior:
+      Added the public Lexicon.complete API and complete CLI command
+      for normalized exact and full-prefix lexical completion, with deterministic lexical
+      or corpus-rank ordering, literal-prefix handling, JSON output, documentation,
+      and regression coverage.
+    public_impact: public
+    decision: accepted
+    evidence_subject: "feat: complete command added"
+    target_entry_key: completion
+    target_entry_id: entry-0001
+    notes: Finalized completion behavior supersedes the earlier suggestion implementation.
+  - sha: 0e7f8d4d435222a1f3f8109d7089b6fd181315ee
+    source_ref: git:0e7f8d4d435222a1f3f8109d7089b6fd181315ee
+    short_sha: 0e7f8d4
+    changed_paths:
+      - README.md
+      - lexhint/cli.py
+      - lexhint/render.py
+      - lexhint/terminal.py
+      - tests/test_cli_dictionary_output.py
+      - tests/test_dictionary_render.py
+    stats:
+      files_changed: 0
+      insertions: 237
+      deletions: 55
+    inspected: true
+    inspected_paths:
+      - README.md
+      - lexhint/cli.py
+      - lexhint/render.py
+      - lexhint/terminal.py
+      - tests/test_cli_dictionary_output.py
+      - tests/test_dictionary_render.py
+    observed_behavior:
+      Added opt-in ANSI styling for human dictionary output with automatic
+      interactive-terminal detection, NO_COLOR and --no-color controls, JSON and non-TTY
+      safety, and visible-width regression coverage.
+    public_impact: public
+    decision: accepted
+    evidence_subject: "feat: colorful output"
+    target_entry_key: color
+    target_entry_id: entry-0002
+    notes: Public CLI presentation change.
