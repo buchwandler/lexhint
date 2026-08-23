@@ -31,7 +31,8 @@ The download default is the `runtime` variant (`lexical,semantic`). Optional var
 
 - `lexical` for membership, frequency, and segmentation;
 - `runtime` for lexical and semantic context evidence;
-- `rich` for lexical, semantic, dictionary, and indexed search features.
+- `dictionary` for entries, senses, topics, and rich dictionary rendering without search indexes;
+- `rich` for everything in `dictionary`, plus fuzzy suggestions and indexed definition/reverse search.
 
 Install several variants side by side:
 

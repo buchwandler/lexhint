@@ -21,6 +21,7 @@ def install_fixture(
     capabilities = {
         "lexical": ("lexical", "custom"),
         "runtime": ("lexical,semantic", "runtime"),
+        "dictionary": ("lexical,semantic,dictionary", "custom"),
         "rich": ("lexical,semantic,dictionary,search", "rich"),
     }[variant]
     source, _ = build_dictionary(
@@ -62,6 +63,27 @@ def test_highest_installed_capability_and_explicit_selection(
     assert datasets.resolve_installed_dataset("en").path == runtime
     assert Lexicon("en").path == runtime
     assert datasets.resolve_installed_dataset("en", variant="lexical").path == lexical
+
+
+def test_capability_chain_resolves_each_maximal_variant(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    cases = (
+        ("lexical", ("lexical",), "lexical"),
+        ("runtime", ("lexical", "runtime"), "runtime"),
+        ("dictionary", ("runtime", "dictionary"), "dictionary"),
+        ("rich", ("dictionary", "rich"), "rich"),
+        ("all", ("lexical", "runtime", "dictionary", "rich"), "rich"),
+    )
+    for name, variants, expected in cases:
+        case_dir = tmp_path / name
+        case_dir.mkdir()
+        installed = {
+            variant: install_fixture(case_dir, monkeypatch, variant) for variant in variants
+        }
+        resolved = datasets.resolve_installed_dataset("en")
+        assert resolved.variant == expected
+        assert resolved.path == installed[expected]
 
 
 def test_newest_version_and_removal_are_side_by_side(

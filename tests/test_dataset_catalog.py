@@ -97,6 +97,46 @@ def test_schema_8_rich_search_artifact_is_remote_compatible() -> None:
     assert datasets._remote_compatible(artifact)
 
 
+def test_schema_8_dictionary_artifact_is_compatible_without_search() -> None:
+    artifact = datasets.DatasetArtifact(
+        "en",
+        "dictionary",
+        "2026.08.20",
+        "data-2026.08.20",
+        "2026-08-21T00:00:00Z",
+        2,
+        "8",
+        "custom",
+        "full",
+        ("lexical", "semantic", "dictionary"),
+        1,
+        1,
+        "lexhint-en-dictionary-s8-2026.08.20.sqlite3.gz",
+        "a" * 64,
+        "https://example.test/asset",
+    )
+    assert datasets._remote_compatible(artifact)
+
+    inconsistent = datasets.DatasetArtifact(
+        "en",
+        "dictionary",
+        "2026.08.20",
+        "data-2026.08.20",
+        "2026-08-21T00:00:00Z",
+        2,
+        "8",
+        "custom",
+        "full",
+        ("lexical", "semantic", "dictionary", "search"),
+        1,
+        1,
+        "lexhint-en-dictionary-s8-2026.08.20.sqlite3.gz",
+        "a" * 64,
+        "https://example.test/asset",
+    )
+    assert not datasets._remote_compatible(inconsistent)
+
+
 def test_manifest_rejects_unsupported_version() -> None:
     with pytest.raises(datasets.DatasetCatalogError, match="unsupported"):
         datasets._manifest_artifacts({"tag_name": "data-1", "assets": []}, {"manifest_version": 1})

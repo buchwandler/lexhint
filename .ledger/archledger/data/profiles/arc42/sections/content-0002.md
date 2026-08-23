@@ -7,7 +7,7 @@ section: architecture_constraints
 title: Architecture Constraints
 order: 20
 status: accepted
-version: 12
+version: 13
 body_format: markdown
 ---
 
@@ -24,4 +24,4 @@ The architecture is constrained by a local, self-describing SQLite artifact and 
 - Frequency is enrichment, not a capability.
 - External dictionary and corpus data remain separate from the Apache-2.0 code and retain their licensing obligations.
 
-Managed dataset variants mirror the named schema profiles: `runtime` provides `lexical,semantic`, while `rich` provides `lexical,semantic,dictionary,search`. The client tests this publisher contract so capability declarations cannot drift from schema construction.
+Managed dataset variants are capability presets rather than exact mirrors of named build profiles: `runtime` provides `lexical,semantic` and remains the recommended default; `lexical` is the smallest projection; `dictionary` provides `lexical,semantic,dictionary` for full dictionary inspection without search indexes; and `rich` provides `lexical,semantic,dictionary,search`. They form a strict capability chain so automatic installed-dataset resolution has one maximal result. The client tests this publisher contract so capability declarations cannot drift from schema construction.

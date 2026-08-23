@@ -13,7 +13,7 @@ from lexhint import (
     SCHEMA_VERSION,
     supported_base_languages,
 )
-from lexhint.schema import normalize_capabilities
+from lexhint.schema import PROFILES, normalize_capabilities
 from lexhint.store import create_schema
 
 
@@ -38,10 +38,20 @@ def artifact(version: str, schema: str) -> datasets.DatasetArtifact:
 
 
 def test_public_contract_is_single_and_importable() -> None:
-    assert DATASET_VARIANT_NAMES == ("lexical", "runtime", "rich")
+    assert DATASET_VARIANT_NAMES == ("lexical", "runtime", "dictionary", "rich")
     assert tuple(DATASET_VARIANTS) == DATASET_VARIANT_NAMES
     assert DEFAULT_DATASET_VARIANT == "runtime"
     assert supported_base_languages() == ("cs", "de", "en", "es", "fr", "it", "pt")
+
+
+def test_public_dataset_variants_match_named_profiles() -> None:
+    assert DATASET_VARIANTS["runtime"].capabilities == PROFILES["runtime"]
+    assert DATASET_VARIANTS["dictionary"].capabilities == (
+        "lexical",
+        "semantic",
+        "dictionary",
+    )
+    assert DATASET_VARIANTS["rich"].capabilities == PROFILES["rich"]
 
 
 def test_remote_resolution_filters_schema_before_ranking(monkeypatch: pytest.MonkeyPatch) -> None:

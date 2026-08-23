@@ -1,3 +1,5 @@
+import sqlite3
+from contextlib import closing
 from pathlib import Path
 
 import pytest
@@ -22,6 +24,11 @@ def test_project_runtime_and_lexical_from_rich(rich_artifact: Path, tmp_path: Pa
     runtime = project_artifact(
         rich_artifact, output=tmp_path / "runtime.sqlite3", profile="runtime"
     )
+    dictionary = project_artifact(
+        rich_artifact,
+        output=tmp_path / "dictionary.sqlite3",
+        capabilities="lexical,semantic,dictionary",
+    )
     lexical = project_artifact(
         rich_artifact, output=tmp_path / "lexical.sqlite3", capabilities="lexical"
     )
@@ -37,13 +44,22 @@ def test_project_runtime_and_lexical_from_rich(rich_artifact: Path, tmp_path: Pa
     runtime_lexicon = Lexicon.from_path(runtime)
     lexical_lexicon = Lexicon.from_path(lexical)
     lexical_search_lexicon = Lexicon.from_path(lexical_search)
+    dictionary_lexicon = Lexicon.from_path(dictionary)
     dictionary_search_lexicon = Lexicon.from_path(dictionary_search)
     rich_lexicon = Lexicon.from_path(rich_artifact)
     assert runtime_lexicon.capabilities == ("lexical", "semantic")
+    assert dictionary_lexicon.capabilities == ("lexical", "semantic", "dictionary")
     assert lexical_lexicon.capabilities == ("lexical",)
     assert lexical_search_lexicon.capabilities == ("lexical", "search")
     assert dictionary_search_lexicon.capabilities == ("lexical", "dictionary", "search")
     assert lexical_search_lexicon.suggest("lov") == ("love",)
+    assert dictionary_lexicon.entries("love")
+    assert dictionary_lexicon.context_domains("music love", target=(6, 10)) == ()
+    assert dictionary_lexicon.complete("lov") == ("love",)
+    with pytest.raises(LexiconCapabilityError):
+        dictionary_lexicon.suggest("lov")
+    with pytest.raises(LexiconCapabilityError):
+        dictionary_lexicon.search_definitions("love")
     assert runtime_lexicon.contains("love") == rich_lexicon.contains("love")
     assert runtime_lexicon.context_domains(
         "music love", target=(6, 10)
@@ -57,6 +73,16 @@ def test_project_runtime_and_lexical_from_rich(rich_artifact: Path, tmp_path: Pa
     assert metadata["projected_from_capabilities"] == "lexical,semantic,dictionary,search"
     assert metadata["projected_from_sha256"]
     assert read_artifact_status(path=runtime).counts["entries"] is None
+    with closing(sqlite3.connect(dictionary)) as connection:
+        tables = {
+            row[0]
+            for row in connection.execute("SELECT name FROM sqlite_master WHERE type = 'table'")
+        }
+    assert "entries" in tables
+    assert "senses" in tables
+    assert "sense_topics" in tables
+    assert "lexeme_ngrams" not in tables
+    assert "sense_search_terms" not in tables
 
 
 def test_project_rejects_non_subset_and_same_path(rich_artifact: Path, tmp_path: Path) -> None:

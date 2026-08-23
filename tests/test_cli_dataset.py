@@ -7,7 +7,7 @@ import pytest
 
 import lexhint.datasets as datasets
 from lexhint.builder import build_dictionary
-from lexhint.cli import main
+from lexhint.cli import _parser, main
 
 FIXTURE = Path(__file__).parent / "fixtures" / "kaikki-mini.jsonl"
 
@@ -60,3 +60,11 @@ def test_path_and_variant_conflict_is_controlled(
 ) -> None:
     assert main(["word", "compiler", "--path", str(tmp_path / "x"), "--variant", "rich"]) == 1
     assert "cannot be combined" in capsys.readouterr().err
+
+
+def test_dictionary_variant_is_available_to_dataset_and_query_parsers() -> None:
+    parser = _parser()
+    download = parser.parse_args(["dataset", "download", "en", "--variant", "dictionary"])
+    query = parser.parse_args(["word", "love", "-l", "en", "--variant", "dictionary"])
+    assert download.variant == "dictionary"
+    assert query.variant == "dictionary"

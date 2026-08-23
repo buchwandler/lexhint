@@ -42,6 +42,11 @@ DATASET_VARIANTS = {
     "runtime": DatasetVariantSpec(
         "runtime", PROFILES["runtime"], "lexical + semantic data; recommended default", True
     ),
+    "dictionary": DatasetVariantSpec(
+        "dictionary",
+        ("lexical", "semantic", "dictionary"),
+        "lexical + semantic + dictionary data; full dictionary without search indexes",
+    ),
     "rich": DatasetVariantSpec(
         "rich",
         PROFILES["rich"],
