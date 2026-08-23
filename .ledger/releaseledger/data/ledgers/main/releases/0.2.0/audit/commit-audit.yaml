@@ -1,0 +1,87 @@
+schema_version: 1
+object_type: commit_audit_sheet
+versioning:
+  schema_version: 1
+  revision: 3
+release_version: 0.2.0
+git_base_ref: v0.1.3
+git_base_sha: 4aafe0264de3e664b90fcea901cb0484eccfa465
+git_head_ref: HEAD
+git_head_sha: eb2336b92e8854add69c39d0f65273e534af1550
+git_range: 4aafe0264de3e664b90fcea901cb0484eccfa465..eb2336b92e8854add69c39d0f65273e534af1550
+commit_count: 1
+rows:
+- sha: eb2336b92e8854add69c39d0f65273e534af1550
+  source_ref: git:eb2336b92e8854add69c39d0f65273e534af1550
+  short_sha: eb2336b
+  changed_paths:
+  - .ledger/archledger/data/document-state.json
+  - .ledger/archledger/data/profiles/arc42/sections/content-0002.md
+  - .ledger/archledger/data/profiles/arc42/sections/content-0005.md
+  - .ledger/archledger/data/profiles/arc42/sections/content-0006.md
+  - .ledger/archledger/data/profiles/arc42/sections/content-0007.md
+  - .ledger/archledger/data/profiles/arc42/sections/content-0008.md
+  - .ledger/archledger/data/profiles/arc42/sections/content-0009.md
+  - .ledger/releaseledger/data/ledgers/main/releases/0.1.0/entries/entry-0005.md
+  - .ledger/releaseledger/data/ledgers/main/releases/0.1.0/entries/entry-0006.md
+  - .ledger/releaseledger/data/ledgers/main/releases/0.1.0/entries/entry-0007.md
+  - .ledger/releaseledger/data/ledgers/main/releases/0.1.0/entries/entry-0008.md
+  - .ledger/releaseledger/data/ledgers/main/releases/0.1.0/entries/entry-0009.md
+  - .ledger/releaseledger/data/ledgers/main/releases/0.1.0/entries/entry-0010.md
+  - .ledger/releaseledger/data/ledgers/main/releases/0.1.0/entries/entry-0011.md
+  - README.md
+  - RELEASING.md
+  - docs/architecture.md
+  - docs/changelog.md
+  - lexhint/__init__.py
+  - lexhint/builder.py
+  - lexhint/cli.py
+  - lexhint/lexicon.py
+  - lexhint/models.py
+  - lexhint/schema.py
+  - lexhint/search.py
+  - lexhint/store.py
+  - tests/test_cli_dataset.py
+  - tests/test_cli_search.py
+  - tests/test_dataset_install.py
+  - tests/test_dataset_resolver.py
+  - tests/test_dictionary_search.py
+  - tests/test_headword_search.py
+  - tests/test_locales.py
+  - tests/test_projection.py
+  - tests/test_schema_contract.py
+  - tests/test_search_helpers.py
+  - tests/test_suggestions.py
+  stats:
+    files_changed: 0
+    insertions: 969
+    deletions: 75
+  inspected: true
+  inspected_paths:
+  - README.md
+  - RELEASING.md
+  - docs/architecture.md
+  - docs/changelog.md
+  - lexhint/builder.py
+  - lexhint/cli.py
+  - lexhint/lexicon.py
+  - lexhint/models.py
+  - lexhint/schema.py
+  - lexhint/search.py
+  - lexhint/store.py
+  - tests/test_cli_search.py
+  - tests/test_dictionary_search.py
+  - tests/test_headword_search.py
+  - tests/test_schema_contract.py
+  - tests/test_search_helpers.py
+  - tests/test_suggestions.py
+  observed_behavior: Adds schema-8 search capability to rich artifacts; exposes deterministic
+    fuzzy suggestions, glob/regex headword matching, indexed dictionary definition
+    and reverse search, and corresponding CLI commands. Updates builders and storage
+    indexes with capability gating and regression coverage.
+  public_impact: public
+  decision: accepted
+  evidence_subject: 'feat: schema 8 with advanced fuzzy and search methods'
+  target_entry_id: entry-0001
+  notes: Reviewed the runtime/API, CLI, storage, documentation, and regression-test
+    changes in the commit; ledger and architecture bookkeeping changes are internal.
