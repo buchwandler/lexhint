@@ -31,7 +31,7 @@ The download default is the `runtime` variant (`lexical,semantic`). Optional var
 
 - `lexical` for membership, frequency, and segmentation;
 - `runtime` for lexical and semantic context evidence;
-- `rich` for lexical, semantic, and dictionary inspection.
+- `rich` for lexical, semantic, dictionary, and indexed search features.
 
 Install several variants side by side:
 
@@ -87,12 +87,11 @@ lexicon.contains("compiler")
 lexicon.segment("chatgpt")
 lexicon.context_domains(text, target=(start, end))
 lexicon.supports_domain(text, target=(start, end), domain="computing")
-lexicon.entries("compiler")  # rich artifacts only
-lexicon.suggest("complier", limit=20)  # search artifacts
-lexicon.match_headwords("comp*", syntax="glob")
-lexicon.search_definitions(
-    "computer program", fields=("glosses",), match="all"
-)  # rich search artifacts
+rich = Lexicon("en", variant="rich")
+rich.entries("compiler")
+rich.suggest("complier", limit=20)
+rich.match_headwords("comp*", syntax="glob")
+rich.search_definitions("computer program", fields=("glosses",), match="all")
 ```
 
 Dictionary membership is authoritative. Frequency rank and count enrich existing lexemes but never create corpus-only words. `Lexicon.word()` reports normalized membership and the attested lowercase, titlecase, and uppercase forms. `uppercase_only` is true only for a known lexeme with uppercase attestation and no lowercase or titlecase attestation.
@@ -129,6 +128,12 @@ Frequency enrichment is independent of capabilities. Use `--no-frequency` for a 
 
 ## CLI queries
 
+The default download installs the `runtime` variant. Install the `rich` variant before using search-capable commands such as `suggest`, `headwords`, or `dictionary search`:
+
+```bash
+lexhint dataset download en --variant rich
+```
+
 ```bash
 lexhint word compiler -l en
 lexhint word compiler -l en --variant runtime
@@ -136,10 +141,10 @@ lexhint segment chatgpt -l en --dataset-version 2026.08.20
 lexhint context "The compiler is 8.3.2." -l en --target 16:21
 lexhint complete comp -l en --limit 10
 lexhint --json complete comp -l en --limit 10
-lexhint suggest compilar -l en --limit 10
-lexhint headwords 'comp*' -l en --syntax glob
-lexhint dictionary search "large feline" -l en --fields glosses --match all
-lexhint --json dictionary search "large feline" -l en
+lexhint suggest compilar -l en --variant rich --limit 10
+lexhint headwords 'comp*' -l en --variant rich --syntax glob
+lexhint dictionary search "large feline" -l en --variant rich --fields glosses --match all
+lexhint --json dictionary search "large feline" -l en --variant rich
 lexhint dictionary word compiler -l en --variant rich
 lexhint dictionary status en --variant runtime
 ```

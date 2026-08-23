@@ -36,7 +36,12 @@ jobs:
       - name: Run the release quality gate
         run: |
           python -m pytest
-          python -X dev -m pytest
+          python -X dev -W error::ResourceWarning -m pytest
+          python -m pytest \
+            --cov=lexhint \
+            --cov-branch \
+            --cov-report=term-missing \
+            --cov-fail-under=80
           python -m ruff check .
           python -m ruff format --check .
           python -m mypy lexhint
@@ -61,6 +66,22 @@ jobs:
           PY
           .release-smoke/bin/lexhint --version
           .release-smoke/bin/lexhint --help
+          .release-smoke/bin/lexhint dictionary build en \
+            --source tests/fixtures/kaikki-mini.jsonl \
+            --output "$RUNNER_TEMP/lexhint-release-smoke.sqlite3" \
+            --no-frequency
+          .release-smoke/bin/lexhint word compiler \
+            --path "$RUNNER_TEMP/lexhint-release-smoke.sqlite3"
+          .release-smoke/bin/lexhint complete comp \
+            --path "$RUNNER_TEMP/lexhint-release-smoke.sqlite3"
+          .release-smoke/bin/lexhint suggest compilar \
+            --path "$RUNNER_TEMP/lexhint-release-smoke.sqlite3" \
+            --limit 10
+          .release-smoke/bin/lexhint dictionary search "computer program" \
+            --path "$RUNNER_TEMP/lexhint-release-smoke.sqlite3" \
+            --fields glosses --match all
+          .release-smoke/bin/lexhint dictionary status \
+            --path "$RUNNER_TEMP/lexhint-release-smoke.sqlite3"
       - name: Publish package
         uses: pypa/gh-action-pypi-publish@v1.13.0
         with:

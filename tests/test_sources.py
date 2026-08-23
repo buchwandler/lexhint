@@ -86,3 +86,49 @@ def test_custom_http_frequency_source_is_removed_after_failed_build(
             frequency_source="https://example.test/en_full.txt",
         )
     assert downloaded and not downloaded[0].exists()
+
+
+def test_disabled_frequency_source_returns_none() -> None:
+    assert resolve_frequency_source("en", enabled=False) is None
+
+
+def test_local_frequency_source_is_resolved(tmp_path: Path) -> None:
+    source = tmp_path / "en.txt"
+    source.write_text("compiler 10\n", encoding="utf-8")
+    resolved = resolve_frequency_source("en", source=source)
+    assert resolved is not None
+    assert resolved.provider == "custom"
+    assert resolved.path == source
+
+
+def test_missing_local_frequency_source_is_controlled(tmp_path: Path) -> None:
+    with pytest.raises(OSError, match="does not exist"):
+        resolve_frequency_source("en", source=tmp_path / "missing.txt")
+
+
+def test_http_frequency_source_is_rejected_offline() -> None:
+    with pytest.raises(OSError, match="offline"):
+        resolve_frequency_source("en", source="https://example.test/en.txt", offline=True)
+
+
+def test_refresh_removes_cached_source_before_download(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    monkeypatch.setattr(sources, "cache_dir", lambda: tmp_path)
+    target = (
+        tmp_path / "sources" / "frequencywords" / sources.FREQUENCYWORDS_REVISION / "en_full.txt"
+    )
+    target.parent.mkdir(parents=True)
+    target.write_text("old 1\n", encoding="utf-8")
+    target.with_name(target.name + ".sha256").write_text("old\n", encoding="ascii")
+    downloaded: list[Path] = []
+
+    def fake_download(_url: str, path: Path, *, timeout: float) -> None:
+        downloaded.append(path)
+        path.write_text("new 2\n", encoding="utf-8")
+
+    monkeypatch.setattr(sources, "_download", fake_download)
+    resolved = resolve_frequency_source("en", refresh=True)
+    assert resolved is not None
+    assert resolved.path == target
+    assert downloaded == [target]

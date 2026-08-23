@@ -46,12 +46,12 @@ Confirm that `lexhint/py.typed` is packaged. Confirm that the wheel and sdist do
 
 ## Version safety
 
-The publication workflow checks out complete Git history and derives the expected package version from the GitHub release tag. For a tag `v0.1.0`, the installed package must report exactly `0.1.0`, never `0+unknown`.
+The publication workflow checks out complete Git history and derives the expected package version from the GitHub release tag. For the v0.2.0 release, the installed package must report exactly `0.2.0`, never `0+unknown`.
 
 The equivalent local check is:
 
 ```bash
-EXPECTED_VERSION=0.1.0 \
+EXPECTED_VERSION=0.2.0 \
   python -c 'import os, lexhint; actual = lexhint.__version__; expected = os.environ["EXPECTED_VERSION"]; assert actual == expected and actual != "0+unknown", (expected, actual); print(actual)'
 ```
 

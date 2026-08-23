@@ -66,3 +66,84 @@ def test_inconsistent_variant_capabilities_are_not_remote_compatible() -> None:
 def test_offline_catalog_is_rejected() -> None:
     with pytest.raises(datasets.DatasetCatalogError, match="offline"):
         datasets.available_datasets(offline=True)
+
+
+def test_managed_dataset_variants_match_named_profiles() -> None:
+    from lexhint.schema import PROFILES
+
+    assert datasets.DATASET_VARIANTS["runtime"].capabilities == PROFILES["runtime"]
+    assert datasets.DATASET_VARIANTS["rich"].capabilities == PROFILES["rich"]
+
+
+def test_schema_8_rich_search_artifact_is_remote_compatible() -> None:
+    artifact = datasets.DatasetArtifact(
+        "en",
+        "rich",
+        "2026.08.20",
+        "data-2026.08.20",
+        "2026-08-21T00:00:00Z",
+        2,
+        "8",
+        "rich",
+        "full",
+        ("lexical", "semantic", "dictionary", "search"),
+        1,
+        1,
+        "lexhint-en-rich-s8-2026.08.20.sqlite3.gz",
+        "a" * 64,
+        "https://example.test/asset",
+    )
+
+    assert datasets._remote_compatible(artifact)
+
+
+def test_manifest_rejects_unsupported_version() -> None:
+    with pytest.raises(datasets.DatasetCatalogError, match="unsupported"):
+        datasets._manifest_artifacts({"tag_name": "data-1", "assets": []}, {"manifest_version": 1})
+
+
+def test_manifest_rejects_missing_assets() -> None:
+    with pytest.raises(datasets.DatasetCatalogError, match="asset list"):
+        datasets._manifest_artifacts(
+            {"tag_name": "data-1"}, {"manifest_version": 2, "dataset_version": "1"}
+        )
+
+
+def test_manifest_rejects_missing_manifest_artifact() -> None:
+    release = {"tag_name": "data-1", "assets": []}
+    manifest = {"manifest_version": 2, "dataset_version": "1", "artifacts": [None]}
+    with pytest.raises(datasets.DatasetCatalogError, match="invalid artifact"):
+        datasets._manifest_artifacts(release, manifest)
+
+
+def test_manifest_rejects_unlisted_asset() -> None:
+    release = {"tag_name": "data-1", "assets": []}
+    manifest = {
+        "manifest_version": 2,
+        "dataset_version": "1",
+        "artifacts": [{"language": "en", "variant": "runtime", "asset": "missing"}],
+    }
+    with pytest.raises(datasets.DatasetCatalogError, match="missing required fields"):
+        datasets._manifest_artifacts(release, manifest)
+
+
+def test_manifest_rejects_missing_release_asset() -> None:
+    release = {"tag_name": "data-1", "assets": []}
+    manifest = {
+        "manifest_version": 2,
+        "dataset_version": "1",
+        "artifacts": [
+            {
+                "language": "en",
+                "variant": "runtime",
+                "profile": "runtime",
+                "capabilities": ["lexical", "semantic"],
+                "coverage": "full",
+                "schema_version": "8",
+                "format": "sqlite3-gzip",
+                "asset": "lexhint-en-runtime-s8-1.sqlite3.gz",
+            }
+        ],
+    }
+    with pytest.raises(datasets.DatasetNotFound, match="missing listed"):
+        datasets._manifest_artifacts(release, manifest)

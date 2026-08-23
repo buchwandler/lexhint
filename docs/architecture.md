@@ -1,6 +1,6 @@
 ---
 title: "Architecture Documentation"
-version: 20
+version: 21
 generator: "archledger 0.4.0"
 arc42_template_version: "9.0-EN"
 ---
@@ -51,6 +51,8 @@ The architecture is constrained by a local, self-describing SQLite artifact and 
 - `search` provides indexed fuzzy headword and dictionary-text search; dictionary-text search requires both `dictionary` and `search`.
 - Frequency is enrichment, not a capability.
 - External dictionary and corpus data remain separate from the Apache-2.0 code and retain their licensing obligations.
+
+Managed dataset variants mirror the named schema profiles: `runtime` provides `lexical,semantic`, while `rich` provides `lexical,semantic,dictionary,search`. The client tests this publisher contract so capability declarations cannot drift from schema construction.
 
 <!-- archledger: no accepted records for this section yet -->
 

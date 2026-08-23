@@ -84,3 +84,38 @@ def test_runtime_resolution_never_downloads(
     )
     with pytest.raises(FileNotFoundError):
         Lexicon("en")
+
+
+def test_invalid_sidecar_is_not_listed(tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> None:
+    monkeypatch.setenv("LEXHINT_DATA_DIR", str(tmp_path / "data"))
+    path = datasets._artifact_path("en", "runtime", "2026.08.20")
+    path.parent.mkdir(parents=True)
+    path.write_bytes(b"not sqlite")
+    path.with_name("artifact.json").write_text("{}", encoding="utf-8")
+
+    assert datasets.list_installed_datasets("en") == ()
+    with pytest.raises(datasets.DatasetIntegrityError, match="invalid dataset sidecar"):
+        datasets._installed_from_sidecar(path)
+
+
+def test_schema_path_mismatch_is_rejected(tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> None:
+    monkeypatch.setenv("LEXHINT_DATA_DIR", str(tmp_path / "data"))
+    path = datasets._artifact_path("en", "runtime", "2026.08.20", "7")
+    path.parent.mkdir(parents=True)
+    path.write_bytes(b"not sqlite")
+    path.with_name("artifact.json").write_text(
+        '{"language":"en","variant":"runtime","dataset_version":"2026.08.20",'
+        '"schema_version":"8","capabilities":["lexical","semantic"]}',
+        encoding="utf-8",
+    )
+    with pytest.raises(datasets.DatasetIntegrityError, match="invalid dataset sidecar"):
+        datasets._installed_from_sidecar(path)
+
+
+def test_explicit_missing_dataset_reports_selector(
+    tmp_path: Path,
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    monkeypatch.setenv("LEXHINT_DATA_DIR", str(tmp_path / "data"))
+    with pytest.raises(datasets.DatasetNotFound, match="runtime/2026.08.20"):
+        datasets.resolve_installed_dataset("en", variant="runtime", version="2026.08.20")

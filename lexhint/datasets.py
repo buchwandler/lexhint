@@ -18,6 +18,7 @@ from urllib.error import HTTPError, URLError
 
 from .download import SUPPORTED_LANGUAGES, data_dir, request
 from .languages import normalize_language, supported_base_languages
+from .schema import PROFILES
 from .store import SCHEMA_VERSION
 
 DATASET_REPOSITORY = "buchwandler/lexhint-datasets"
@@ -39,12 +40,12 @@ DATASET_VARIANTS = {
         "lexical", ("lexical",), "lexical membership/commonness only; smallest"
     ),
     "runtime": DatasetVariantSpec(
-        "runtime", ("lexical", "semantic"), "lexical + semantic data; recommended default", True
+        "runtime", PROFILES["runtime"], "lexical + semantic data; recommended default", True
     ),
     "rich": DatasetVariantSpec(
         "rich",
-        ("lexical", "semantic", "dictionary"),
-        "lexical + semantic + dictionary data; largest",
+        PROFILES["rich"],
+        "lexical + semantic + dictionary + search data; largest",
     ),
 }
 DEFAULT_DATASET_VARIANT = next(name for name, spec in DATASET_VARIANTS.items() if spec.recommended)

@@ -9,10 +9,10 @@ Published artifacts are selected by four independent values:
 - `language`: supported physical/base dictionary language such as `en`;
 - `locale`: optional runtime preference such as `GB` or `US`, never a separate artifact;
 - `variant`: capability profile, one of `lexical`, `runtime`, or `rich`;
-- `schema_version`: exact SQLite compatibility key, currently `7`;
+- `schema_version`: exact SQLite compatibility key, currently `8`;
 - `dataset_version`: published data snapshot.
 
-Lexhint requires exact schema equality. A client with schema 7 skips schema 8 releases and never opens an installed schema 8 database. English locale preferences use the same base-language frequency source, because no regional frequency corpus is supplied here.
+Lexhint requires exact schema equality. A schema-8 client skips releases for other schema families and never opens an incompatible installed database. English locale preferences use the same base-language frequency source, because no regional frequency corpus is supplied here.
 
 ## FrequencyWords
 
