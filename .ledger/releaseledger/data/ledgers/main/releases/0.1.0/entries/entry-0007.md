@@ -7,14 +7,15 @@ versioning:
 entry_id: entry-0007
 release_version: 0.1.0
 kind: docs
-summary: Documented the local SQLite artifact architecture and Sphinx documentation
+summary:
+  Documented the local SQLite artifact architecture and Sphinx documentation
   setup
 status: accepted
 audience: null
 scopes: []
 source_refs: []
 paths:
-- docs/architecture.md
+  - docs/architecture.md
 issues: []
 prs: []
 sources: []

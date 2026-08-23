@@ -19,6 +19,7 @@
 ### Added
 
 - Added deterministic local lexical prefix completion through Lexicon.complete() and lexhint complete
+- Added schema-8 capability-gated fuzzy suggestions, headword glob/regex matching, and indexed definition search APIs
 
 ### Changed
 

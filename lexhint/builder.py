@@ -27,6 +27,7 @@ from .store import (
     SCHEMA_VERSION,
     create_schema,
     insert_dictionary_entries,
+    insert_lexeme_search_index,
     iter_jsonl_entries,
     set_metadata,
 )
@@ -232,6 +233,7 @@ def build_dictionary(
     scanned = kept_entries = sense_count = 0
     frequency_rows = frequency_matches = frequency_total_tokens = 0
     semantic_rows = 0
+    search_lexeme_rows = search_sense_rows = 0
     final_stats: DictionaryBuildStats
     try:
         connection = sqlite3.connect(tmp)
@@ -284,6 +286,8 @@ def build_dictionary(
                     entry_count, inserted_senses, _words = insert_dictionary_entries(
                         connection, entries
                     )
+                    if "search" in selection.capabilities:
+                        insert_lexeme_search_index(connection, _words)
                     kept_entries += entry_count
                     sense_count += inserted_senses
                     if "semantic" in selection.capabilities:
@@ -326,6 +330,14 @@ def build_dictionary(
                 semantic_rows = int(
                     connection.execute("SELECT COUNT(*) FROM lexeme_domains").fetchone()[0]
                 )
+            if "search" in selection.capabilities:
+                search_lexeme_rows = int(
+                    connection.execute("SELECT COUNT(*) FROM lexeme_ngrams").fetchone()[0]
+                )
+                if "dictionary" in selection.capabilities:
+                    search_sense_rows = int(
+                        connection.execute("SELECT COUNT(*) FROM sense_search_terms").fetchone()[0]
+                    )
             if resolved_frequency is not None:
                 with _text_source(
                     resolved_frequency.path, timeout=plan.timeout, offline=plan.offline
@@ -349,6 +361,9 @@ def build_dictionary(
                     "sense_count": str(
                         sense_count if "dictionary" in selection.capabilities else 0
                     ),
+                    "search_index_version": "1" if "search" in selection.capabilities else "",
+                    "search_lexeme_ngram_rows": str(search_lexeme_rows),
+                    "search_sense_term_rows": str(search_sense_rows),
                     "semantic_lexeme_count": str(semantic_rows),
                     "frequency_total_rows": str(frequency_rows),
                     "frequency_total_tokens": str(frequency_total_tokens),
@@ -369,6 +384,8 @@ def build_dictionary(
                 frequency_matches,
                 frequency_total_tokens,
                 kept_entries if "dictionary" in selection.capabilities else 0,
+                search_lexeme_rows=search_lexeme_rows,
+                search_sense_rows=search_sense_rows,
             )
             if progress is not None:
                 progress(final_stats)
@@ -433,6 +450,11 @@ def project_artifact(
                 "corpus_count, corpus_rank FROM lexemes"
             ).fetchall(),
         )
+        if "search" in selection.capabilities:
+            target_connection.executemany(
+                "INSERT INTO lexeme_ngrams(gram, word) VALUES (?, ?)",
+                source_connection.execute("SELECT gram, word FROM lexeme_ngrams").fetchall(),
+            )
         if "semantic" in selection.capabilities:
             target_connection.executemany(
                 "INSERT INTO lexeme_domains(word, domain, weight, source_topics) "
@@ -459,13 +481,45 @@ def project_artifact(
                     f"INSERT INTO {table}({columns}) VALUES ({placeholders})",
                     source_connection.execute(f"SELECT {columns} FROM {table}").fetchall(),
                 )
-        now = datetime.now(timezone.utc).isoformat()
+            if "search" in selection.capabilities:
+                target_connection.executemany(
+                    "INSERT INTO sense_search_terms(term, sense_id, field, term_count) "
+                    "VALUES (?, ?, ?, ?)",
+                    source_connection.execute(
+                        "SELECT term, sense_id, field, term_count FROM sense_search_terms"
+                    ).fetchall(),
+                )
         metadata = dict(source_lexicon.metadata)
+        if "search" in selection.capabilities:
+            metadata_search_rows = int(
+                target_connection.execute("SELECT COUNT(*) FROM lexeme_ngrams").fetchone()[0]
+            )
+            metadata_sense_rows = (
+                int(
+                    target_connection.execute("SELECT COUNT(*) FROM sense_search_terms").fetchone()[
+                        0
+                    ]
+                )
+                if "dictionary" in selection.capabilities
+                else 0
+            )
+        else:
+            metadata_search_rows = metadata_sense_rows = 0
+            for key in (
+                "search_index_version",
+                "search_lexeme_ngram_rows",
+                "search_sense_term_rows",
+            ):
+                metadata.pop(key, None)
+        now = datetime.now(timezone.utc).isoformat()
         metadata.update(
             {
                 "profile": selection.profile,
                 "dictionary_profile": selection.profile,
                 "capabilities": ",".join(selection.capabilities),
+                "search_index_version": ("1" if "search" in selection.capabilities else ""),
+                "search_lexeme_ngram_rows": str(metadata_search_rows),
+                "search_sense_term_rows": str(metadata_sense_rows),
                 "created_at": now,
                 "built_at": now,
                 "projected_from_sha256": digest.hexdigest(),
@@ -473,6 +527,13 @@ def project_artifact(
                 "projected_from_profile": source_lexicon.metadata.get("profile", ""),
             }
         )
+        if "search" not in selection.capabilities:
+            for key in (
+                "search_index_version",
+                "search_lexeme_ngram_rows",
+                "search_sense_term_rows",
+            ):
+                metadata.pop(key, None)
         set_metadata(target_connection, metadata)
         target_connection.execute("ANALYZE")
         target_connection.commit()

@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import sqlite3
 from pathlib import Path
 
 import pytest
@@ -12,6 +13,8 @@ from lexhint import (
     SCHEMA_VERSION,
     supported_base_languages,
 )
+from lexhint.schema import normalize_capabilities
+from lexhint.store import create_schema
 
 
 def artifact(version: str, schema: str) -> datasets.DatasetArtifact:
@@ -42,7 +45,7 @@ def test_public_contract_is_single_and_importable() -> None:
 
 
 def test_remote_resolution_filters_schema_before_ranking(monkeypatch: pytest.MonkeyPatch) -> None:
-    newer = artifact("2026.10.01", "8")
+    newer = artifact("2026.10.01", "9")
     compatible = artifact("2026.09.01", SCHEMA_VERSION)
     releases = [{"tag_name": newer.release_tag}, {"tag_name": compatible.release_tag}]
     monkeypatch.setattr(datasets, "_releases", lambda version: releases)
@@ -55,14 +58,14 @@ def test_remote_resolution_filters_schema_before_ranking(monkeypatch: pytest.Mon
 
 
 def test_explicit_schema_mismatch_does_not_fall_back(monkeypatch: pytest.MonkeyPatch) -> None:
-    incompatible = artifact("2026.10.15", "8")
+    incompatible = artifact("2026.10.15", "7")
     monkeypatch.setattr(
         datasets,
         "_releases",
         lambda version: [{"tag_name": incompatible.release_tag}],
     )
     monkeypatch.setattr(datasets, "_manifest_for_release", lambda release: (incompatible,))
-    with pytest.raises(datasets.DatasetIncompatible, match="requires schema 7"):
+    with pytest.raises(datasets.DatasetIncompatible, match="requires schema 8"):
         datasets._remote_artifacts(language="en", variant="runtime", version="2026.10.15")
 
 
@@ -103,3 +106,29 @@ def test_manifest_requires_filename_and_manifest_schema_agreement() -> None:
     }
     with pytest.raises(datasets.DatasetCatalogError, match="inconsistent schema"):
         datasets._manifest_artifacts(release, manifest)
+
+
+def test_schema_8_search_tables_are_capability_gated() -> None:
+    def tables(capabilities: str) -> set[str]:
+        connection = sqlite3.connect(":memory:")
+        selection = (
+            normalize_capabilities(profile="rich")
+            if capabilities == "rich"
+            else normalize_capabilities(capabilities)
+        )
+        create_schema(connection, selection.capabilities)
+        result = {
+            str(row[0])
+            for row in connection.execute("SELECT name FROM sqlite_master WHERE type='table'")
+        }
+        connection.close()
+        return result
+
+    lexical = tables("lexical")
+    lexical_search = tables("lexical,search")
+    rich = tables("rich")
+    assert "lexeme_ngrams" not in lexical
+    assert "sense_search_terms" not in lexical
+    assert "lexeme_ngrams" in lexical_search
+    assert "sense_search_terms" not in lexical_search
+    assert {"lexeme_ngrams", "sense_search_terms"} <= rich

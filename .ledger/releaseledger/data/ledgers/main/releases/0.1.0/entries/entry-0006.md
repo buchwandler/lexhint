@@ -7,14 +7,15 @@ versioning:
 entry_id: entry-0006
 release_version: 0.1.0
 kind: added
-summary: Added a local read-only Lexicon for dictionary-derived membership and compact
+summary:
+  Added a local read-only Lexicon for dictionary-derived membership and compact
   identifier segmentation
 status: accepted
 audience: null
 scopes: []
 source_refs: []
 paths:
-- lexhint/lexicon.py
+  - lexhint/lexicon.py
 issues: []
 prs: []
 sources: []

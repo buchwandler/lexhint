@@ -87,6 +87,17 @@ class DictionaryEntry:
 
 
 @dataclass(frozen=True, slots=True)
+class DictionarySearchHit:
+    word: str
+    pos: str
+    sense_index: int
+    glosses: tuple[str, ...]
+    score: float
+    matched_terms: tuple[str, ...] = ()
+    matched_fields: tuple[str, ...] = ()
+
+
+@dataclass(frozen=True, slots=True)
 class ContextCue:
     text: str
     start: int
@@ -115,3 +126,5 @@ class DictionaryBuildStats:
     frequency_matches: int = 0
     frequency_total_tokens: int = 0
     entries: int = 0
+    search_lexeme_rows: int = 0
+    search_sense_rows: int = 0

@@ -21,7 +21,7 @@ def install_fixture(
     capabilities = {
         "lexical": ("lexical", "custom"),
         "runtime": ("lexical,semantic", "runtime"),
-        "rich": ("lexical,semantic,dictionary", "rich"),
+        "rich": ("lexical,semantic,dictionary,search", "rich"),
     }[variant]
     source, _ = build_dictionary(
         "en",
@@ -40,7 +40,7 @@ def install_fixture(
         f"data-{version}",
         "2026-08-21T00:00:00Z",
         2,
-        "7",
+        "8",
         capabilities[1],
         "full",
         tuple(capabilities[0].split(",")),

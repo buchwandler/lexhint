@@ -3,12 +3,14 @@ from __future__ import annotations
 import json
 import sqlite3
 import unicodedata
+from collections import Counter
 from collections.abc import Iterable, Iterator, Mapping
 from dataclasses import dataclass
 
-from .models import DictionaryEntry, Example, Form, Pronunciation, RelatedTerm
+from .models import DictionaryEntry, Example, Form, Pronunciation, RelatedTerm, Sense
+from .search import search_tokens, word_ngrams
 
-SCHEMA_VERSION = "7"
+SCHEMA_VERSION = "8"
 
 
 @dataclass(frozen=True, slots=True)
@@ -118,6 +120,50 @@ def insert_lexeme(connection: sqlite3.Connection, word: str, *, entry_count: int
     )
 
 
+def insert_lexeme_search_index(connection: sqlite3.Connection, words: Iterable[str]) -> int:
+    """Insert normalized boundary n-grams for existing lexical words."""
+
+    if not _has_table(connection, "lexeme_ngrams"):
+        return 0
+    rows = {(gram, normalize_word(word)) for word in words for gram in word_ngrams(word)}
+    connection.executemany(
+        "INSERT OR IGNORE INTO lexeme_ngrams(gram, word) VALUES (?, ?)",
+        rows,
+    )
+    return len(rows)
+
+
+def _search_field_values(sense: Sense) -> dict[str, tuple[str, ...]]:
+    def related(values: tuple[str | RelatedTerm, ...]) -> tuple[str, ...]:
+        return tuple(value if isinstance(value, str) else value.word for value in values)
+
+    return {
+        "glosses": sense.glosses,
+        "topics": sense.topics,
+        "tags": sense.tags,
+        "examples": tuple(example.text for example in sense.examples),
+        "synonyms": related(sense.synonyms),
+        "antonyms": related(sense.antonyms),
+    }
+
+
+def insert_sense_search_terms(connection: sqlite3.Connection, sense_id: int, sense: Sense) -> int:
+    """Insert counted normalized terms for the searchable sense fields."""
+
+    if not _has_table(connection, "sense_search_terms"):
+        return 0
+    rows: list[tuple[str, int, str, int]] = []
+    for field, values in _search_field_values(sense).items():
+        counts = Counter(token for value in values for token in search_tokens(value))
+        rows.extend((term, sense_id, field, count) for term, count in counts.items())
+    connection.executemany(
+        "INSERT OR REPLACE INTO sense_search_terms(term, sense_id, field, term_count) "
+        "VALUES (?, ?, ?, ?)",
+        rows,
+    )
+    return len(rows)
+
+
 def insert_dictionary_entries(
     connection: sqlite3.Connection, entries: Iterable[DictionaryEntry]
 ) -> tuple[int, int, set[str]]:
@@ -125,6 +171,8 @@ def insert_dictionary_entries(
     sense_count = 0
     words: set[str] = set()
     rich = _has_table(connection, "entries")
+    sense_topics = _has_table(connection, "sense_topics")
+    search_terms = _has_table(connection, "sense_search_terms")
     for entry_index, entry in enumerate(entries):
         word = normalize_word(entry.word)
         display_word = normalize_display_word(entry.word)
@@ -168,18 +216,20 @@ def insert_dictionary_entries(
             )
             assert sense_cursor.lastrowid is not None
             sense_id = sense_cursor.lastrowid
-            if _has_table(connection, "sense_topics"):
+            if sense_topics:
                 for topic in sense.topics:
                     connection.execute(
                         "INSERT INTO sense_topics(entry_id, sense_id, topic) VALUES (?, ?, ?)",
                         (entry_id, sense_id, topic),
                     )
+            if search_terms:
+                insert_sense_search_terms(connection, sense_id, sense)
     return entry_count, sense_count, words
 
 
 def create_schema(
     connection: sqlite3.Connection,
-    capabilities: Iterable[str] = ("lexical", "semantic", "dictionary"),
+    capabilities: Iterable[str] = ("lexical", "semantic", "dictionary", "search"),
 ) -> None:
     selected = set(capabilities)
     connection.execute("PRAGMA foreign_keys = ON")
@@ -198,6 +248,18 @@ def create_schema(
         CREATE INDEX lexemes_corpus_rank_idx ON lexemes(corpus_rank);
         """
     )
+    if "search" in selected:
+        connection.executescript(
+            """
+            CREATE TABLE lexeme_ngrams (
+                gram TEXT NOT NULL,
+                word TEXT NOT NULL,
+                PRIMARY KEY (gram, word),
+                FOREIGN KEY(word) REFERENCES lexemes(word)
+            );
+            CREATE INDEX lexeme_ngrams_word_idx ON lexeme_ngrams(word);
+            """
+        )
     if "semantic" in selected:
         connection.executescript(
             """
@@ -251,6 +313,21 @@ def create_schema(
             CREATE INDEX sense_topics_entry_idx ON sense_topics(entry_id);
             """
         )
+        if "search" in selected:
+            connection.executescript(
+                """
+                CREATE TABLE sense_search_terms (
+                    term TEXT NOT NULL,
+                    sense_id INTEGER NOT NULL,
+                    field TEXT NOT NULL,
+                    term_count INTEGER NOT NULL,
+                    PRIMARY KEY (term, sense_id, field),
+                    FOREIGN KEY(sense_id) REFERENCES senses(id) ON DELETE CASCADE
+                );
+                CREATE INDEX sense_search_terms_sense_idx
+                    ON sense_search_terms(sense_id);
+                """
+            )
 
 
 def metadata(connection: sqlite3.Connection) -> dict[str, str]:

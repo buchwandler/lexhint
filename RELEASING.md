@@ -1,7 +1,7 @@
 # Releasing Lexhint
 
 Use this checklist for a code release. Lexhint publishes the Python package separately from language SQLite artifacts. Runtime commands require a local artifact, either built locally or installed from the dataset distribution.
-
+Managed SQLite artifacts currently use schema 8. Rebuild and republish every managed dataset variant after schema or capability changes; do not migrate immutable schema-7 artifacts in place. Rich artifacts must advertise `lexical,semantic,dictionary,search`, while runtime remains `lexical,semantic`.
 The package uses dynamic setuptools-scm versioning. A Git-less source archive resolves to `0+unknown` and must never be published.
 
 ## Quality checks
@@ -67,6 +67,9 @@ python -m venv /tmp/lexhint-release-test
 /tmp/lexhint-release-test/bin/lexhint dictionary --help
 /tmp/lexhint-release-test/bin/lexhint dictionary word --help
 /tmp/lexhint-release-test/bin/lexhint dictionary build --help
+/tmp/lexhint-release-test/bin/lexhint dictionary search --help
+/tmp/lexhint-release-test/bin/lexhint suggest --help
+/tmp/lexhint-release-test/bin/lexhint headwords --help
 /tmp/lexhint-release-test/bin/lexhint dictionary status --help
 ```
 
@@ -98,6 +101,9 @@ From the repository checkout, build a small deterministic artifact and exercise 
   --target 16:21 --path /tmp/lexhint-en.sqlite3
 /tmp/lexhint-release-test/bin/lexhint dictionary word compiler \
   --path /tmp/lexhint-en.sqlite3
+/tmp/lexhint-release-test/bin/lexhint suggest complier --path /tmp/lexhint-en.sqlite3
+/tmp/lexhint-release-test/bin/lexhint headwords 'comp*' --path /tmp/lexhint-en.sqlite3
+/tmp/lexhint-release-test/bin/lexhint dictionary search "computer program" --path /tmp/lexhint-en.sqlite3
 /tmp/lexhint-release-test/bin/lexhint dictionary status \
   --path /tmp/lexhint-en.sqlite3
 /tmp/lexhint-release-test/bin/lexhint --json word compiler \

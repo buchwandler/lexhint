@@ -1,6 +1,6 @@
 ---
 title: "Architecture Documentation"
-version: 19
+version: 20
 generator: "archledger 0.4.0"
 arc42_template_version: "9.0-EN"
 ---
@@ -44,10 +44,11 @@ The architecture is constrained by a local, self-describing SQLite artifact and 
 - `lexhint.Lexicon` opens artifacts through SQLite read-only mode.
 - Runtime operations never fetch network resources, create missing lexemes, or write partial caches.
 - The CLI resolves default cached or vendored artifacts for ordinary reads and exposes `dictionary status` for current SQL counts.
-- `SCHEMA_VERSION` is an exact artifact compatibility key. Current schema 7 clients select and open only schema 7 artifacts; schema families are stored side by side under `s<schema>` paths.
+- `SCHEMA_VERSION` is an exact artifact compatibility key. Current schema 8 clients select and open only schema 8 artifacts; schema families are stored side by side under `s<schema>` paths.
 - Metadata records schema version, base language, coverage, profile, capabilities, creation time, builder version, and source provenance.
-- `lexemes` is present for the lexical capability. Semantic and dictionary tables are capability-specific.
-- Default builds select `lexical,semantic,dictionary` and automatic pinned full FrequencyWords enrichment.
+- `lexemes` is present for the lexical capability. Semantic, dictionary, and search tables are capability-specific.
+- Default builds select `lexical,semantic,dictionary,search` and automatic pinned full FrequencyWords enrichment.
+- `search` provides indexed fuzzy headword and dictionary-text search; dictionary-text search requires both `dictionary` and `search`.
 - Frequency is enrichment, not a capability.
 - External dictionary and corpus data remain separate from the Apache-2.0 code and retain their licensing obligations.
 
@@ -103,16 +104,16 @@ The solution is organized around a small, explicit evidence pipeline.
 
 The package is organized around a local artifact runtime and focused build modules.
 
-- `lexhint.lexicon.Lexicon` owns read-only artifact access, lexical lookup, prefix completion, segmentation, dictionary inspection, and semantic evidence queries.
+- `lexhint.lexicon.Lexicon` owns read-only artifact access, lexical lookup, prefix completion, fuzzy suggestions, headword matching, indexed definition search, segmentation, dictionary inspection, and semantic evidence queries.
 - `lexhint.schema` defines schema and capability validation for the self-describing SQLite artifact.
 - `lexhint.builder` creates fresh atomic artifacts from streamed source data and applies the immutable build plan.
 - `lexhint.extract` converts source records into curated lexical and dictionary data.
 - `lexhint.semantics` projects source topics into the stable `SemanticDomain` taxonomy.
 - `lexhint.frequency` and `lexhint.sources` resolve corpus enrichment and source provenance.
-- `lexhint.store` persists lexemes, domains, rich dictionary tables, metadata, and indexes.
+- `lexhint.store` persists lexemes, domains, rich dictionary tables, search indexes, metadata, and indexes.
 - `lexhint.cli` exposes build and runtime operations in human-readable and JSON forms.
 
-The public package exports `Lexicon` and `SemanticDomain` as the principal consumer interface. It also exports `SCHEMA_VERSION`, `DATASET_VARIANTS`, `DATASET_VARIANT_NAMES`, `DEFAULT_DATASET_VARIANT`, and `supported_base_languages()` for the separate dataset publisher contract. Build and source helpers remain available from their owning modules.
+The public package exports `Lexicon`, `DictionarySearchHit`, and `SemanticDomain` as the principal consumer interface. It also exports `SCHEMA_VERSION`, `DATASET_VARIANTS`, `DATASET_VARIANT_NAMES`, `DEFAULT_DATASET_VARIANT`, and `supported_base_languages()` for the separate dataset publisher contract. Build and source helpers remain available from their owning modules.
 
 ## Consumer interface
 
@@ -121,6 +122,9 @@ from lexhint import Lexicon, SemanticDomain
 
 lexicon = Lexicon.from_path("en.sqlite3")
 completions = lexicon.complete("comp")
+suggestions = lexicon.suggest("complier")
+headwords = lexicon.match_headwords("comp*", syntax="glob")
+hits = lexicon.search_definitions("computer program", fields=("glosses",), match="all")
 segments = lexicon.segment("chatgpt")
 text = "The compiler is 8.3.2."
 start = text.index("8.3.2")
@@ -140,7 +144,7 @@ The consumer decides what an unknown run, version, or candidate should mean. Lex
 1. The consumer constructs `Lexicon` from one local SQLite artifact, resolved from the vendored, configured cache, or schema-aware managed dataset path when no override is supplied.
 2. Construction validates exact schema version, base language, coverage, and explicit capabilities before queries.
 3. An optional locale such as `GB` or `US` is runtime presentation state. It does not change artifact resolution or physical English dataset identity.
-4. `word()` and `contains()` query dictionary-derived lexemes. `word()` exposes casing attestation already stored in the lexeme row. `complete()` performs bounded normalized prefix completion through exact lookup and indexed lexical range queries. `segment()` evaluates known spans using authoritative full coverage, case flags, dynamic programming, and optional corpus rank, while retaining strict surface-case acceptance.
+4. `word()` and `contains()` query lexical keys. `complete()` performs bounded normalized prefix completion through exact lookup and indexed lexical range queries; it is not fuzzy correction. `suggest()` uses bounded n-gram candidates, `match_headwords()` uses safe glob/regex scans, and `search_definitions()` joins the indexed sense-term table without exposing SQLite details. `segment()` evaluates known spans using authoritative full coverage, case flags, dynamic programming, and optional corpus rank, while retaining strict surface-case acceptance.
 5. Runtime reads do not acquire missing data or write to the artifact.
 
 ## Semantic evidence
@@ -159,7 +163,7 @@ Lexhint is deployed as a local Python package and a local SQLite evidence artifa
 - Consumers install the package and open an artifact with `Lexicon.from_path()` or the default `Lexicon` resolution.
 - Artifact paths are selected by the caller or build workflow; CLI `--path` is an explicit override.
 - `dictionary status` reports current row counts and metadata without rebuilding the artifact.
-- A complete local artifact supports offline lexical, segmentation, dictionary, and semantic reads when the corresponding capabilities are present.
+- A complete local artifact supports offline lexical, segmentation, dictionary, semantic, fuzzy, headword, and definition-search reads when the corresponding capabilities are present.
 - Generated artifacts contain source and hash provenance for dictionary and corpus inputs.
 - Build downloads and replacements use temporary files and atomic rename.
 - Generated external datasets are distributed separately from code according to `DATA_SOURCES.md`.
@@ -172,7 +176,7 @@ Lexhint is deployed as a local Python package and a local SQLite evidence artifa
 
 Schema metadata is explicit and self-describing. `language`, `locale`, `variant`, `schema_version`, and `dataset_version` remain separate dimensions. Locale is optional and does not create `en-GB` or `en-US` artifacts. Strict equality, not a compatibility range, controls SQLite access.
 
-Schema 7 metadata is explicit and self-describing. `lexemes` is always present for lexical capability and already stores lowercase, titlecase, and uppercase attestation flags exposed by `WordEvidence`. `lexeme_domains` exists only for `semantic`; each row stores bounded deterministic weight and source-topic provenance. Rich `entries`, `senses`, `sense_topics`, forms, and pronunciations exist only for `dictionary`. Old partial-cache schemas are rejected and must be rebuilt. Prefix completion uses the existing `lexemes.word` primary-key range and does not require a schema change.
+Schema 8 metadata is explicit and self-describing. `lexemes` is always present for lexical capability and stores lowercase, titlecase, and uppercase attestation flags exposed by `WordEvidence`. `lexeme_domains` exists only for `semantic`; rich `entries`, `senses`, and `sense_topics` exist only for `dictionary`; `lexeme_ngrams` exists for `search`; and `sense_search_terms` exists for `dictionary` plus `search`. Search metadata records index version and row counts, and projections remove those claims when search is excluded. Old partial-cache schemas are rejected and must be rebuilt.
 
 ### Provenance and data lifecycle
 
@@ -195,7 +199,7 @@ Lexhint treats published datasets as explicit, immutable local artifacts rather 
 The current architecture records these decisions.
 
 - **Use a self-describing SQLite artifact.** Schema, language, coverage, profile, capabilities, and provenance are validated at runtime.
-- **Separate lexical, semantic, and dictionary capabilities.** Consumers can select the evidence they need without allowing data from an older artifact to leak into a fresh build.
+- **Separate lexical, semantic, dictionary, and search capabilities.** Consumers can select evidence and index size intentionally without allowing data from an older artifact to leak into a fresh build.
 - **Use indexed lexical ranges for completion.** `complete()` is a local read-only normalized prefix query with exact-match priority and explicit frequency or lexical ordering.
 - **Treat frequency as enrichment.** Corpus rank improves segmentation and commonness evidence but does not define lexical capability.
 - **Build fresh artifacts atomically.** Capability-specific tables are created from the resolved build plan and replacements cannot expose partial output.

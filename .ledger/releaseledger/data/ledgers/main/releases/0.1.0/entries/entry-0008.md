@@ -13,7 +13,7 @@ audience: null
 scopes: []
 source_refs: []
 paths:
-- lexhint/store.py
+  - lexhint/store.py
 issues: []
 prs: []
 sources: []

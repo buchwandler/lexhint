@@ -1,11 +1,12 @@
 from __future__ import annotations
 
+import fnmatch
 import json
 import math
 import os
 import re
 import sqlite3
-from collections.abc import Mapping
+from collections.abc import Callable, Mapping
 from contextlib import closing
 from dataclasses import replace
 from importlib.resources import files
@@ -16,6 +17,7 @@ from .languages import locale_spec, normalize_language, normalize_locale
 from .models import (
     ContextCue,
     DictionaryEntry,
+    DictionarySearchHit,
     DomainEvidence,
     Example,
     Form,
@@ -25,6 +27,15 @@ from .models import (
     SemanticDomain,
     Sense,
     WordEvidence,
+)
+from .search import (
+    FIELD_WEIGHTS,
+    capped_term_frequency,
+    edit_distance,
+    glob_literal_prefix,
+    regex_literal_prefix,
+    search_tokens,
+    word_ngrams,
 )
 from .store import SCHEMA_VERSION, normalize_display_word, normalize_word
 
@@ -327,6 +338,203 @@ class Lexicon:
 
         result.extend(str(row["word"]) for row in rows)
         return tuple(result)
+
+    def suggest(
+        self,
+        query: str,
+        *,
+        limit: int = 20,
+        max_distance: int | None = None,
+    ) -> tuple[str, ...]:
+        """Return bounded, deterministic fuzzy spelling candidates."""
+        self._require("lexical")
+        self._require("search")
+        if limit < 0:
+            raise ValueError("limit must be >= 0")
+        if max_distance is not None and max_distance < 0:
+            raise ValueError("max_distance must be >= 0")
+        normalized = normalize_word(query.strip())
+        if not normalized or limit == 0:
+            return ()
+        if max_distance is None:
+            max_distance = 1 if len(normalized) <= 5 else 2
+        grams = tuple(sorted(word_ngrams(normalized)))
+        if not grams:
+            return ()
+        candidate_pool = max(200, limit * 50)
+        placeholders = ", ".join("?" for _ in grams)
+        with closing(self._connect()) as connection:
+            rows = connection.execute(
+                "SELECT n.word, l.corpus_rank, COUNT(*) AS overlap "
+                "FROM lexeme_ngrams AS n JOIN lexemes AS l ON l.word=n.word "
+                f"WHERE n.gram IN ({placeholders}) "
+                "GROUP BY n.word ORDER BY overlap DESC, n.word LIMIT ?",
+                (*grams, candidate_pool),
+            ).fetchall()
+        ranked: list[tuple[tuple[object, ...], str]] = []
+        for row in rows:
+            word = str(row["word"])
+            distance = edit_distance(normalized, word, max_distance=max_distance)
+            if distance > max_distance:
+                continue
+            rank = row["corpus_rank"]
+            key = (
+                distance,
+                rank is None,
+                rank if rank is not None else 10**18,
+                word,
+            )
+            ranked.append((key, word))
+        ranked.sort(key=lambda item: item[0])
+        return tuple(word for _, word in ranked[:limit])
+
+    def match_headwords(
+        self,
+        pattern: str,
+        *,
+        syntax: str = "glob",
+        limit: int = 100,
+    ) -> tuple[str, ...]:
+        """Match normalized lexical keys with glob or full-match regex syntax."""
+        self._require("lexical")
+        if limit < 0:
+            raise ValueError("limit must be >= 0")
+        if limit == 0:
+            return ()
+        if syntax not in {"glob", "regex"}:
+            raise ValueError("syntax must be 'glob' or 'regex'")
+        normalized_pattern = normalize_word(pattern)
+        if syntax == "glob":
+
+            def glob_match(word: str) -> bool:
+                return fnmatch.fnmatchcase(word, normalized_pattern)
+
+            matcher: Callable[[str], bool] = glob_match
+            prefix = glob_literal_prefix(normalized_pattern)
+        else:
+            try:
+                compiled = re.compile(normalized_pattern)
+            except re.error as exc:
+                raise ValueError(f"invalid regex pattern: {exc}") from exc
+
+            def regex_match(word: str) -> bool:
+                return compiled.fullmatch(word) is not None
+
+            matcher = regex_match
+            prefix = regex_literal_prefix(normalized_pattern)
+        upper = _prefix_upper_bound(prefix) if prefix else None
+        query = "SELECT word FROM lexemes"
+        parameters: tuple[object, ...] = ()
+        if prefix and upper is not None:
+            query += " WHERE word >= ? AND word < ?"
+            parameters = (prefix, upper)
+        query += " ORDER BY word"
+        matches: list[str] = []
+        with closing(self._connect()) as connection:
+            cursor = connection.execute(query, parameters)
+            while len(matches) < limit:
+                rows = cursor.fetchmany(256)
+                if not rows:
+                    break
+                for row in rows:
+                    word = str(row["word"])
+                    if matcher(word):
+                        matches.append(word)
+                        if len(matches) == limit:
+                            break
+        return tuple(matches)
+
+    def search_definitions(
+        self,
+        query: str,
+        *,
+        fields: tuple[str, ...] = ("glosses",),
+        match: str = "all",
+        limit: int = 50,
+    ) -> tuple[DictionarySearchHit, ...]:
+        """Search indexed dictionary sense text with deterministic relevance."""
+        self._require("dictionary")
+        self._require("search")
+        if limit < 0:
+            raise ValueError("limit must be >= 0")
+        if match not in {"all", "any"}:
+            raise ValueError("match must be 'all' or 'any'")
+        allowed = set(FIELD_WEIGHTS)
+        selected_fields = tuple(dict.fromkeys(fields))
+        unknown = sorted(set(selected_fields) - allowed)
+        if unknown:
+            raise ValueError(f"unknown search field {unknown[0]!r}")
+        if not selected_fields:
+            raise ValueError("fields must not be empty")
+        if limit == 0:
+            return ()
+        terms = tuple(dict.fromkeys(search_tokens(query)))
+        if not terms:
+            return ()
+        term_placeholders = ", ".join("?" for _ in terms)
+        field_placeholders = ", ".join("?" for _ in selected_fields)
+        sql = (
+            "SELECT t.sense_id, t.term, t.field, t.term_count, "
+            "s.glosses, s.sense_index, e.display_word, e.pos, e.entry_index, "
+            "l.corpus_rank "
+            "FROM sense_search_terms AS t "
+            "JOIN senses AS s ON s.id=t.sense_id "
+            "JOIN entries AS e ON e.id=s.entry_id "
+            "LEFT JOIN lexemes AS l ON l.word=e.word "
+            f"WHERE t.term IN ({term_placeholders}) "
+            f"AND t.field IN ({field_placeholders})"
+        )
+        parameters = (*terms, *selected_fields)
+        grouped: dict[int, list[sqlite3.Row]] = {}
+        with closing(self._connect()) as connection:
+            for row in connection.execute(sql, parameters):
+                grouped.setdefault(int(row["sense_id"]), []).append(row)
+        ranked: list[tuple[tuple[object, ...], DictionarySearchHit]] = []
+        for rows in grouped.values():
+            first = rows[0]
+            term_fields: dict[str, dict[str, int]] = {}
+            for row in rows:
+                term_fields.setdefault(str(row["term"]), {})[str(row["field"])] = int(
+                    row["term_count"]
+                )
+            matched_terms = tuple(term for term in terms if term in term_fields)
+            if match == "all" and len(matched_terms) != len(terms):
+                continue
+            matched_fields = tuple(
+                field
+                for field in selected_fields
+                if any(field in term_fields[term] for term in matched_terms)
+            )
+            score = sum(
+                FIELD_WEIGHTS[field] * capped_term_frequency(count)
+                for term in matched_terms
+                for field, count in term_fields[term].items()
+            )
+            hit = DictionarySearchHit(
+                word=str(first["display_word"]),
+                pos=str(first["pos"]),
+                sense_index=int(first["sense_index"]),
+                glosses=self._tuple(str(first["glosses"])),
+                score=float(score),
+                matched_terms=matched_terms,
+                matched_fields=matched_fields,
+            )
+            rank = first["corpus_rank"]
+            key = (
+                -score,
+                rank is None,
+                rank if rank is not None else 10**18,
+                hit.word.casefold(),
+                int(first["entry_index"]),
+                hit.sense_index,
+            )
+            ranked.append((key, hit))
+        ranked.sort(key=lambda item: item[0])
+        return tuple(hit for _, hit in ranked[:limit])
+
+    def reverse(self, query: str, *, limit: int = 50) -> tuple[DictionarySearchHit, ...]:
+        """Search glosses using reverse-dictionary semantics."""
+        return self.search_definitions(query, fields=("glosses",), match="all", limit=limit)
 
     def _lexeme_candidates(self, values: set[str]) -> dict[str, sqlite3.Row]:
         result: dict[str, sqlite3.Row] = {}

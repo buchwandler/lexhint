@@ -7,14 +7,15 @@ versioning:
 entry_id: entry-0005
 release_version: 0.1.0
 kind: removed
-summary: Removed standalone word-list vendoring in favor of dictionary-derived lexical
+summary:
+  Removed standalone word-list vendoring in favor of dictionary-derived lexical
   membership
 status: accepted
 audience: null
 scopes: []
 source_refs: []
 paths:
-- tools/vendor_wordlists.py
+  - tools/vendor_wordlists.py
 issues: []
 prs: []
 sources: []

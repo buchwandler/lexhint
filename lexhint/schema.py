@@ -3,11 +3,11 @@ from __future__ import annotations
 from collections.abc import Iterable
 from dataclasses import dataclass
 
-CAPABILITY_ORDER = ("lexical", "semantic", "dictionary")
+CAPABILITY_ORDER = ("lexical", "semantic", "dictionary", "search")
 CAPABILITIES = frozenset(CAPABILITY_ORDER)
 PROFILES = {
     "runtime": ("lexical", "semantic"),
-    "rich": ("lexical", "semantic", "dictionary"),
+    "rich": ("lexical", "semantic", "dictionary", "search"),
 }
 
 
@@ -45,9 +45,9 @@ def normalize_capabilities(
             else "custom"
         )
     canonical = tuple(capability for capability in CAPABILITY_ORDER if capability in selected)
-    if "lexical" not in canonical:
-        missing = "semantic" if "semantic" in selected else "dictionary"
-        raise ValueError(f"capability {missing!r} requires capability 'lexical'")
+    for dependent in ("semantic", "dictionary", "search"):
+        if dependent in canonical and "lexical" not in canonical:
+            raise ValueError(f"capability {dependent!r} requires capability 'lexical'")
     return CapabilitySelection(canonical, profile or "custom")
 
 

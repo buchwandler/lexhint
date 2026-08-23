@@ -114,9 +114,9 @@ def test_incompatible_database_metadata_is_rejected_before_queries(tmp_path: Pat
         no_frequency=True,
     )
     with closing(sqlite3.connect(database)) as connection:
-        connection.execute("UPDATE metadata SET value='8' WHERE key='schema_version'")
+        connection.execute("UPDATE metadata SET value='7' WHERE key='schema_version'")
         connection.commit()
-    with pytest.raises(RuntimeError, match="uses schema 8"):
+    with pytest.raises(RuntimeError, match="uses schema 7"):
         Lexicon.from_path(database)
 
 

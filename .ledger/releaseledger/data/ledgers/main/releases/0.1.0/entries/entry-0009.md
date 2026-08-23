@@ -13,7 +13,7 @@ audience: null
 scopes: []
 source_refs: []
 paths:
-- pyproject.toml
+  - pyproject.toml
 issues: []
 prs: []
 sources: []

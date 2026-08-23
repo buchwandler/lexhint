@@ -26,11 +26,24 @@ def test_project_runtime_and_lexical_from_rich(rich_artifact: Path, tmp_path: Pa
         rich_artifact, output=tmp_path / "lexical.sqlite3", capabilities="lexical"
     )
 
+    lexical_search = project_artifact(
+        rich_artifact, output=tmp_path / "lexical-search.sqlite3", capabilities="lexical,search"
+    )
+    dictionary_search = project_artifact(
+        rich_artifact,
+        output=tmp_path / "dictionary-search.sqlite3",
+        capabilities="lexical,dictionary,search",
+    )
     runtime_lexicon = Lexicon.from_path(runtime)
     lexical_lexicon = Lexicon.from_path(lexical)
+    lexical_search_lexicon = Lexicon.from_path(lexical_search)
+    dictionary_search_lexicon = Lexicon.from_path(dictionary_search)
     rich_lexicon = Lexicon.from_path(rich_artifact)
     assert runtime_lexicon.capabilities == ("lexical", "semantic")
     assert lexical_lexicon.capabilities == ("lexical",)
+    assert lexical_search_lexicon.capabilities == ("lexical", "search")
+    assert dictionary_search_lexicon.capabilities == ("lexical", "dictionary", "search")
+    assert lexical_search_lexicon.suggest("lov") == ("love",)
     assert runtime_lexicon.contains("love") == rich_lexicon.contains("love")
     assert runtime_lexicon.context_domains(
         "music love", target=(6, 10)
@@ -41,7 +54,7 @@ def test_project_runtime_and_lexical_from_rich(rich_artifact: Path, tmp_path: Pa
         lexical_lexicon.context_domains("music love", target=(6, 10))
 
     metadata = dict(runtime_lexicon.metadata)
-    assert metadata["projected_from_capabilities"] == "lexical,semantic,dictionary"
+    assert metadata["projected_from_capabilities"] == "lexical,semantic,dictionary,search"
     assert metadata["projected_from_sha256"]
     assert read_artifact_status(path=runtime).counts["entries"] is None
 

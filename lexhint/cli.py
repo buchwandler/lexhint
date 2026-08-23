@@ -128,6 +128,20 @@ def _parser() -> argparse.ArgumentParser:
         if name == "complete":
             command.add_argument("--limit", type=int, default=20)
 
+    suggest = sub.add_parser("suggest", help="suggest likely spellings for a query")
+    suggest.add_argument("values", nargs="+")
+    suggest.add_argument("-l", "--language", choices=sorted(SUPPORTED_LANGUAGES))
+    _artifact_selector(suggest)
+    suggest.add_argument("--limit", type=int, default=20)
+    suggest.add_argument("--max-distance", type=int)
+
+    headwords = sub.add_parser("headwords", help="match lexical headwords by glob or regex")
+    headwords.add_argument("pattern")
+    headwords.add_argument("-l", "--language", choices=sorted(SUPPORTED_LANGUAGES))
+    _artifact_selector(headwords)
+    headwords.add_argument("--syntax", choices=("glob", "regex"), default="glob")
+    headwords.add_argument("--limit", type=int, default=100)
+
     context = sub.add_parser("context", help="show semantic-domain evidence around a target")
     context.add_argument("text", nargs="+")
     context.add_argument("--target", required=True, help="START:END span or literal target")
@@ -145,7 +159,7 @@ def _parser() -> argparse.ArgumentParser:
     build.add_argument("--source", dest="source_option", help="dictionary JSONL(.gz) path or URL")
     build.add_argument("--output")
     build.add_argument(
-        "--capabilities", help="comma-separated capabilities: lexical,semantic,dictionary"
+        "--capabilities", help="comma-separated capabilities: lexical,semantic,dictionary,search"
     )
     build.add_argument("--profile", choices=sorted(PROFILES))
     build.add_argument(
@@ -164,9 +178,17 @@ def _parser() -> argparse.ArgumentParser:
     project.add_argument("source", type=Path)
     project.add_argument("--output", required=True)
     project.add_argument(
-        "--capabilities", help="comma-separated capabilities: lexical,semantic,dictionary"
+        "--capabilities", help="comma-separated capabilities: lexical,semantic,dictionary,search"
     )
     project.add_argument("--profile", choices=sorted(PROFILES))
+
+    search = dictionary_sub.add_parser("search", help="search indexed dictionary definitions")
+    search.add_argument("query", nargs="+")
+    search.add_argument("-l", "--language", choices=sorted(SUPPORTED_LANGUAGES))
+    _artifact_selector(search)
+    search.add_argument("--fields", default="glosses")
+    search.add_argument("--match", choices=("all", "any"), default="all")
+    search.add_argument("--limit", type=int, default=50)
 
     inspect = dictionary_sub.add_parser(
         "word",
@@ -468,6 +490,37 @@ def _run(args: argparse.Namespace, *, style: TerminalStyle, json_output: bool) -
             for completion in completions:
                 print(completion)
         return 0
+    if args.command == "suggest":
+        language, query = _language(args.values, args.language)
+        lexicon = Lexicon(
+            language, variant=args.variant, dataset_version=args.dataset_version, path=args.path
+        )
+        suggestions = lexicon.suggest(query, limit=args.limit, max_distance=args.max_distance)
+        if json_output:
+            _json({"language": language, "query": query, "suggestions": list(suggestions)})
+        else:
+            for suggestion in suggestions:
+                print(suggestion)
+        return 0
+    if args.command == "headwords":
+        language = normalize_language(args.language or _default_language())
+        lexicon = Lexicon(
+            language, variant=args.variant, dataset_version=args.dataset_version, path=args.path
+        )
+        matches = lexicon.match_headwords(args.pattern, syntax=args.syntax, limit=args.limit)
+        if json_output:
+            _json(
+                {
+                    "language": language,
+                    "pattern": args.pattern,
+                    "syntax": args.syntax,
+                    "matches": list(matches),
+                }
+            )
+        else:
+            for match in matches:
+                print(match)
+        return 0
     if args.command == "segment":
         language, text = _language(args.values, args.language)
         lexicon = Lexicon(
@@ -514,6 +567,27 @@ def _run(args: argparse.Namespace, *, style: TerminalStyle, json_output: bool) -
             )
         else:
             _context(domains, style)
+        return 0
+    if args.dictionary_command == "search":
+        language = normalize_language(args.language or _default_language())
+        fields = tuple(field.strip() for field in args.fields.split(",") if field.strip())
+        lexicon = Lexicon(
+            language, variant=args.variant, dataset_version=args.dataset_version, path=args.path
+        )
+        query = " ".join(args.query)
+        hits = lexicon.search_definitions(query, fields=fields, match=args.match, limit=args.limit)
+        if json_output:
+            _json(
+                {
+                    "language": language,
+                    "query": query,
+                    "hits": [asdict(hit) for hit in hits],
+                }
+            )
+        else:
+            for hit in hits:
+                gloss = "; ".join(hit.glosses)
+                print(f"{hit.word}\t{hit.pos}\t{hit.score:.2f}\t{gloss}")
         return 0
     if args.dictionary_command == "project":
         path = project_artifact(

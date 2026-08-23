@@ -77,7 +77,7 @@ american = Lexicon("en", locale="en-US")
 
 `locale` accepts the canonical `GB` and `US` values plus their supported aliases. Without a locale, English remains region-neutral. Locale-aware ordering and labels use only regional tags retained from source data. Frequency remains base-language English data, not British or American frequency.
 
-Runtime access is local-only, deterministic, read-only, and never fetches missing entries or mutates the database. `complete()` performs deterministic normalized lexical-key prefix completion and is not a spelling corrector. It requires only the `lexical` capability, returns an exact key first, and ranks remaining full-prefix matches by corpus rank when available or lexical order otherwise. `segment()` and semantic context operations require full authoritative coverage.
+Runtime access is local-only, deterministic, read-only, and never fetches missing entries or mutates the database. `complete()` performs deterministic normalized lexical-key prefix completion and is not a spelling corrector. It requires only the `lexical` capability, returns an exact key first, and ranks remaining full-prefix matches by corpus rank when available or lexical order otherwise. `suggest()` is the separate bounded fuzzy-spelling API and requires `search`; `match_headwords()` provides glob/regex matching; `search_definitions()` provides indexed dictionary-text search and requires `dictionary` plus `search`. Search results are bounded by the artifact's available coverage. `segment()` and semantic context operations require full authoritative coverage.
 
 The public runtime operations are:
 
@@ -88,6 +88,11 @@ lexicon.segment("chatgpt")
 lexicon.context_domains(text, target=(start, end))
 lexicon.supports_domain(text, target=(start, end), domain="computing")
 lexicon.entries("compiler")  # rich artifacts only
+lexicon.suggest("complier", limit=20)  # search artifacts
+lexicon.match_headwords("comp*", syntax="glob")
+lexicon.search_definitions(
+    "computer program", fields=("glosses",), match="all"
+)  # rich search artifacts
 ```
 
 Dictionary membership is authoritative. Frequency rank and count enrich existing lexemes but never create corpus-only words. `Lexicon.word()` reports normalized membership and the attested lowercase, titlecase, and uppercase forms. `uppercase_only` is true only for a known lexeme with uppercase attestation and no lowercase or titlecase attestation.
@@ -98,7 +103,7 @@ Semantic results are explainable `DomainEvidence` values containing score and ne
 
 ## Build an artifact
 
-The default build creates a full `lexical,semantic,dictionary` artifact and automatically acquires the pinned full FrequencyWords source:
+The default build creates a full `lexical,semantic,dictionary,search` artifact and automatically acquires the pinned full FrequencyWords source:
 
 ```bash
 lexhint dictionary build en
@@ -109,13 +114,16 @@ Use a local or remote dictionary source and explicit build policies when needed:
 ```bash
 lexhint dictionary build en --source ./raw-wiktextract-data.jsonl.gz
 lexhint dictionary build en --capabilities lexical,semantic --no-frequency
+lexhint dictionary build en --capabilities lexical,search --no-frequency
 lexhint dictionary build en --profile runtime
 lexhint dictionary build en --frequency-source ./en_full.txt
 lexhint dictionary build en --refresh-frequency
 lexhint --offline dictionary build en --source ./raw-wiktextract-data.jsonl.gz
 ```
 
-Capabilities are canonicalized in the order `lexical,semantic,dictionary`. `semantic` and `dictionary` require `lexical`. Profiles are shortcuts: `runtime` means `lexical,semantic`, and `rich` means `lexical,semantic,dictionary`.
+Capabilities are canonicalized in the order `lexical,semantic,dictionary,search`. `semantic`, `dictionary`, and `search` require `lexical`. Dictionary-text search additionally requires `dictionary`. Profiles are shortcuts: `runtime` means `lexical,semantic`, and `rich` means `lexical,semantic,dictionary,search`.
+
+`complete()` is prefix completion only; it does not correct spelling. Use `suggest()` for fuzzy spelling candidates, `match_headwords()` for glob/regex lexical-key matching, and `search_definitions()` for indexed dictionary sense search.
 
 Frequency enrichment is independent of capabilities. Use `--no-frequency` for a valid lexical artifact without corpus data. Automatic sources are cached under `~/.cache/lexhint/sources/frequencywords/<revision>/`, or an equivalent XDG/`LEXHINT_CACHE_DIR` location. Builds record source URLs, revisions, hashes, schema, capabilities, and builder metadata. Build configuration and progress are written to stderr, while the final result, including JSON, is written to stdout.
 
@@ -128,6 +136,10 @@ lexhint segment chatgpt -l en --dataset-version 2026.08.20
 lexhint context "The compiler is 8.3.2." -l en --target 16:21
 lexhint complete comp -l en --limit 10
 lexhint --json complete comp -l en --limit 10
+lexhint suggest compilar -l en --limit 10
+lexhint headwords 'comp*' -l en --syntax glob
+lexhint dictionary search "large feline" -l en --fields glosses --match all
+lexhint --json dictionary search "large feline" -l en
 lexhint dictionary word compiler -l en --variant rich
 lexhint dictionary status en --variant runtime
 ```

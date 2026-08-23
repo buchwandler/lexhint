@@ -38,6 +38,7 @@ from .lexicon import (
 from .models import (
     ContextCue,
     DictionaryEntry,
+    DictionarySearchHit,
     DomainEvidence,
     Example,
     Form,
@@ -65,6 +66,7 @@ __all__ = [
     "normalize_locale",
     "supported_base_languages",
     "DictionaryEntry",
+    "DictionarySearchHit",
     "DomainEvidence",
     "Example",
     "Form",

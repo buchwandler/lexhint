@@ -7,14 +7,15 @@ versioning:
 entry_id: entry-0010
 release_version: 0.1.0
 kind: quality
-summary: Improved CI and publication checks for tests, static analysis, documentation,
+summary:
+  Improved CI and publication checks for tests, static analysis, documentation,
   distributions, and wheel smoke tests
 status: accepted
 audience: null
 scopes: []
 source_refs: []
 paths:
-- .github/workflows/tests.yml
+  - .github/workflows/tests.yml
 issues: []
 prs: []
 sources: []
