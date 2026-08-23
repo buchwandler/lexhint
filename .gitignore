@@ -220,3 +220,8 @@ __marimo__/
 *.sqlite3-journal
 
 context_lexhint*.*
+
+benchmarks/results/*
+!benchmarks/results/.gitkeep
+benchmarks/**/*.sqlite3
+benchmarks/**/*.sqlite3.gz
