@@ -82,6 +82,22 @@ def object_sizes(connection: sqlite3.Connection) -> dict[str, int] | None:
     return {str(row[0]): int(row[1]) for row in rows}
 
 
+def _relation_payload_bytes(path: str | Path) -> int:
+    connection = sqlite3.connect(path)
+    try:
+        row = connection.execute(
+            "SELECT COALESCE(SUM("
+            "LENGTH(CAST(source_word AS BLOB)) + "
+            "LENGTH(CAST(target_word AS BLOB)) + "
+            "LENGTH(CAST(relation AS BLOB)) + "
+            "LENGTH(CAST(tags AS BLOB))"
+            "), 0) FROM headword_relations"
+        ).fetchone()
+    finally:
+        connection.close()
+    return int(row[0]) if row else 0
+
+
 def measure_database(
     path: str | Path, *, gzip_path: str | Path | None = None, gzip_level: int = 9
 ) -> dict[str, Any]:
@@ -158,14 +174,17 @@ def build_database(
         vacuumed = measure_database(database_path)
     profile = dataset.profile
     relation_rows = int(build.counts.get("relations", 0))
-    relation_bytes = sum(
+    relation_object_bytes = sum(
         int(value)
         for name, value in (as_built.get("objects") or {}).items()
         if str(name).startswith("headword_relations")
     )
+    relation_bytes = relation_object_bytes
+    if relation_rows and not relation_bytes:
+        relation_bytes = _relation_payload_bytes(database_path)
     relation_metrics = {
         "rows": relation_rows,
-        "object_bytes": relation_bytes,
+        "object_bytes": relation_object_bytes,
         "bytes_per_relation": relation_bytes / relation_rows if relation_rows else 0.0,
     }
     return {

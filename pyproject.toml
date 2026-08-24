@@ -60,6 +60,7 @@ fallback_version = "0+unknown"
 
 [tool.pytest.ini_options]
 testpaths = ["tests"]
+pythonpath = ["."]
 addopts = "-q"
 filterwarnings = [
   "error::ResourceWarning",
