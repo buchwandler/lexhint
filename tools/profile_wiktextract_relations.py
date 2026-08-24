@@ -35,10 +35,18 @@ def _percentile(values: list[int], fraction: float) -> int:
 
 
 def _relation_bytes(relation: HeadwordRelation) -> int:
-    return sum(
-        len(value.encode("utf-8"))
-        for value in (relation.source, relation.target, relation.relation, "|".join(relation.tags))
-    ) + 12
+    return (
+        sum(
+            len(value.encode("utf-8"))
+            for value in (
+                relation.source,
+                relation.target,
+                relation.relation,
+                "|".join(relation.tags),
+            )
+        )
+        + 12
+    )
 
 
 def profile_source(path: Path, *, language: str) -> dict[str, object]:
