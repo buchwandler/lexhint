@@ -1,7 +1,7 @@
 # Releasing Lexhint
 
 Use this checklist for a code release. Lexhint publishes the Python package separately from language SQLite artifacts. Runtime commands require a local artifact, either built locally or installed from the dataset distribution.
-Managed SQLite artifacts currently use schema 8. Rebuild and republish every managed dataset variant after schema or capability changes; do not migrate immutable schema-7 artifacts in place. Rich artifacts must advertise `lexical,semantic,dictionary,search`, while runtime remains `lexical,semantic`.
+Managed SQLite artifacts currently use schema 9. Rebuild and republish every managed dataset variant after schema or capability changes; do not migrate immutable older-schema artifacts in place. Rich artifacts must advertise `lexical,semantic,dictionary,search`, while runtime remains `lexical,semantic`.
 The package uses dynamic setuptools-scm versioning. A Git-less source archive resolves to `0+unknown` and must never be published.
 
 ## Quality checks
