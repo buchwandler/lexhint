@@ -16,7 +16,7 @@ from typing import Any, BinaryIO, TextIO, cast
 from urllib.parse import urlparse
 
 from .download import cached_dictionary_path, package_version, user_agent
-from .extract import dictionary_entries
+from .extract import dictionary_entries, relation_candidates
 from .frequency import enrich_frequency, iter_frequency_rows
 from .languages import normalize_language
 from .models import DictionaryBuildStats
@@ -27,6 +27,7 @@ from .store import (
     SCHEMA_VERSION,
     create_schema,
     insert_dictionary_entries,
+    insert_headword_relations,
     insert_lexeme_search_index,
     iter_jsonl_entries,
     set_metadata,
@@ -233,7 +234,7 @@ def build_dictionary(
     scanned = kept_entries = sense_count = 0
     frequency_rows = frequency_matches = frequency_total_tokens = 0
     semantic_rows = 0
-    search_lexeme_rows = search_sense_rows = 0
+    search_lexeme_rows = search_sense_rows = relation_rows = 0
     final_stats: DictionaryBuildStats
     try:
         connection = sqlite3.connect(tmp)
@@ -253,6 +254,8 @@ def build_dictionary(
                     "builder_version": package_version(),
                     "lexhint_version": package_version(),
                     "dictionary_source": source_value,
+                    "dictionary_source_format": "wiktextract-jsonl",
+                    "dictionary_source_contract": "1",
                     "dictionary_source_sha256": source_sha256 or "",
                     "source": source_value,
                     "source_sha256": source_sha256 or "",
@@ -300,6 +303,10 @@ def build_dictionary(
                                     )
                                 },
                             )
+                    if "dictionary" in selection.capabilities:
+                        relation_rows += insert_headword_relations(
+                            connection, relation_candidates(raw_entry, language=base_language)
+                        )
                 if scanned % 5000 == 0:
                     connection.commit()
                 if progress is not None and scanned % 25_000 == 0:
@@ -361,6 +368,7 @@ def build_dictionary(
                     "sense_count": str(
                         sense_count if "dictionary" in selection.capabilities else 0
                     ),
+                    "relation_rows": str(relation_rows),
                     "search_index_version": "1" if "search" in selection.capabilities else "",
                     "search_lexeme_ngram_rows": str(search_lexeme_rows),
                     "search_sense_term_rows": str(search_sense_rows),
@@ -386,6 +394,7 @@ def build_dictionary(
                 kept_entries if "dictionary" in selection.capabilities else 0,
                 search_lexeme_rows=search_lexeme_rows,
                 search_sense_rows=search_sense_rows,
+                relation_rows=relation_rows,
             )
             if progress is not None:
                 progress(final_stats)
@@ -475,6 +484,7 @@ def project_artifact(
                     "synonyms, antonyms",
                 ),
                 ("sense_topics", "entry_id, sense_id, topic"),
+                ("headword_relations", "source_word, target_word, relation, tags"),
             ):
                 placeholders = ", ".join("?" for _ in columns.split(", "))
                 target_connection.executemany(
@@ -520,6 +530,13 @@ def project_artifact(
                 "search_index_version": ("1" if "search" in selection.capabilities else ""),
                 "search_lexeme_ngram_rows": str(metadata_search_rows),
                 "search_sense_term_rows": str(metadata_sense_rows),
+                "relation_rows": str(
+                    target_connection.execute("SELECT COUNT(*) FROM headword_relations").fetchone()[
+                        0
+                    ]
+                )
+                if "dictionary" in selection.capabilities
+                else "0",
                 "created_at": now,
                 "built_at": now,
                 "projected_from_sha256": digest.hexdigest(),

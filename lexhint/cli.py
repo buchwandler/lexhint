@@ -190,6 +190,20 @@ def _parser() -> argparse.ArgumentParser:
     search.add_argument("--match", choices=("all", "any"), default="all")
     search.add_argument("--limit", type=int, default=50)
 
+    relations = dictionary_sub.add_parser("relations", help="show explicit headword relationships")
+    relations.add_argument("values", nargs="+")
+    relations.add_argument("-l", "--language", choices=sorted(SUPPORTED_LANGUAGES))
+    _artifact_selector(relations)
+    relations.add_argument("--relation", dest="relation_types", action="append")
+    relations.add_argument("--limit", type=int, default=50)
+
+    resolve = dictionary_sub.add_parser("resolve", help="resolve explicit headword relationships")
+    resolve.add_argument("values", nargs="+")
+    resolve.add_argument("-l", "--language", choices=sorted(SUPPORTED_LANGUAGES))
+    _artifact_selector(resolve)
+    resolve.add_argument("--relation", dest="relation_types", action="append")
+    resolve.add_argument("--limit", type=int, default=20)
+
     inspect = dictionary_sub.add_parser(
         "word",
         help="show rich dictionary entries",
@@ -311,6 +325,10 @@ def _status(info: ArtifactStatus, style: TerminalStyle) -> None:
     print(f"  coverage      {values['coverage']}")
     print(f"  profile       {values['profile']}")
     print(f"  capabilities  {', '.join(values['capabilities'])}")
+    provenance = values["provenance"]
+    print(f"  source        {provenance['dictionary_source']}")
+    print(f"  source format {provenance['dictionary_source_format'] or 'unknown'}")
+    print(f"  source spec   {provenance['dictionary_source_contract'] or 'unknown'}")
     print(f"  lexemes       {counts['lexemes']:,}")
     print(
         f"  semantic      {counts['semantic_rows']:,}"
@@ -321,6 +339,11 @@ def _status(info: ArtifactStatus, style: TerminalStyle) -> None:
         f"  dictionary    {counts['entries']:,} entries, {counts['senses']:,} senses"
         if counts["entries"] is not None
         else "  dictionary    not included"
+    )
+    print(
+        f"  relations     {counts['relations']:,} rows"
+        if counts["relations"] is not None
+        else "  relations     not included"
     )
     print(f"  frequency     {counts['frequency_lexemes']:,} lexemes ranked")
     print(f"  built         {values['built_at']}")
@@ -588,6 +611,45 @@ def _run(args: argparse.Namespace, *, style: TerminalStyle, json_output: bool) -
             for hit in hits:
                 gloss = "; ".join(hit.glosses)
                 print(f"{hit.word}\t{hit.pos}\t{hit.score:.2f}\t{gloss}")
+        return 0
+    if args.dictionary_command in {"relations", "resolve"}:
+        language, word = _language(args.values, args.language)
+        relation_types = tuple(
+            relation
+            for value in (args.relation_types or [])
+            for relation in value.split(",")
+            if relation
+        )
+        lexicon = Lexicon(
+            language, variant=args.variant, dataset_version=args.dataset_version, path=args.path
+        )
+        if args.dictionary_command == "relations":
+            relation_values = lexicon.relations(
+                word, relation_types=relation_types or None, limit=args.limit
+            )
+            payload = {
+                "language": language,
+                "word": word,
+                "relations": [asdict(value) for value in relation_values],
+            }
+            if json_output:
+                _json(payload)
+            else:
+                for value in relation_values:
+                    tags = f" [{', '.join(value.tags)}]" if value.tags else ""
+                    print(f"{value.source} -> {value.target}  {value.relation}{tags}")
+        else:
+            targets = lexicon.resolve_headword(
+                word,
+                relations=relation_types or ("redirect", "alternative", "form_of"),
+                limit=args.limit,
+            )
+            payload = {"language": language, "word": word, "targets": list(targets)}
+            if json_output:
+                _json(payload)
+            else:
+                for target_value in targets:
+                    print(target_value)
         return 0
     if args.dictionary_command == "project":
         path = project_artifact(

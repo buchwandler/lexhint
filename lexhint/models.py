@@ -1,6 +1,6 @@
 from __future__ import annotations
 
-from dataclasses import dataclass
+from dataclasses import dataclass, field
 from enum import Enum
 
 
@@ -67,6 +67,14 @@ class RelatedTerm:
 
 
 @dataclass(frozen=True, slots=True)
+class HeadwordRelation:
+    source: str
+    target: str
+    relation: str
+    tags: tuple[str, ...] = ()
+
+
+@dataclass(frozen=True, slots=True)
 class Sense:
     glosses: tuple[str, ...] = ()
     topics: tuple[str, ...] = ()
@@ -128,3 +136,58 @@ class DictionaryBuildStats:
     entries: int = 0
     search_lexeme_rows: int = 0
     search_sense_rows: int = 0
+    relation_rows: int = 0
+
+
+@dataclass(slots=True)
+class ExtractionDiagnostics:
+    source_records: int = 0
+    language_records: int = 0
+    entries_without_word: int = 0
+    entries_without_senses: int = 0
+    senses_seen: int = 0
+    senses_retained: int = 0
+    senses_without_retained_content: int = 0
+    entries_with_etymology: int = 0
+    entries_with_forms: int = 0
+    entries_with_ipa: int = 0
+    entries_with_relations: int = 0
+    accepted_entries: int = 0
+    accepted_senses: int = 0
+    relation_candidates: int = 0
+    source_fields: dict[str, int] = field(default_factory=dict)
+    retained_fields: dict[str, int] = field(default_factory=dict)
+    dropped_fields: dict[str, int] = field(default_factory=dict)
+
+    @staticmethod
+    def _increment(values: dict[str, int], field_name: str) -> None:
+        values[field_name] = values.get(field_name, 0) + 1
+
+    def record_fields(self, fields: set[str], retained: set[str]) -> None:
+        for field_name in fields:
+            self._increment(self.source_fields, field_name)
+            if field_name in retained:
+                self._increment(self.retained_fields, field_name)
+            else:
+                self._increment(self.dropped_fields, field_name)
+
+    def as_dict(self) -> dict[str, object]:
+        return {
+            "source_records": self.source_records,
+            "language_records": self.language_records,
+            "entries_without_word": self.entries_without_word,
+            "entries_without_senses": self.entries_without_senses,
+            "senses_seen": self.senses_seen,
+            "senses_retained": self.senses_retained,
+            "senses_without_retained_content": self.senses_without_retained_content,
+            "entries_with_etymology": self.entries_with_etymology,
+            "entries_with_forms": self.entries_with_forms,
+            "entries_with_ipa": self.entries_with_ipa,
+            "entries_with_relations": self.entries_with_relations,
+            "accepted_entries": self.accepted_entries,
+            "accepted_senses": self.accepted_senses,
+            "relation_candidates": self.relation_candidates,
+            "source_fields": dict(sorted(self.source_fields.items())),
+            "retained_fields": dict(sorted(self.retained_fields.items())),
+            "dropped_fields": dict(sorted(self.dropped_fields.items())),
+        }

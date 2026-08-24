@@ -157,6 +157,17 @@ def build_database(
         vacuum_connection.close()
         vacuumed = measure_database(database_path)
     profile = dataset.profile
+    relation_rows = int(build.counts.get("relations", 0))
+    relation_bytes = sum(
+        int(value)
+        for name, value in (as_built.get("objects") or {}).items()
+        if str(name).startswith("headword_relations")
+    )
+    relation_metrics = {
+        "rows": relation_rows,
+        "object_bytes": relation_bytes,
+        "bytes_per_relation": relation_bytes / relation_rows if relation_rows else 0.0,
+    }
     return {
         "format": "lexhint-sqlite-benchmark.v1",
         "created_at": time.strftime("%Y-%m-%dT%H:%M:%SZ", time.gmtime()),
@@ -180,6 +191,7 @@ def build_database(
             "quick_check": quick_check(database_path),
         },
         "size": {"as_built": as_built, "vacuumed": vacuumed},
+        "relations": relation_metrics,
         "objects": as_built.get("objects"),
         "workloads": {},
     }

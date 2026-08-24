@@ -194,6 +194,29 @@ def run_workloads(
                         c, terms, match=match, limit=20
                     ),
                 )
+        relation_lookup = getattr(adapter, "relation_lookup", None)
+        reverse_relation_lookup = getattr(adapter, "reverse_relation_lookup", None)
+        resolve_headword = getattr(adapter, "resolve_headword", None)
+        if callable(relation_lookup):
+            for index, word in enumerate(queries.get("relation_sources", [])):
+                add(
+                    f"relation_source_{index}",
+                    lambda c, word=word: relation_lookup(c, word, 20),
+                )
+        if callable(reverse_relation_lookup):
+            for index, word in enumerate(queries.get("relation_targets", [])):
+                add(
+                    f"relation_target_{index}",
+                    lambda c, word=word: reverse_relation_lookup(c, word, 20),
+                )
+        if callable(resolve_headword):
+            for index, word in enumerate(queries.get("relation_resolve", [])):
+                add(
+                    f"relation_resolve_{index}",
+                    lambda c, word=word: resolve_headword(
+                        c, word, ("redirect", "alternative", "form_of"), 20
+                    ),
+                )
         return records
     finally:
         connection.close()

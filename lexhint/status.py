@@ -20,6 +20,7 @@ class ArtifactStatus:
     capabilities: tuple[str, ...]
     counts: dict[str, int | None]
     frequency: dict[str, str]
+    provenance: dict[str, str]
     built_at: str
 
     def as_dict(self) -> dict[str, Any]:
@@ -63,6 +64,7 @@ def read_artifact_status(
     with closing(lexicon._connect()) as connection:
         has_semantic = _has_table(connection, "lexeme_domains")
         has_dictionary = _has_table(connection, "entries") and _has_table(connection, "senses")
+        has_relations = _has_table(connection, "headword_relations")
         counts: dict[str, int | None] = {
             "lexemes": _count(connection, "SELECT COUNT(*) FROM lexemes"),
             "semantic_rows": (
@@ -72,6 +74,11 @@ def read_artifact_status(
             if has_dictionary
             else None,
             "senses": _count(connection, "SELECT COUNT(*) FROM senses") if has_dictionary else None,
+            "relations": (
+                _count(connection, "SELECT COUNT(*) FROM headword_relations")
+                if has_relations
+                else None
+            ),
             "frequency_lexemes": _count(
                 connection, "SELECT COUNT(*) FROM lexemes WHERE corpus_rank IS NOT NULL"
             ),
@@ -90,6 +97,25 @@ def read_artifact_status(
             "corpus": metadata.get("frequency_corpus", ""),
             "revision": metadata.get("frequency_source_revision", ""),
             "source_sha256": metadata.get("frequency_source_sha256", ""),
+        },
+        provenance={
+            key: metadata.get(key, "")
+            for key in (
+                "schema_version",
+                "language",
+                "coverage",
+                "profile",
+                "capabilities",
+                "dataset_version",
+                "builder_version",
+                "built_at",
+                "dictionary_source",
+                "dictionary_source_sha256",
+                "dictionary_source_format",
+                "dictionary_source_contract",
+                "frequency_source",
+                "frequency_source_sha256",
+            )
         },
         built_at=metadata.get("built_at", ""),
     )

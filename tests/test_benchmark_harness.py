@@ -11,6 +11,7 @@ from benchmarks.report import render_report
 from benchmarks.scaling import linear_fit, scaling_estimate
 from benchmarks.schemas.compact_experiment import WithoutRowidSearchAdapter
 from benchmarks.schemas.current_v8 import CurrentV8Adapter
+from benchmarks.schemas.current_v8_relations import CurrentV8RelationsAdapter
 from benchmarks.workloads import run_workloads
 from lexhint.store import create_schema
 
@@ -50,11 +51,11 @@ def test_changed_seed_changes_generated_content() -> None:
     ]
 
 
-def test_current_v8_schema_matches_production_schema() -> None:
+def test_current_v9_relation_schema_matches_production_schema() -> None:
     production = sqlite3.connect(":memory:")
     benchmark = sqlite3.connect(":memory:")
     create_schema(production)
-    CurrentV8Adapter().create(benchmark)
+    CurrentV8RelationsAdapter().create(benchmark)
     assert schema_objects(production) == schema_objects(benchmark)
     production.close()
     benchmark.close()

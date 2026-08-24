@@ -13,7 +13,7 @@ from importlib.resources import files
 from pathlib import Path
 
 from .download import cached_dictionary_path
-from .languages import locale_spec, normalize_language, normalize_locale
+from .languages import is_regional_source_tag, locale_spec, normalize_language, normalize_locale
 from .models import (
     ContextCue,
     DictionaryEntry,
@@ -21,6 +21,7 @@ from .models import (
     DomainEvidence,
     Example,
     Form,
+    HeadwordRelation,
     LexicalSegment,
     Pronunciation,
     RelatedTerm,
@@ -40,16 +41,6 @@ from .search import (
 from .store import SCHEMA_VERSION, normalize_display_word, normalize_word
 
 _WORD_RE = re.compile(r"[^\W\d_]+(?:[-'][^\W\d_]+)*", re.UNICODE)
-_REGIONAL_TAGS = {
-    "uk",
-    "british",
-    "british-english",
-    "british english",
-    "us",
-    "american",
-    "american-english",
-    "american english",
-}
 
 
 class LexiconNotInstalled(FileNotFoundError):
@@ -77,7 +68,7 @@ def _locale_rank(tags: tuple[str, ...], locale: str | None) -> int:
     preferred = {tag.casefold() for tag in spec.preferred_source_tags}
     if normalized & preferred:
         return 0
-    if normalized & _REGIONAL_TAGS:
+    if any(is_regional_source_tag(tag) for tag in tags):
         return 2
     return 1
 
@@ -748,6 +739,54 @@ class Lexicon:
     def topics(self, word: str) -> tuple[str, ...]:
         self._require("dictionary")
         return tuple(sorted({topic for sense in self.senses(word) for topic in sense.topics}))
+
+    def relations(
+        self,
+        word: str,
+        *,
+        relation_types: tuple[str, ...] | None = None,
+        limit: int = 50,
+    ) -> tuple[HeadwordRelation, ...]:
+        """Return explicit headword relations without following them implicitly."""
+        self._require("dictionary")
+        if limit < 0:
+            raise ValueError("limit must be >= 0")
+        normalized = normalize_word(word)
+        query = (
+            "SELECT source_word, target_word, relation, tags FROM headword_relations "
+            "WHERE source_word=?"
+        )
+        parameters: list[object] = [normalized]
+        if relation_types:
+            placeholders = ",".join("?" for _ in relation_types)
+            query += f" AND relation IN ({placeholders})"
+            parameters.extend(relation_types)
+        query += " ORDER BY relation, target_word LIMIT ?"
+        parameters.append(limit)
+        with closing(self._connect()) as connection:
+            rows = connection.execute(query, parameters).fetchall()
+        return tuple(
+            HeadwordRelation(
+                str(row["source_word"]),
+                str(row["target_word"]),
+                str(row["relation"]),
+                self._tuple(str(row["tags"])),
+            )
+            for row in rows
+        )
+
+    def resolve_headword(
+        self,
+        word: str,
+        *,
+        relations: tuple[str, ...] = ("redirect", "alternative", "form_of"),
+        limit: int = 20,
+    ) -> tuple[str, ...]:
+        """Resolve explicit alias relationships to target headwords."""
+        return tuple(
+            relation.target
+            for relation in self.relations(word, relation_types=relations, limit=limit)
+        )
 
     @staticmethod
     def _context_token_distances(

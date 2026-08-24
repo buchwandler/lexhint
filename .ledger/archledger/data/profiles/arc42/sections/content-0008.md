@@ -7,7 +7,7 @@ section: cross_cutting_concepts
 title: Cross-cutting Concepts
 order: 80
 status: accepted
-version: 15
+version: 16
 body_format: markdown
 ---
 
@@ -15,13 +15,21 @@ body_format: markdown
 
 Schema metadata is explicit and self-describing. `language`, `locale`, `variant`, `schema_version`, and `dataset_version` remain separate dimensions. Locale is optional and does not create `en-GB` or `en-US` artifacts. Strict equality, not a compatibility range, controls SQLite access.
 
-Schema 8 metadata is explicit and self-describing. `lexemes` is always present for lexical capability and stores lowercase, titlecase, and uppercase attestation flags exposed by `WordEvidence`. `lexeme_domains` exists only for `semantic`; rich `entries`, `senses`, and `sense_topics` exist only for `dictionary`; `lexeme_ngrams` exists for `search`; and `sense_search_terms` exists for `dictionary` plus `search`. Search metadata records index version and row counts, and projections remove those claims when search is excluded. Old partial-cache schemas are rejected and must be rebuilt.
+Schema 9 metadata is explicit and self-describing. `lexemes` is always present for lexical capability and stores lowercase, titlecase, and uppercase attestation flags exposed by `WordEvidence`. `lexeme_domains` exists only for `semantic`; rich `entries`, `senses`, `sense_topics`, and `headword_relations` exist only for `dictionary`; `lexeme_ngrams` exists for `search`; and `sense_search_terms` exists for `dictionary` plus `search`. Search and relation metadata record index and row counts, and projections remove claims for excluded structures. Schema 8 artifacts are rejected and must be rebuilt; schema 8 and schema 9 dataset families remain side by side on disk.
 
-Managed dataset variants select capability subsets in a strict chain: `lexical`, `runtime` (`lexical,semantic`), `dictionary` (`lexical,semantic,dictionary`), and `rich` (`lexical,semantic,dictionary,search`). A dictionary projection therefore supports full entry/sense/topic inspection, rendering, semantic context, and completion while intentionally omitting fuzzy suggestion and indexed definition/reverse search. Only rich includes both search structures.
+Managed dataset variants select capability subsets in a strict chain: `lexical`, `runtime` (`lexical,semantic`), `dictionary` (`lexical,semantic,dictionary`), and `rich` (`lexical,semantic,dictionary,search`). A dictionary projection supports full entry/sense/topic inspection, explicit relation lookup, rendering, semantic context, and completion while intentionally omitting fuzzy suggestion and indexed definition/reverse search. Only rich includes both search structures.
+
+### Source contract and diagnostics
+
+The build consumes a narrow Lexhint-owned TypedDict contract for the fields it intentionally retains: lexical identity, POS, senses, topics, forms, IPA sounds, etymology, examples, synonyms, antonyms, redirects, `alt_of`, and `form_of`. Translations, descendants, broader linkage taxonomies, audio URLs, IDs, raw glosses, categories, templates, and unknown fields are not persisted. Extraction diagnostics and the local inspection tool report retained and dropped fields without weakening defensive runtime checks.
 
 ### Provenance and data lifecycle
 
-Metadata records `dictionary_source`, `dictionary_source_sha256`, `frequency_source`, and `frequency_source_sha256`, alongside profile, capabilities, creation time, and builder version. Remote dictionary input is hashed while streamed. Automatic FrequencyWords sources are cached by pinned revision and language, validated against an atomic SHA-256 sidecar, and downloaded through temporary files followed by atomic rename.
+Metadata records `dictionary_source`, `dictionary_source_sha256`, `dictionary_source_format`, `dictionary_source_contract`, `frequency_source`, and `frequency_source_sha256`, alongside profile, capabilities, creation time, and builder version. Remote dictionary input is hashed while streamed. Automatic FrequencyWords sources are cached by pinned revision and language, validated against an atomic SHA-256 sidecar, and downloaded through temporary files followed by atomic rename.
+
+### Relation decision evidence
+
+The relation benchmark compares the schema 8 baseline with a normalized relation table and measures direct, reverse, and resolve lookups, build phases, dbstat attribution, raw and gzip size, and warm/reopen query percentiles. The small calibrated synthetic comparison produced 3,579 relations with a 0.99% raw-size delta and 1.39% gzip-size delta, supporting Option A. The supplied rich fixture contained no relation candidates, so its profiler result is treated as a fixture observation rather than an English estimate.
 
 ### Errors and offline behavior
 
@@ -29,4 +37,4 @@ Capability, coverage, schema, language, and missing-artifact failures have contr
 
 ### Verification and licensing
 
-Tests cover read-only behavior, no-network guards, segmentation, case attestation, virtual-boundary semantic target anchoring, schema and capability validation, frequency policy, semantic target exclusion, CLI contracts, source extraction, and the managed four-variant resolver chain. External dictionary and corpus data remain subject to the obligations documented in `DATA_SOURCES.md`.
+Tests cover read-only behavior, no-network guards, segmentation, case attestation, virtual-boundary semantic target anchoring, schema and capability validation, frequency policy, semantic target exclusion, CLI contracts, source extraction, relation extraction/API/CLI/projection, and the managed four-variant resolver chain. External dictionary and corpus data remain subject to the obligations documented in `DATA_SOURCES.md`.

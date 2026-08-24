@@ -246,6 +246,7 @@ def test_status_reports_current_capability_aware_counts(tmp_path: Path) -> None:
         "semantic_rows": None,
         "entries": None,
         "senses": None,
+        "relations": None,
         "frequency_lexemes": 0,
     }
     assert result.profile == "custom"

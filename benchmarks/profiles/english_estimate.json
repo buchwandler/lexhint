@@ -26,5 +26,10 @@
   "token_length_mean": 6.0,
   "search_term_density": 1.0,
   "batch_size": 10000,
+  "relations_per_lexeme_mean": 0.35,
+  "redirect_fraction": 0.03,
+  "alternative_fraction": 0.08,
+  "form_of_fraction": 0.24,
+  "relation_tag_bytes_mean": 10,
   "assumption_note": "Placeholder synthetic assumptions; calibrate from aggregate artifact statistics before treating as English measurements."
 }

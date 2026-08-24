@@ -144,6 +144,9 @@ def _comparison_report(comparison: dict[str, Any]) -> str:
         "completion_broad_0_limit_20_median_us",
         "suggest_distance_1_0_median_us",
         "definition_common_0_median_us",
+        "relation_rows",
+        "relation_object_bytes",
+        "relation_bytes_per_row",
     ):
         values = [comparison["results"][schema].get(metric) for schema in comparison["schemas"]]
         lines.append(
@@ -190,7 +193,11 @@ def _run_comparison(args: argparse.Namespace, capabilities: tuple[str, ...] | No
         _write_result(child, metrics, queries)
         workload = metrics["workloads"]
         size = metrics["size"]["as_built"]
+        relation_metrics = metrics.get("relations", {})
         summary["results"][schema] = {
+            "relation_rows": relation_metrics.get("rows", 0),
+            "relation_object_bytes": relation_metrics.get("object_bytes", 0),
+            "relation_bytes_per_row": relation_metrics.get("bytes_per_relation", 0.0),
             "raw_bytes": size["raw_bytes"],
             "gzip_bytes": size["gzip_bytes"],
         }
@@ -202,6 +209,10 @@ def _run_comparison(args: argparse.Namespace, capabilities: tuple[str, ...] | No
         ):
             if key in workload:
                 summary["results"][schema][f"{key}_median_us"] = workload[key]["median_us"]
+    baseline = summary["results"][args.schema[0]]
+    for result in summary["results"].values():
+        result["delta_raw_bytes"] = result["raw_bytes"] - baseline["raw_bytes"]
+        result["delta_gzip_bytes"] = result["gzip_bytes"] - baseline["gzip_bytes"]
     write_json(root / "comparison.json", summary)
     (root / "report.md").write_text(_comparison_report(summary), encoding="utf-8")
     print(root)

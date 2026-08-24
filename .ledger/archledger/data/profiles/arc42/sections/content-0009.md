@@ -7,7 +7,7 @@ section: architecture_decisions
 title: Architecture Decisions
 order: 90
 status: accepted
-version: 12
+version: 13
 body_format: markdown
 ---
 
@@ -15,6 +15,7 @@ The current architecture records these decisions.
 
 - **Use a self-describing SQLite artifact.** Schema, language, coverage, profile, capabilities, and provenance are validated at runtime.
 - **Separate lexical, semantic, dictionary, and search capabilities.** Consumers can select evidence and index size intentionally without allowing data from an older artifact to leak into a fresh build.
+- **Add measured headword relations to the dictionary capability in schema 9.** Redirect, alternative, and form-of relations are normalized, explicitly queried, and omitted from lexical/runtime projections. This is Option A, selected because the benchmark showed a small compressed-size delta and indexed relation queries.
 - **Use indexed lexical ranges for completion.** `complete()` is a local read-only normalized prefix query with exact-match priority and explicit frequency or lexical ordering.
 - **Treat frequency as enrichment.** Corpus rank improves segmentation and commonness evidence but does not define lexical capability.
 - **Build fresh artifacts atomically.** Capability-specific tables are created from the resolved build plan and replacements cannot expose partial output.
@@ -24,3 +25,4 @@ The current architecture records these decisions.
 - **Treat semantic context as soft evidence.** Lexhint reports explainable hints, not sense disambiguation or semantic certainty.
 - **Keep the runtime read-only and offline by default.** Acquisition belongs to explicit build workflows.
 - **Keep a narrow consumer boundary.** Lexhint supplies evidence; downstream consumers own interpretation and speech rendering.
+- **Do not mirror the full Wiktextract schema or adopt online provider plugins, runtime caches, raw Wiktionary parsing, translations, or audio persistence.**

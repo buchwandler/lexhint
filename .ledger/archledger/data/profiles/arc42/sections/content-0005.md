@@ -7,22 +7,24 @@ section: building_block_view
 title: Building Block View
 order: 50
 status: accepted
-version: 14
+version: 15
 body_format: markdown
 ---
 
 The package is organized around a local artifact runtime and focused build modules.
 
-- `lexhint.lexicon.Lexicon` owns read-only artifact access, lexical lookup, prefix completion, fuzzy suggestions, headword matching, indexed definition search, segmentation, dictionary inspection, and semantic evidence queries.
+- `lexhint.lexicon.Lexicon` owns read-only artifact access, lexical lookup, prefix completion, fuzzy suggestions, headword matching, indexed definition search, explicit headword relation lookup and resolution, segmentation, dictionary inspection, and semantic evidence queries.
 - `lexhint.schema` defines schema and capability validation for the self-describing SQLite artifact.
 - `lexhint.builder` creates fresh atomic artifacts from streamed source data and applies the immutable build plan.
-- `lexhint.extract` converts source records into curated lexical and dictionary data.
+- `lexhint.extract` converts source records into curated lexical and dictionary data plus explicit relation candidates.
+- `lexhint.wiktextract_types` documents the narrow upstream JSONL contract consumed by Lexhint without depending on Wiktextract at runtime.
 - `lexhint.semantics` projects source topics into the stable `SemanticDomain` taxonomy.
 - `lexhint.frequency` and `lexhint.sources` resolve corpus enrichment and source provenance.
-- `lexhint.store` persists lexemes, domains, rich dictionary tables, search indexes, metadata, and indexes.
+- `lexhint.store` persists lexemes, domains, rich dictionary tables, headword relations, search indexes, metadata, and indexes.
 - `lexhint.cli` exposes build and runtime operations in human-readable and JSON forms.
+- `tools/inspect_wiktextract.py` and `tools/profile_wiktextract_relations.py` are developer-only local source analysis tools.
 
-The public package exports `Lexicon`, `DictionarySearchHit`, and `SemanticDomain` as the principal consumer interface. It also exports `SCHEMA_VERSION`, `DATASET_VARIANTS`, `DATASET_VARIANT_NAMES`, `DEFAULT_DATASET_VARIANT`, and `supported_base_languages()` for the separate dataset publisher contract. Build and source helpers remain available from their owning modules.
+The public package exports `Lexicon`, `HeadwordRelation`, `DictionarySearchHit`, and `SemanticDomain` as the principal consumer interface. It also exports `SCHEMA_VERSION`, `DATASET_VARIANTS`, `DATASET_VARIANT_NAMES`, `DEFAULT_DATASET_VARIANT`, and `supported_base_languages()` for the separate dataset publisher contract. Build and source helpers remain available from their owning modules.
 
 ## Consumer interface
 
@@ -33,13 +35,9 @@ lexicon = Lexicon.from_path("en.sqlite3")
 completions = lexicon.complete("comp")
 suggestions = lexicon.suggest("complier")
 headwords = lexicon.match_headwords("comp*", syntax="glob")
+relations = lexicon.relations("colour")
+targets = lexicon.resolve_headword("colours")
 hits = lexicon.search_definitions("computer program", fields=("glosses",), match="all")
-segments = lexicon.segment("chatgpt")
-text = "The compiler is 8.3.2."
-start = text.index("8.3.2")
-evidence = lexicon.supports_domain(
-    text, target=(start, start + len("8.3.2")), domain=SemanticDomain.COMPUTING
-)
 ```
 
-The consumer decides what an unknown run, version, or candidate should mean. Lexhint ends at evidence.
+The consumer decides what an unknown run, version, or candidate should mean. Lexhint ends at evidence. Relation following is always explicit and does not alter `entries()` exact lookup.

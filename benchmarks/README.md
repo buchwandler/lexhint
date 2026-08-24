@@ -10,6 +10,8 @@ dataset.
 
 ```bash
 python benchmarks/run.py all --schema current-v8 --profile smoke
+python benchmarks/run.py compare --schema current-v8 --schema current-v8-relations \
+  --profile small --iterations 20 --warmup 5
 python benchmarks/run.py compare --schema current-v8 \
   --schema current-v8-without-rowid-search --profile smoke
 python benchmarks/run.py scale --schema current-v8 --profile english-estimate \
@@ -24,13 +26,20 @@ Each run creates an immutable timestamped directory with `config.json`,
 
 `generate.py` produces a streamable logical dataset. Adapters in `schemas/` own
 DDL, population, finalization, and workload queries. `current-v8` is a historical
-snapshot of Lexhint schema 8; `current-v8-without-rowid-search` changes only the
-compound search tables. Results include raw and gzip size, page metrics, optional
-`dbstat` object attribution, build phases, and warm/reopen workload percentiles.
+snapshot of Lexhint schema 8; `current-v8-relations` adds the normalized
+`redirect`, `alternative`, and `form_of` relation table used to calibrate production
+schema 9 Option A. Results include raw and gzip size, page metrics, optional
+`dbstat` object attribution, relation bytes per row, build phases, and warm/reopen
+workload percentiles.
 
 The English profile is an explicit synthetic assumption, not a measured English
 fact. Use `calibrate` on aggregate statistics from a real artifact to create a
 measured profile before relying on estimates.
+
+The relation profile fields are `relations_per_lexeme_mean`,
+`redirect_fraction`, `alternative_fraction`, `form_of_fraction`, and
+`relation_tag_bytes_mean`. The relation adapter adds source, reverse, and explicit
+resolve workloads. Synthetic timings are comparative evidence, not hardware thresholds.
 
 ## Profiles
 

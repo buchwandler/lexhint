@@ -4,6 +4,18 @@ from dataclasses import dataclass
 
 SUPPORTED_BASE_LANGUAGES = ("cs", "de", "en", "es", "fr", "it", "pt")
 SUPPORTED_LANGUAGES = frozenset(SUPPORTED_BASE_LANGUAGES)
+REGIONAL_SOURCE_TAGS = frozenset(
+    {
+        "uk",
+        "british",
+        "british-english",
+        "british english",
+        "us",
+        "american",
+        "american-english",
+        "american english",
+    }
+)
 
 
 def supported_base_languages() -> tuple[str, ...]:
@@ -65,11 +77,17 @@ def locale_spec(language: str, locale: str | None) -> LocaleSpec | None:
     return LOCALES.get(normalized) if normalized is not None else None
 
 
+def is_regional_source_tag(value: str) -> bool:
+    return value.casefold() in REGIONAL_SOURCE_TAGS
+
+
 __all__ = [
     "LOCALES",
     "LocaleSpec",
+    "REGIONAL_SOURCE_TAGS",
     "SUPPORTED_BASE_LANGUAGES",
     "SUPPORTED_LANGUAGES",
+    "is_regional_source_tag",
     "supported_base_languages",
     "locale_spec",
     "normalize_language",

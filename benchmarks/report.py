@@ -38,6 +38,7 @@ def render_report(metrics: dict[str, Any]) -> str:
         "lexeme_ngrams",
         "sense_search_terms",
         "semantic_rows",
+        "relations",
     ):
         lines.append(f"| {key} | {_size(counts.get(key))} |")
     lines.extend(
@@ -59,6 +60,18 @@ def render_report(metrics: dict[str, Any]) -> str:
     )
     for name, value in (metrics.get("objects") or {}).items():
         lines.append(f"| `{name}` | {_size(value)} |")
+    relation_metrics = metrics.get("relations", {})
+    if relation_metrics.get("rows") is not None:
+        lines.extend(
+            [
+                "",
+                "## Relation storage",
+                "",
+                f"- Rows: **{_size(relation_metrics.get('rows'))}**",
+                f"- Indexed object bytes: **{_size(relation_metrics.get('object_bytes'))}**",
+                f"- Bytes per relation: **{relation_metrics.get('bytes_per_relation', 0):.2f}**",
+            ]
+        )
     lines.extend(["", "## Build performance", ""])
     for name, phase in metrics.get("build", {}).get("phases", {}).items():
         lines.append(f"- `{name}`: {phase.get('seconds', 0):.4f}s; {_size(phase.get('rows'))} rows")

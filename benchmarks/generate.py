@@ -7,7 +7,13 @@ import random
 import string
 from collections.abc import Iterator
 
-from .model import SyntheticEntry, SyntheticLexeme, SyntheticProfile, SyntheticSense
+from .model import (
+    SyntheticEntry,
+    SyntheticLexeme,
+    SyntheticProfile,
+    SyntheticRelation,
+    SyntheticSense,
+)
 
 ONSETS = (
     "b",
@@ -209,6 +215,29 @@ class SyntheticGenerator:
                 yield self._entry(lexeme_index, entry_index, entry_id)
                 entry_id += 1
 
+    def iter_relations(self) -> Iterator[SyntheticRelation]:
+        profile = self.profile
+        for index in range(profile.lexemes):
+            count = _count(profile.relations_per_lexeme_mean, self._rng(index, 41))
+            source = self._word(index)
+            for offset in range(count):
+                target = self._word((index + offset + 1) % profile.lexemes)
+                weights = (
+                    ("redirect", profile.redirect_fraction),
+                    ("alternative", profile.alternative_fraction),
+                    ("form_of", profile.form_of_fraction),
+                )
+                total = sum(weight for _, weight in weights)
+                selector = self._rng(index * 100 + offset, 43).random() * total
+                relation = "form_of"
+                for candidate, weight in weights:
+                    selector -= weight
+                    if selector < 0:
+                        relation = candidate
+                        break
+                tags = ("regional",) if profile.relation_tag_bytes_mean else ()
+                yield SyntheticRelation(source, target, relation, _json(tags))
+
     def _sense(
         self, lexeme_index: int, entry: SyntheticEntry, sense_index: int, sense_id: int
     ) -> SyntheticSense:
@@ -313,6 +342,12 @@ class SyntheticGenerator:
             "sense_search_terms": search_terms,
         }
 
+    def relation_counts(self) -> dict[str, int]:
+        counts: dict[str, int] = {}
+        for relation in self.iter_relations():
+            counts[relation.relation] = counts.get(relation.relation, 0) + 1
+        return counts
+
     @staticmethod
     def _ngrams(word: str) -> tuple[str, ...]:
         padded = f"^{word}$"
@@ -327,6 +362,7 @@ class SyntheticGenerator:
             return {}
         common = words[0]
         rare = words[-1]
+        relations = tuple(self.iter_relations())
         return {
             "exact_hits": [common, words[len(words) // 2], rare],
             "exact_misses": ["zzzzmissing", "q" * 18],
@@ -342,4 +378,7 @@ class SyntheticGenerator:
             "definition_common": ["object"],
             "definition_multi_all": ["object", "system"],
             "definition_multi_any": ["object", "rare"],
+            "relation_sources": [relations[0].source] if relations else [common],
+            "relation_targets": [relations[0].target] if relations else [rare],
+            "relation_resolve": [relations[0].source] if relations else [common],
         }

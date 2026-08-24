@@ -7,10 +7,18 @@ from collections import Counter
 from collections.abc import Iterable, Iterator, Mapping
 from dataclasses import dataclass
 
-from .models import DictionaryEntry, Example, Form, Pronunciation, RelatedTerm, Sense
+from .models import (
+    DictionaryEntry,
+    Example,
+    Form,
+    HeadwordRelation,
+    Pronunciation,
+    RelatedTerm,
+    Sense,
+)
 from .search import search_tokens, word_ngrams
 
-SCHEMA_VERSION = "8"
+SCHEMA_VERSION = "9"
 
 
 @dataclass(frozen=True, slots=True)
@@ -227,6 +235,29 @@ def insert_dictionary_entries(
     return entry_count, sense_count, words
 
 
+def insert_headword_relations(
+    connection: sqlite3.Connection, relations: Iterable[HeadwordRelation]
+) -> int:
+    if not _has_table(connection, "headword_relations"):
+        return 0
+    rows = {
+        (
+            normalize_word(relation.source),
+            normalize_word(relation.target),
+            relation.relation,
+            json_tuple(relation.tags),
+        )
+        for relation in relations
+    }
+    before = connection.total_changes
+    connection.executemany(
+        "INSERT OR IGNORE INTO headword_relations(source_word, target_word, relation, tags) "
+        "VALUES (?, ?, ?, ?)",
+        rows,
+    )
+    return connection.total_changes - before
+
+
 def create_schema(
     connection: sqlite3.Connection,
     capabilities: Iterable[str] = ("lexical", "semantic", "dictionary", "search"),
@@ -328,6 +359,21 @@ def create_schema(
                     ON sense_search_terms(sense_id);
                 """
             )
+        connection.executescript(
+            """
+            CREATE TABLE headword_relations (
+                source_word TEXT NOT NULL,
+                target_word TEXT NOT NULL,
+                relation TEXT NOT NULL,
+                tags TEXT NOT NULL DEFAULT '[]',
+                PRIMARY KEY (source_word, target_word, relation)
+            );
+            CREATE INDEX headword_relations_target_idx
+                ON headword_relations(target_word, relation);
+            CREATE INDEX headword_relations_relation_idx
+                ON headword_relations(relation, source_word);
+            """
+        )
 
 
 def metadata(connection: sqlite3.Connection) -> dict[str, str]:

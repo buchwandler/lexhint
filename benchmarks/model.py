@@ -40,6 +40,11 @@ class SyntheticProfile:
     vocabulary_size: int = 256
     token_length_mean: float = 6.0
     search_term_density: float = 1.0
+    relations_per_lexeme_mean: float = 0.35
+    redirect_fraction: float = 0.03
+    alternative_fraction: float = 0.08
+    form_of_fraction: float = 0.24
+    relation_tag_bytes_mean: int = 10
     batch_size: int = 1000
     assumption_note: str = ""
 
@@ -72,6 +77,9 @@ class SyntheticProfile:
             "example_translation_probability",
             "semantic_coverage",
             "search_term_density",
+            "redirect_fraction",
+            "alternative_fraction",
+            "form_of_fraction",
         ):
             value = getattr(self, name)
             if not 0 <= value <= 1:
@@ -91,6 +99,7 @@ class SyntheticProfile:
             "headword_length_mean",
             "headword_length_stddev",
             "token_length_mean",
+            "relations_per_lexeme_mean",
         ):
             if getattr(self, name) < 0:
                 raise ValueError(f"{name} must be non-negative")
@@ -100,6 +109,7 @@ class SyntheticProfile:
             "example_length_mean",
             "vocabulary_size",
             "batch_size",
+            "relation_tag_bytes_mean",
         ):
             if getattr(self, name) < 0:
                 raise ValueError(f"{name} must be non-negative")
@@ -153,6 +163,14 @@ class SyntheticSense:
         return dict(self.search_fields).get(field, ())
 
 
+@dataclass(frozen=True, slots=True)
+class SyntheticRelation:
+    source: str
+    target: str
+    relation: str
+    tags_json: str
+
+
 class SyntheticDataset:
     """A repeatable logical dataset whose rows are generated on demand."""
 
@@ -170,6 +188,11 @@ class SyntheticDataset:
 
         yield from SyntheticGenerator(self.profile).iter_entries()
 
+    def iter_relations(self) -> Iterator[SyntheticRelation]:
+        from .generate import SyntheticGenerator
+
+        yield from SyntheticGenerator(self.profile).iter_relations()
+
     def iter_senses(self) -> Iterator[SyntheticSense]:
         from .generate import SyntheticGenerator
 
@@ -184,3 +207,8 @@ class SyntheticDataset:
         from .generate import SyntheticGenerator
 
         return SyntheticGenerator(self.profile).query_corpus()
+
+    def relation_counts(self) -> dict[str, int]:
+        from .generate import SyntheticGenerator
+
+        return SyntheticGenerator(self.profile).relation_counts()
