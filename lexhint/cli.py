@@ -8,7 +8,7 @@ from collections.abc import Sequence
 from contextlib import suppress
 from dataclasses import asdict
 from pathlib import Path
-from typing import NoReturn
+from typing import NoReturn, cast
 
 from . import __version__
 from .builder import build_dictionary, project_artifact
@@ -35,7 +35,13 @@ from .lexicon import (
     LexiconIncompatible,
     LexiconNotInstalled,
 )
-from .models import DictionaryBuildStats, DomainEvidence, LexicalSegment, WordEvidence
+from .models import (
+    DictionaryBuildStats,
+    DictionaryEntry,
+    DomainEvidence,
+    LexicalSegment,
+    WordEvidence,
+)
 from .render import (
     DictionaryRenderOptions,
     filter_dictionary_entries,
@@ -195,6 +201,9 @@ def _parser() -> argparse.ArgumentParser:
     relations.add_argument("-l", "--language", choices=sorted(SUPPORTED_LANGUAGES))
     _artifact_selector(relations)
     relations.add_argument("--relation", dest="relation_types", action="append")
+    relations.add_argument(
+        "--incoming", action="store_true", help="show relations targeting the word"
+    )
     relations.add_argument("--limit", type=int, default=50)
 
     resolve = dictionary_sub.add_parser("resolve", help="resolve explicit headword relationships")
@@ -290,6 +299,22 @@ def _parser() -> argparse.ArgumentParser:
 
 def _json(payload: object) -> None:
     print(json.dumps(payload, ensure_ascii=False))
+
+
+def _dictionary_entry_json(value: DictionaryEntry) -> dict[str, object]:
+    payload = cast(dict[str, object], asdict(value))
+    senses = payload.get("senses", [])
+    if isinstance(senses, (list, tuple)):
+        for sense in senses:
+            if not isinstance(sense, dict):
+                continue
+            examples = sense.get("examples", [])
+            if not isinstance(examples, (list, tuple)):
+                continue
+            for example in examples:
+                if isinstance(example, dict) and example.get("kind") is None:
+                    example.pop("kind", None)
+    return payload
 
 
 def _word(info: WordEvidence, style: TerminalStyle) -> None:
@@ -624,12 +649,19 @@ def _run(args: argparse.Namespace, *, style: TerminalStyle, json_output: bool) -
             language, variant=args.variant, dataset_version=args.dataset_version, path=args.path
         )
         if args.dictionary_command == "relations":
-            relation_values = lexicon.relations(
-                word, relation_types=relation_types or None, limit=args.limit
+            relation_values = (
+                lexicon.incoming_relations(
+                    word, relation_types=relation_types or None, limit=args.limit
+                )
+                if args.incoming
+                else lexicon.relations(
+                    word, relation_types=relation_types or None, limit=args.limit
+                )
             )
             payload = {
                 "language": language,
                 "word": word,
+                "direction": "incoming" if args.incoming else "outgoing",
                 "relations": [asdict(value) for value in relation_values],
             }
             if json_output:
@@ -644,9 +676,9 @@ def _run(args: argparse.Namespace, *, style: TerminalStyle, json_output: bool) -
                 relations=relation_types or ("redirect", "alternative", "form_of"),
                 limit=args.limit,
             )
-            payload = {"language": language, "word": word, "targets": list(targets)}
+            resolve_payload = {"language": language, "word": word, "targets": list(targets)}
             if json_output:
-                _json(payload)
+                _json(resolve_payload)
             else:
                 for target_value in targets:
                     print(target_value)
@@ -747,7 +779,7 @@ def _run(args: argparse.Namespace, *, style: TerminalStyle, json_output: bool) -
                     "language": language,
                     "locale": locale,
                     "word": word,
-                    "entries": [asdict(value) for value in entries],
+                    "entries": [_dictionary_entry_json(value) for value in entries],
                 }
             )
         else:

@@ -41,7 +41,7 @@ def install_fixture(
         f"data-{version}",
         "2026-08-21T00:00:00Z",
         2,
-        "9",
+        "10",
         capabilities[1],
         "full",
         tuple(capabilities[0].split(",")),

@@ -55,7 +55,7 @@ def test_public_dataset_variants_match_named_profiles() -> None:
 
 
 def test_remote_resolution_filters_schema_before_ranking(monkeypatch: pytest.MonkeyPatch) -> None:
-    newer = artifact("2026.10.01", "10")
+    newer = artifact("2026.10.01", "11")
     compatible = artifact("2026.09.01", SCHEMA_VERSION)
     releases = [{"tag_name": newer.release_tag}, {"tag_name": compatible.release_tag}]
     monkeypatch.setattr(datasets, "_releases", lambda version: releases)
@@ -75,7 +75,7 @@ def test_explicit_schema_mismatch_does_not_fall_back(monkeypatch: pytest.MonkeyP
         lambda version: [{"tag_name": incompatible.release_tag}],
     )
     monkeypatch.setattr(datasets, "_manifest_for_release", lambda release: (incompatible,))
-    with pytest.raises(datasets.DatasetIncompatible, match="requires schema 9"):
+    with pytest.raises(datasets.DatasetIncompatible, match="requires schema 10"):
         datasets._remote_artifacts(language="en", variant="runtime", version="2026.10.15")
 
 

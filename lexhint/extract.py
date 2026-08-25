@@ -6,6 +6,7 @@ from .languages import normalize_language
 from .models import (
     DictionaryEntry,
     Example,
+    ExternalSenseId,
     ExtractionDiagnostics,
     Form,
     HeadwordRelation,
@@ -31,6 +32,24 @@ def _text(value: object) -> str | None:
     return value if isinstance(value, str) and value else None
 
 
+def _scalar_text(value: object) -> str | None:
+    if isinstance(value, bool):
+        return None
+    if isinstance(value, (str, int)) and str(value):
+        return str(value)
+    return None
+
+
+def _external_ids(raw: Mapping[str, object]) -> tuple[ExternalSenseId, ...]:
+    result: list[ExternalSenseId] = []
+    for namespace, key in (("wiktionary-senseid", "senseid"), ("wikidata", "wikidata")):
+        for value in _strings(raw.get(key)):
+            identifier = ExternalSenseId(namespace, value)
+            if identifier not in result:
+                result.append(identifier)
+    return tuple(result)
+
+
 def _examples(value: object) -> tuple[Example, ...]:
     if not isinstance(value, list):
         return ()
@@ -38,17 +57,20 @@ def _examples(value: object) -> tuple[Example, ...]:
     for item in value:
         text: str | None
         translation: str | None
+        kind: str | None
         if isinstance(item, str):
             text = item
             translation = None
+            kind = None
         elif isinstance(item, Mapping):
             text = _text(item.get("text"))
             translation = _text(item.get("translation"))
+            kind = _text(item.get("type")) or _text(item.get("kind"))
         else:
             continue
         if text is None:
             continue
-        example = Example(text, translation)
+        example = Example(text, translation, kind)
         if example not in result:
             result.append(example)
     return tuple(result)
@@ -146,8 +168,18 @@ def _sense(
         examples=_examples(raw.get("examples")),
         synonyms=_related(raw.get("synonyms"), "synonym"),
         antonyms=_related(raw.get("antonyms"), "antonym"),
+        source_ids=_external_ids(raw),
     )
-    if not any((sense.glosses, sense.topics, sense.examples, sense.synonyms, sense.antonyms)):
+    if not any(
+        (
+            sense.glosses,
+            sense.topics,
+            sense.examples,
+            sense.synonyms,
+            sense.antonyms,
+            sense.source_ids,
+        )
+    ):
         if diagnostics is not None:
             diagnostics.senses_without_retained_content += 1
         return None
@@ -185,6 +217,15 @@ def relation_candidates(
 
     for target, tags in _relation_values(entry.get("redirects")):
         add(target, "redirect", tags)
+    for field, relation in (
+        ("synonyms", "synonym"),
+        ("antonyms", "antonym"),
+        ("hypernyms", "hypernym"),
+        ("hyponyms", "hyponym"),
+        ("related", "related"),
+    ):
+        for target, tags in _relation_values(entry.get(field)):
+            add(target, relation, tags)
     raw_senses = entry.get("senses")
     if isinstance(raw_senses, list):
         for raw_sense in raw_senses:
@@ -239,6 +280,7 @@ def dictionary_entries(
     forms = _forms(entry.get("forms"))
     pronunciations = _pronunciations(entry.get("sounds"))
     etymology = _text(entry.get("etymology_text")) or _text(entry.get("etymology"))
+    etymology_number = _scalar_text(entry.get("etymology_number"))
     relations = relation_candidates(entry, language=base_language)
     if diagnostics is not None:
         diagnostics.accepted_entries += 1
@@ -252,7 +294,6 @@ def dictionary_entries(
             if isinstance(raw_sense, Mapping):
                 fields = set(raw_sense)
                 diagnostics.record_fields(fields, set(RETAINED_SENSE_FIELDS) & fields)
-
     yield DictionaryEntry(
         word=display_word,
         pos=str(entry.get("pos") or ""),
@@ -260,6 +301,7 @@ def dictionary_entries(
         forms=forms,
         pronunciations=pronunciations,
         etymology=etymology,
+        etymology_number=etymology_number,
     )
 
 

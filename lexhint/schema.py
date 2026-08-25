@@ -7,6 +7,7 @@ CAPABILITY_ORDER = ("lexical", "semantic", "dictionary", "search")
 CAPABILITIES = frozenset(CAPABILITY_ORDER)
 PROFILES = {
     "runtime": ("lexical", "semantic"),
+    "dictionary": ("lexical", "semantic", "dictionary"),
     "rich": ("lexical", "semantic", "dictionary", "search"),
 }
 
@@ -24,7 +25,7 @@ def normalize_capabilities(
         raise ValueError("choose either --profile or --capabilities, not both")
     if profile is not None:
         if profile not in PROFILES:
-            raise ValueError(f"unknown profile {profile!r}; choose runtime or rich")
+            raise ValueError(f"unknown profile {profile!r}; choose runtime, dictionary, or rich")
         selected = PROFILES[profile]
     elif capabilities is None:
         selected = CAPABILITY_ORDER

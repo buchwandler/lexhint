@@ -31,7 +31,7 @@ def install_runtime(tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> None:
         "data-2026.08.20",
         "2026-08-21T00:00:00Z",
         2,
-        "9",
+        "10",
         "runtime",
         "full",
         ("lexical", "semantic"),

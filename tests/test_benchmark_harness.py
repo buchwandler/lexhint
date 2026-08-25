@@ -2,6 +2,7 @@ from __future__ import annotations
 
 import json
 import sqlite3
+from contextlib import closing
 from dataclasses import replace
 
 from benchmarks.config import load_profile
@@ -11,7 +12,7 @@ from benchmarks.report import render_report
 from benchmarks.scaling import linear_fit, scaling_estimate
 from benchmarks.schemas.compact_experiment import WithoutRowidSearchAdapter
 from benchmarks.schemas.current_v8 import CurrentV8Adapter
-from benchmarks.schemas.current_v8_relations import CurrentV8RelationsAdapter
+from benchmarks.schemas.schema10_candidate import Schema10CandidateAdapter
 from benchmarks.workloads import run_workloads
 from lexhint.store import create_schema
 
@@ -51,14 +52,19 @@ def test_changed_seed_changes_generated_content() -> None:
     ]
 
 
-def test_current_v9_relation_schema_matches_production_schema() -> None:
-    production = sqlite3.connect(":memory:")
-    benchmark = sqlite3.connect(":memory:")
-    create_schema(production)
-    CurrentV8RelationsAdapter().create(benchmark)
-    assert schema_objects(production) == schema_objects(benchmark)
-    production.close()
-    benchmark.close()
+def test_schema10_candidate_has_production_storage_shape() -> None:
+    with (
+        closing(sqlite3.connect(":memory:")) as production,
+        closing(sqlite3.connect(":memory:")) as benchmark,
+    ):
+        create_schema(production)
+        Schema10CandidateAdapter().create(benchmark)
+        production_sql = {name: sql for _, name, _, sql in schema_objects(production)}
+        benchmark_sql = {name: sql for _, name, _, sql in schema_objects(benchmark)}
+        assert "WITHOUT ROWID" in benchmark_sql["lexeme_ngrams"]
+        assert "WITHOUT ROWID" in benchmark_sql["headword_relations"]
+        assert "entries_display_word_idx" not in benchmark_sql
+        assert "entries_word_idx" in production_sql
 
 
 def test_build_is_valid_and_records_shape(tmp_path) -> None:

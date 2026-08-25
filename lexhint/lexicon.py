@@ -20,6 +20,7 @@ from .models import (
     DictionarySearchHit,
     DomainEvidence,
     Example,
+    ExternalSenseId,
     Form,
     HeadwordRelation,
     LexicalSegment,
@@ -27,6 +28,7 @@ from .models import (
     RelatedTerm,
     SemanticDomain,
     Sense,
+    SenseRecord,
     WordEvidence,
 )
 from .search import (
@@ -38,7 +40,13 @@ from .search import (
     search_tokens,
     word_ngrams,
 )
-from .store import SCHEMA_VERSION, normalize_display_word, normalize_word
+from .store import (
+    SCHEMA_VERSION,
+    format_sense_id,
+    normalize_display_word,
+    normalize_word,
+    parse_sense_id,
+)
 
 _WORD_RE = re.compile(r"[^\W\d_]+(?:[-'][^\W\d_]+)*", re.UNICODE)
 
@@ -625,13 +633,16 @@ class Lexicon:
                 )
         return tuple(result)
 
-    @classmethod
-    def _entry(cls, connection: sqlite3.Connection, row: sqlite3.Row) -> DictionaryEntry:
+    def _entry(self, connection: sqlite3.Connection, row: sqlite3.Row) -> DictionaryEntry:
         def examples(value: str) -> tuple[Example, ...]:
-            data = cls._loads(value)
+            data = self._loads(value)
             return (
                 tuple(
-                    Example(str(item["text"]), item.get("translation"))
+                    Example(
+                        str(item["text"]),
+                        item.get("translation"),
+                        item.get("kind") or item.get("type"),
+                    )
                     for item in data
                     if isinstance(item, Mapping) and isinstance(item.get("text"), str)
                 )
@@ -640,7 +651,7 @@ class Lexicon:
             )
 
         def forms(value: str) -> tuple[Form, ...]:
-            data = cls._loads(value)
+            data = self._loads(value)
             return (
                 tuple(
                     Form(str(item["form"]), tuple(str(tag) for tag in item.get("tags", ())))
@@ -652,7 +663,7 @@ class Lexicon:
             )
 
         def pronunciations(value: str) -> tuple[Pronunciation, ...]:
-            data = cls._loads(value)
+            data = self._loads(value)
             return (
                 tuple(
                     Pronunciation(str(item["ipa"]), tuple(str(tag) for tag in item.get("tags", ())))
@@ -663,9 +674,23 @@ class Lexicon:
                 else ()
             )
 
+        def source_ids(value: str) -> tuple[ExternalSenseId, ...]:
+            data = self._loads(value)
+            return (
+                tuple(
+                    ExternalSenseId(str(item["namespace"]), str(item["value"]))
+                    for item in data
+                    if isinstance(item, Mapping)
+                    and isinstance(item.get("namespace"), str)
+                    and isinstance(item.get("value"), str)
+                )
+                if isinstance(data, list)
+                else ()
+            )
+
         senses = connection.execute(
-            "SELECT glosses, topics, tags, examples, synonyms, antonyms FROM senses "
-            "WHERE entry_id=? ORDER BY sense_index",
+            "SELECT id, glosses, topics, tags, examples, synonyms, antonyms, source_ids "
+            "FROM senses WHERE entry_id=? ORDER BY sense_index",
             (row["id"],),
         ).fetchall()
         return DictionaryEntry(
@@ -673,18 +698,21 @@ class Lexicon:
             pos=str(row["pos"]),
             senses=tuple(
                 Sense(
-                    cls._tuple(str(sense["glosses"])),
-                    cls._tuple(str(sense["topics"])),
-                    cls._tuple(str(sense["tags"])),
-                    examples(str(sense["examples"])),
-                    cls._related(str(sense["synonyms"])),
-                    cls._related(str(sense["antonyms"])),
+                    glosses=self._tuple(str(sense["glosses"])),
+                    topics=self._tuple(str(sense["topics"])),
+                    tags=self._tuple(str(sense["tags"])),
+                    examples=examples(str(sense["examples"])),
+                    synonyms=self._related(str(sense["synonyms"])),
+                    antonyms=self._related(str(sense["antonyms"])),
+                    sense_id=format_sense_id(self.language, int(sense["id"])),
+                    source_ids=source_ids(str(sense["source_ids"])),
                 )
                 for sense in senses
             ),
             forms=forms(str(row["forms"])),
             pronunciations=pronunciations(str(row["pronunciations"])),
             etymology=str(row["etymology"]) or None,
+            etymology_number=str(row["etymology_number"]) or None,
         )
 
     def _localized_entry(self, entry: DictionaryEntry) -> DictionaryEntry:
@@ -736,9 +764,45 @@ class Lexicon:
             for sense in entry.senses
         )
 
+    def sense_by_id(self, sense_id: str) -> SenseRecord | None:
+        """Return one sense with its entry context by versioned Lexhint ID."""
+        self._require("dictionary")
+        numeric_id = parse_sense_id(self.language, sense_id)
+        if numeric_id is None:
+            return None
+        with closing(self._connect()) as connection:
+            row = connection.execute(
+                "SELECT e.* FROM entries AS e JOIN senses AS s ON s.entry_id=e.id WHERE s.id=?",
+                (numeric_id,),
+            ).fetchone()
+            if row is None:
+                return None
+            entry = self._entry(connection, row)
+        sense = next(
+            (
+                value
+                for value in entry.senses
+                if value.sense_id == format_sense_id(self.language, numeric_id)
+            ),
+            None,
+        )
+        return (
+            SenseRecord(entry.word, entry.pos, entry.etymology_number, sense)
+            if sense is not None
+            else None
+        )
+
     def topics(self, word: str) -> tuple[str, ...]:
         self._require("dictionary")
-        return tuple(sorted({topic for sense in self.senses(word) for topic in sense.topics}))
+        normalized = normalize_word(word)
+        with closing(self._connect()) as connection:
+            rows = connection.execute(
+                "SELECT DISTINCT t.topic FROM sense_topics AS t "
+                "JOIN senses AS s ON s.id=t.sense_id "
+                "JOIN entries AS e ON e.id=s.entry_id WHERE e.word=? ORDER BY t.topic",
+                (normalized,),
+            ).fetchall()
+        return tuple(str(row["topic"]) for row in rows)
 
     def relations(
         self,
@@ -762,6 +826,41 @@ class Lexicon:
             query += f" AND relation IN ({placeholders})"
             parameters.extend(relation_types)
         query += " ORDER BY relation, target_word LIMIT ?"
+        parameters.append(limit)
+        with closing(self._connect()) as connection:
+            rows = connection.execute(query, parameters).fetchall()
+        return tuple(
+            HeadwordRelation(
+                str(row["source_word"]),
+                str(row["target_word"]),
+                str(row["relation"]),
+                self._tuple(str(row["tags"])),
+            )
+            for row in rows
+        )
+
+    def incoming_relations(
+        self,
+        word: str,
+        *,
+        relation_types: tuple[str, ...] | None = None,
+        limit: int = 50,
+    ) -> tuple[HeadwordRelation, ...]:
+        """Return headword relations whose target is *word*."""
+        self._require("dictionary")
+        if limit < 0:
+            raise ValueError("limit must be >= 0")
+        normalized = normalize_word(word)
+        query = (
+            "SELECT source_word, target_word, relation, tags FROM headword_relations "
+            "WHERE target_word=?"
+        )
+        parameters: list[object] = [normalized]
+        if relation_types:
+            placeholders = ",".join("?" for _ in relation_types)
+            query += f" AND relation IN ({placeholders})"
+            parameters.extend(relation_types)
+        query += " ORDER BY relation, source_word LIMIT ?"
         parameters.append(limit)
         with closing(self._connect()) as connection:
             rows = connection.execute(query, parameters).fetchall()

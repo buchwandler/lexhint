@@ -45,6 +45,13 @@ class SemanticDomain(str, Enum):
 class Example:
     text: str
     translation: str | None = None
+    kind: str | None = None
+
+
+@dataclass(frozen=True, slots=True)
+class ExternalSenseId:
+    namespace: str
+    value: str
 
 
 @dataclass(frozen=True, slots=True)
@@ -82,6 +89,8 @@ class Sense:
     examples: tuple[Example, ...] = ()
     synonyms: tuple[str | RelatedTerm, ...] = ()
     antonyms: tuple[str | RelatedTerm, ...] = ()
+    sense_id: str | None = None
+    source_ids: tuple[ExternalSenseId, ...] = ()
 
 
 @dataclass(frozen=True, slots=True)
@@ -92,6 +101,15 @@ class DictionaryEntry:
     forms: tuple[Form, ...] = ()
     pronunciations: tuple[Pronunciation, ...] = ()
     etymology: str | None = None
+    etymology_number: str | None = None
+
+
+@dataclass(frozen=True, slots=True)
+class SenseRecord:
+    word: str
+    pos: str
+    etymology_number: str | None
+    sense: Sense
 
 
 @dataclass(frozen=True, slots=True)

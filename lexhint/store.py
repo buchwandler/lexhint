@@ -1,15 +1,20 @@
 from __future__ import annotations
 
+import base64
+import binascii
+import hashlib
 import json
 import sqlite3
 import unicodedata
 from collections import Counter
 from collections.abc import Iterable, Iterator, Mapping
-from dataclasses import dataclass
+from dataclasses import dataclass, field
 
+from .languages import normalize_language
 from .models import (
     DictionaryEntry,
     Example,
+    ExternalSenseId,
     Form,
     HeadwordRelation,
     Pronunciation,
@@ -18,7 +23,19 @@ from .models import (
 )
 from .search import search_tokens, word_ngrams
 
-SCHEMA_VERSION = "9"
+SCHEMA_VERSION = "10"
+
+MAX_STABLE_SENSE_ID = (1 << 63) - 1
+
+
+class SenseIdentityCollision(ValueError):
+    """Two different source senses produced the same deterministic ID."""
+
+
+@dataclass(slots=True)
+class SenseIdentityRegistry:
+    counts: dict[bytes, int] = field(default_factory=dict)
+    ids: dict[int, bytes] = field(default_factory=dict)
 
 
 @dataclass(frozen=True, slots=True)
@@ -58,9 +75,79 @@ def json_tuple(values: tuple[str, ...]) -> str:
     return json.dumps(values, ensure_ascii=False, separators=(",", ":"))
 
 
+def _identity_text(value: str) -> str:
+    return unicodedata.normalize("NFC", value).strip()
+
+
+def sense_identity_anchor(
+    language: str,
+    entry: DictionaryEntry,
+    sense: Sense,
+    duplicate_index: int = 0,
+) -> bytes:
+    source_ids = tuple(sorted((item.namespace, item.value) for item in sense.source_ids))
+    payload: dict[str, object] = {
+        "v": 1,
+        "language": normalize_language(language),
+        "word": normalize_word(entry.word),
+        "pos": normalize_word(entry.pos),
+        "etymology_number": entry.etymology_number or "",
+        "source_ids": source_ids,
+        "duplicate": duplicate_index,
+    }
+    if not source_ids:
+        payload["glosses"] = tuple(sorted(_identity_text(value) for value in sense.glosses))
+        payload["identity_tags"] = tuple(sorted(sense.tags))
+    return json.dumps(payload, ensure_ascii=False, sort_keys=True, separators=(",", ":")).encode()
+
+
+def stable_sense_int(anchor: bytes) -> int:
+    digest = hashlib.blake2b(anchor, digest_size=8, person=b"lexhint1").digest()
+    value = int.from_bytes(digest, "big") & MAX_STABLE_SENSE_ID
+    return value or 1
+
+
+def format_sense_id(language: str, value: int) -> str:
+    if not 1 <= value <= MAX_STABLE_SENSE_ID:
+        raise ValueError("sense integer ID is outside the positive 63-bit range")
+    encoded = base64.b32encode(value.to_bytes(8, "big")).decode("ascii").rstrip("=")
+    return f"lh1-{normalize_language(language)}-{encoded}"
+
+
+def parse_sense_id(language: str, value: str) -> int | None:
+    parts = value.split("-", 2)
+    if len(parts) != 3 or parts[0] != "lh1" or parts[1] != normalize_language(language):
+        return None
+    encoded = parts[2].upper()
+    try:
+        padded = encoded + "=" * ((8 - len(encoded) % 8) % 8)
+        raw = base64.b32decode(padded, casefold=True)
+    except (ValueError, binascii.Error):
+        return None
+    if len(raw) != 8:
+        return None
+    result = int.from_bytes(raw, "big")
+    return result if 1 <= result <= MAX_STABLE_SENSE_ID else None
+
+
+def _json_source_ids(values: tuple[ExternalSenseId, ...]) -> str:
+    return json.dumps(
+        [{"namespace": value.namespace, "value": value.value} for value in values],
+        ensure_ascii=False,
+        separators=(",", ":"),
+    )
+
+
 def _json_examples(values: tuple[Example, ...]) -> str:
     return json.dumps(
-        [{"text": value.text, "translation": value.translation} for value in values],
+        [
+            {
+                "text": value.text,
+                "translation": value.translation,
+                **({"kind": value.kind} if value.kind is not None else {}),
+            }
+            for value in values
+        ],
         ensure_ascii=False,
         separators=(",", ":"),
     )
@@ -161,9 +248,9 @@ def insert_sense_search_terms(connection: sqlite3.Connection, sense_id: int, sen
     if not _has_table(connection, "sense_search_terms"):
         return 0
     rows: list[tuple[str, int, str, int]] = []
-    for field, values in _search_field_values(sense).items():
+    for field_name, values in _search_field_values(sense).items():
         counts = Counter(token for value in values for token in search_tokens(value))
-        rows.extend((term, sense_id, field, count) for term, count in counts.items())
+        rows.extend((term, sense_id, field_name, count) for term, count in counts.items())
     connection.executemany(
         "INSERT OR REPLACE INTO sense_search_terms(term, sense_id, field, term_count) "
         "VALUES (?, ?, ?, ?)",
@@ -173,11 +260,16 @@ def insert_sense_search_terms(connection: sqlite3.Connection, sense_id: int, sen
 
 
 def insert_dictionary_entries(
-    connection: sqlite3.Connection, entries: Iterable[DictionaryEntry]
+    connection: sqlite3.Connection,
+    entries: Iterable[DictionaryEntry],
+    *,
+    language: str = "en",
+    identity_registry: SenseIdentityRegistry | None = None,
 ) -> tuple[int, int, set[str]]:
     entry_count = 0
     sense_count = 0
     words: set[str] = set()
+    registry = identity_registry or SenseIdentityRegistry()
     rich = _has_table(connection, "entries")
     sense_topics = _has_table(connection, "sense_topics")
     search_terms = _has_table(connection, "sense_search_terms")
@@ -192,13 +284,15 @@ def insert_dictionary_entries(
             continue
         cursor = connection.execute(
             "INSERT INTO entries("
-            "word, display_word, pos, entry_index, etymology, forms, pronunciations) "
-            "VALUES (?, ?, ?, ?, ?, ?, ?)",
+            "word, display_word, pos, entry_index, etymology_number, etymology, "
+            "forms, pronunciations) "
+            "VALUES (?, ?, ?, ?, ?, ?, ?, ?)",
             (
                 word,
                 display_word,
                 entry.pos,
                 entry_index,
+                entry.etymology_number or "",
                 entry.etymology or "",
                 _json_forms(entry.forms),
                 _json_pronunciations(entry.pronunciations),
@@ -207,11 +301,28 @@ def insert_dictionary_entries(
         assert cursor.lastrowid is not None
         entry_id = cursor.lastrowid
         for sense_index, sense in enumerate(entry.senses):
+            base_anchor = sense_identity_anchor(language, entry, sense)
+            duplicate_index = registry.counts.get(base_anchor, 0)
+            registry.counts[base_anchor] = duplicate_index + 1
+            anchor = sense_identity_anchor(language, entry, sense, duplicate_index)
+            sense_id = stable_sense_int(anchor)
+            prior_anchor = registry.ids.get(sense_id)
+            if prior_anchor is not None and prior_anchor != anchor:
+                raise SenseIdentityCollision(
+                    f"deterministic sense ID collision for {sense_id}: "
+                    f"{prior_anchor!r} != {anchor!r}"
+                )
+            if prior_anchor is not None:
+                raise SenseIdentityCollision(f"duplicate deterministic sense ID {sense_id}")
+            if connection.execute("SELECT 1 FROM senses WHERE id=?", (sense_id,)).fetchone():
+                raise SenseIdentityCollision(f"deterministic sense ID already exists: {sense_id}")
+            registry.ids[sense_id] = anchor
             sense_cursor = connection.execute(
                 "INSERT INTO senses("
-                "entry_id, sense_index, glosses, topics, tags, examples, synonyms, antonyms) "
-                "VALUES (?, ?, ?, ?, ?, ?, ?, ?)",
+                "id, entry_id, sense_index, glosses, topics, tags, examples, synonyms, "
+                "antonyms, source_ids) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)",
                 (
+                    sense_id,
                     entry_id,
                     sense_index,
                     json_tuple(sense.glosses),
@@ -220,15 +331,15 @@ def insert_dictionary_entries(
                     _json_examples(sense.examples),
                     _json_related(sense.synonyms),
                     _json_related(sense.antonyms),
+                    _json_source_ids(sense.source_ids),
                 ),
             )
-            assert sense_cursor.lastrowid is not None
-            sense_id = sense_cursor.lastrowid
+            assert sense_cursor.rowcount == 1
             if sense_topics:
                 for topic in sense.topics:
                     connection.execute(
-                        "INSERT INTO sense_topics(entry_id, sense_id, topic) VALUES (?, ?, ?)",
-                        (entry_id, sense_id, topic),
+                        "INSERT INTO sense_topics(topic, sense_id) VALUES (?, ?)",
+                        (topic, sense_id),
                     )
             if search_terms:
                 insert_sense_search_terms(connection, sense_id, sense)
@@ -240,22 +351,41 @@ def insert_headword_relations(
 ) -> int:
     if not _has_table(connection, "headword_relations"):
         return 0
-    rows = {
-        (
+    merged: dict[tuple[str, str, str], tuple[str, ...]] = {}
+    for relation in relations:
+        key = (
             normalize_word(relation.source),
             normalize_word(relation.target),
             relation.relation,
-            json_tuple(relation.tags),
         )
-        for relation in relations
-    }
-    before = connection.total_changes
-    connection.executemany(
-        "INSERT OR IGNORE INTO headword_relations(source_word, target_word, relation, tags) "
-        "VALUES (?, ?, ?, ?)",
-        rows,
-    )
-    return connection.total_changes - before
+        merged[key] = tuple(dict.fromkeys(merged.get(key, ()) + relation.tags))
+    inserted = 0
+    for (source, target, relation_name), tags in merged.items():
+        encoded_tags = json_tuple(tags)
+        existing = connection.execute(
+            "SELECT tags FROM headword_relations "
+            "WHERE source_word=? AND target_word=? AND relation=?",
+            (source, target, relation_name),
+        ).fetchone()
+        if existing is None:
+            connection.execute(
+                "INSERT INTO headword_relations(source_word, target_word, relation, tags) "
+                "VALUES (?, ?, ?, ?)",
+                (source, target, relation_name, encoded_tags),
+            )
+            inserted += 1
+            continue
+        existing_tags = json.loads(str(existing[0]))
+        combined = tuple(
+            dict.fromkeys(tuple(item for item in existing_tags if isinstance(item, str)) + tags)
+        )
+        if json_tuple(combined) != str(existing[0]):
+            connection.execute(
+                "UPDATE headword_relations SET tags=? "
+                "WHERE source_word=? AND target_word=? AND relation=?",
+                (json_tuple(combined), source, target, relation_name),
+            )
+    return inserted
 
 
 def create_schema(
@@ -287,8 +417,7 @@ def create_schema(
                 word TEXT NOT NULL,
                 PRIMARY KEY (gram, word),
                 FOREIGN KEY(word) REFERENCES lexemes(word)
-            );
-            CREATE INDEX lexeme_ngrams_word_idx ON lexeme_ngrams(word);
+            ) WITHOUT ROWID;
             """
         )
     if "semantic" in selected:
@@ -301,7 +430,7 @@ def create_schema(
                 source_topics TEXT NOT NULL,
                 PRIMARY KEY(word, domain),
                 FOREIGN KEY(word) REFERENCES lexemes(word)
-            );
+            ) WITHOUT ROWID;
             CREATE INDEX lexeme_domains_domain_idx ON lexeme_domains(domain);
             """
         )
@@ -314,12 +443,12 @@ def create_schema(
                 display_word TEXT NOT NULL,
                 pos TEXT NOT NULL,
                 entry_index INTEGER NOT NULL,
+                etymology_number TEXT NOT NULL DEFAULT '',
                 etymology TEXT NOT NULL DEFAULT '',
                 forms TEXT NOT NULL DEFAULT '[]',
                 pronunciations TEXT NOT NULL DEFAULT '[]'
             );
             CREATE INDEX entries_word_idx ON entries(word);
-            CREATE INDEX entries_display_word_idx ON entries(display_word);
             CREATE TABLE senses (
                 id INTEGER PRIMARY KEY,
                 entry_id INTEGER NOT NULL,
@@ -330,18 +459,16 @@ def create_schema(
                 examples TEXT NOT NULL,
                 synonyms TEXT NOT NULL,
                 antonyms TEXT NOT NULL,
+                source_ids TEXT NOT NULL DEFAULT '[]',
                 FOREIGN KEY(entry_id) REFERENCES entries(id) ON DELETE CASCADE
             );
             CREATE INDEX senses_entry_idx ON senses(entry_id);
             CREATE TABLE sense_topics (
-                entry_id INTEGER NOT NULL,
-                sense_id INTEGER NOT NULL,
                 topic TEXT NOT NULL,
-                FOREIGN KEY(entry_id) REFERENCES entries(id) ON DELETE CASCADE,
+                sense_id INTEGER NOT NULL,
+                PRIMARY KEY(topic, sense_id),
                 FOREIGN KEY(sense_id) REFERENCES senses(id) ON DELETE CASCADE
-            );
-            CREATE INDEX sense_topics_topic_idx ON sense_topics(topic);
-            CREATE INDEX sense_topics_entry_idx ON sense_topics(entry_id);
+            ) WITHOUT ROWID;
             """
         )
         if "search" in selected:
@@ -354,9 +481,7 @@ def create_schema(
                     term_count INTEGER NOT NULL,
                     PRIMARY KEY (term, sense_id, field),
                     FOREIGN KEY(sense_id) REFERENCES senses(id) ON DELETE CASCADE
-                );
-                CREATE INDEX sense_search_terms_sense_idx
-                    ON sense_search_terms(sense_id);
+                ) WITHOUT ROWID;
                 """
             )
         connection.executescript(
@@ -367,13 +492,29 @@ def create_schema(
                 relation TEXT NOT NULL,
                 tags TEXT NOT NULL DEFAULT '[]',
                 PRIMARY KEY (source_word, target_word, relation)
-            );
+            ) WITHOUT ROWID;
             CREATE INDEX headword_relations_target_idx
                 ON headword_relations(target_word, relation);
-            CREATE INDEX headword_relations_relation_idx
-                ON headword_relations(relation, source_word);
             """
         )
+
+
+def finalize_artifact(connection: sqlite3.Connection) -> None:
+    """Validate and compact an immutable schema 10 artifact."""
+    connection.commit()
+    foreign_keys = connection.execute("PRAGMA foreign_key_check").fetchall()
+    if foreign_keys:
+        raise sqlite3.DatabaseError(f"foreign key check failed: {foreign_keys[0]!r}")
+    quick_check = connection.execute("PRAGMA quick_check").fetchone()
+    if quick_check != ("ok",):
+        raise sqlite3.DatabaseError(f"quick_check failed: {quick_check!r}")
+    connection.execute("ANALYZE")
+    connection.commit()
+    connection.execute("VACUUM")
+    quick_check = connection.execute("PRAGMA quick_check").fetchone()
+    if quick_check != ("ok",):
+        raise sqlite3.DatabaseError(f"quick_check failed after VACUUM: {quick_check!r}")
+    connection.commit()
 
 
 def metadata(connection: sqlite3.Connection) -> dict[str, str]:

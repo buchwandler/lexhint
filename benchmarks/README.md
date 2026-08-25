@@ -26,11 +26,13 @@ Each run creates an immutable timestamped directory with `config.json`,
 
 `generate.py` produces a streamable logical dataset. Adapters in `schemas/` own
 DDL, population, finalization, and workload queries. `current-v8` is a historical
-snapshot of Lexhint schema 8; `current-v8-relations` adds the normalized
-`redirect`, `alternative`, and `form_of` relation table used to calibrate production
-schema 9 Option A. Results include raw and gzip size, page metrics, optional
-`dbstat` object attribution, relation bytes per row, build phases, and warm/reopen
-workload percentiles.
+snapshot of the older Lexhint schema; `current-v8-relations` adds the normalized
+relation table used by earlier comparisons. `current-v9` is the pre-schema-10
+baseline, while `current-v9-without-rowid`, `current-v9-readonly-finalized`, and
+`schema10-candidate` measure compact compound-key tables and immutable index
+finalization. Results include raw and gzip size, page metrics, optional `dbstat`
+object attribution, relation bytes per row, build phases, and warm/reopen workload
+percentiles.
 
 The English profile is an explicit synthetic assumption, not a measured English
 fact. Use `calibrate` on aggregate statistics from a real artifact to create a

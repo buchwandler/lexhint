@@ -178,3 +178,18 @@ def test_colored_dictionary_output_uses_semantic_styles() -> None:
     assert "\033[2;36mtranslation:\033[0m" in colored
     assert "\033[36metymology\033[0m" in colored
     assert "\033[36mexamples\033[0m" in colored
+
+
+def test_renderer_labels_quotation_kind() -> None:
+    entry = DictionaryEntry(
+        "love",
+        "noun",
+        (Sense(glosses=("A feeling.",), examples=(Example("A quote.", kind="quotation"),)),),
+    )
+    output = render_dictionary_entries(
+        "love",
+        (entry,),
+        options=DictionaryRenderOptions(fields=resolve_dictionary_fields("full"), width=60),
+        detail="full",
+    )
+    assert "- [quotation] A quote." in output

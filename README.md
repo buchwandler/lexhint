@@ -121,7 +121,7 @@ lexhint dictionary build en --refresh-frequency
 lexhint --offline dictionary build en --source ./raw-wiktextract-data.jsonl.gz
 ```
 
-Capabilities are canonicalized in the order `lexical,semantic,dictionary,search`. `semantic`, `dictionary`, and `search` require `lexical`. Dictionary-text search additionally requires `dictionary`. Profiles are shortcuts: `runtime` means `lexical,semantic`, and `rich` means `lexical,semantic,dictionary,search`.
+Capabilities are canonicalized in the order `lexical,semantic,dictionary,search`. `semantic`, `dictionary`, and `search` require `lexical`. Dictionary-text search additionally requires `dictionary`. Profiles are shortcuts: `runtime` means `lexical,semantic`, `dictionary` means `lexical,semantic,dictionary` without search indexes, and `rich` means `lexical,semantic,dictionary,search`.
 
 `complete()` is prefix completion only; it does not correct spelling. Use `suggest()` for fuzzy spelling candidates, `match_headwords()` for glob/regex lexical-key matching, and `search_definitions()` for indexed dictionary sense search.
 
@@ -168,6 +168,17 @@ The `--show` and `--hide` options accept repeatable comma-separated fields. Cano
 
 Human CLI output uses ANSI color automatically on interactive terminals. Use `--no-color` or the `NO_COLOR` environment variable to disable it. Color is never emitted for JSON or non-TTY stdout.
 
+## Dictionary schema 10 contract
+
+Schema 10 dictionary entries expose a versioned deterministic `sense_id` in JSON and through `Lexicon.sense_by_id()`. The ID is Lexhint-owned and stable across equivalent builds, not a permanent Wiktionary ID. Raw upstream `senseid` and Wikidata values, when available, appear separately as namespaced source provenance. Entry-level synonyms, antonyms, hypernyms, hyponyms, and related terms are headword relations; sense-level synonyms and antonyms remain attached to their exact senses.
+
+Use the incoming relation view when a target headword is the subject of the lookup:
+
+```bash
+lexhint dictionary relations love --incoming --variant dictionary
+```
+
+Schema 10 artifacts are rebuilt from raw source rather than migrated. The `dictionary` variant contains full dictionary content without search indexes. The `rich` variant adds the larger fuzzy and definition-search indexes.
 Use `--json` for stable, complete machine-readable output. POS selection applies to JSON entries, while `--detail`, `--show`, `--hide`, and `--width` are human-only options. `dictionary status` reports current SQL row counts, capabilities, provenance, size, and build metadata without rebuilding. Use `--path` as an advanced override when inspecting a specific artifact. Rich dictionary lookup reports a controlled capability error for compact runtime artifacts.
 
 ## Data and scope

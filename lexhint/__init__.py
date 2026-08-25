@@ -41,6 +41,7 @@ from .models import (
     DictionarySearchHit,
     DomainEvidence,
     Example,
+    ExternalSenseId,
     Form,
     HeadwordRelation,
     LexicalSegment,
@@ -48,6 +49,7 @@ from .models import (
     RelatedTerm,
     SemanticDomain,
     Sense,
+    SenseRecord,
     WordEvidence,
 )
 from .store import SCHEMA_VERSION
@@ -70,6 +72,7 @@ __all__ = [
     "DictionarySearchHit",
     "DomainEvidence",
     "Example",
+    "ExternalSenseId",
     "Form",
     "HeadwordRelation",
     "LexicalSegment",
@@ -83,6 +86,7 @@ __all__ = [
     "Pronunciation",
     "SemanticDomain",
     "Sense",
+    "SenseRecord",
     "WordEvidence",
     "InstalledDataset",
     "available_datasets",

@@ -286,9 +286,10 @@ def _render_etymology(etymology: str, width: int, style: TerminalStyle) -> list[
 def _render_examples(sense: Sense, width: int, style: TerminalStyle) -> list[str]:
     lines = [f"       {style.cyan('examples')}"]
     for example in sense.examples:
+        example_text = f"[{example.kind}] {example.text}" if example.kind else example.text
         lines.extend(
             _wrap(
-                example.text,
+                example_text,
                 width,
                 initial="         - ",
                 subsequent="           ",

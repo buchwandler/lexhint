@@ -25,7 +25,9 @@ from .semantics import insert_lexeme_domains
 from .sources import ResolvedFrequencySource, resolve_frequency_source
 from .store import (
     SCHEMA_VERSION,
+    SenseIdentityRegistry,
     create_schema,
+    finalize_artifact,
     insert_dictionary_entries,
     insert_headword_relations,
     insert_lexeme_search_index,
@@ -236,6 +238,7 @@ def build_dictionary(
     semantic_rows = 0
     search_lexeme_rows = search_sense_rows = relation_rows = 0
     final_stats: DictionaryBuildStats
+    identity_registry = SenseIdentityRegistry()
     try:
         connection = sqlite3.connect(tmp)
         try:
@@ -287,7 +290,10 @@ def build_dictionary(
                 entries = tuple(dictionary_entries(raw_entry, language=base_language))
                 if entries:
                     entry_count, inserted_senses, _words = insert_dictionary_entries(
-                        connection, entries
+                        connection,
+                        entries,
+                        language=base_language,
+                        identity_registry=identity_registry,
                     )
                     if "search" in selection.capabilities:
                         insert_lexeme_search_index(connection, _words)
@@ -398,8 +404,7 @@ def build_dictionary(
             )
             if progress is not None:
                 progress(final_stats)
-            connection.execute("ANALYZE")
-            connection.commit()
+            finalize_artifact(connection)
         finally:
             connection.close()
         tmp.replace(target)
@@ -476,14 +481,15 @@ def project_artifact(
             for table, columns in (
                 (
                     "entries",
-                    "id, word, display_word, pos, entry_index, etymology, forms, pronunciations",
+                    "id, word, display_word, pos, entry_index, etymology_number, etymology, "
+                    "forms, pronunciations",
                 ),
                 (
                     "senses",
                     "id, entry_id, sense_index, glosses, topics, tags, examples, "
-                    "synonyms, antonyms",
+                    "synonyms, antonyms, source_ids",
                 ),
-                ("sense_topics", "entry_id, sense_id, topic"),
+                ("sense_topics", "topic, sense_id"),
                 ("headword_relations", "source_word, target_word, relation, tags"),
             ):
                 placeholders = ", ".join("?" for _ in columns.split(", "))
@@ -552,10 +558,7 @@ def project_artifact(
             ):
                 metadata.pop(key, None)
         set_metadata(target_connection, metadata)
-        target_connection.execute("ANALYZE")
-        target_connection.commit()
-        if target_connection.execute("PRAGMA quick_check").fetchone() != ("ok",):
-            raise sqlite3.DatabaseError("projected artifact failed PRAGMA quick_check")
+        finalize_artifact(target_connection)
     finally:
         source_connection.close()
         if target_connection is not None:
