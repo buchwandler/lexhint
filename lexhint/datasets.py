@@ -19,6 +19,7 @@ from urllib.error import HTTPError, URLError
 from .download import SUPPORTED_LANGUAGES, data_dir, request
 from .languages import normalize_language, supported_base_languages
 from .schema import PROFILES
+from .schema_contract import SchemaContractError, validate_artifact_structure
 from .store import SCHEMA_VERSION
 
 DATASET_REPOSITORY = "buchwandler/lexhint-datasets"
@@ -450,6 +451,16 @@ def _database_metadata(path: Path) -> dict[str, str]:
         raise DatasetIntegrityError("installed dataset is not a readable SQLite artifact") from exc
 
 
+def _validate_database_structure(path: Path, capabilities: tuple[str, ...]) -> None:
+    try:
+        with closing(sqlite3.connect(f"file:{path.resolve()}?mode=ro", uri=True)) as connection:
+            validate_artifact_structure(connection, capabilities)
+    except (OSError, sqlite3.DatabaseError, SchemaContractError) as exc:
+        raise DatasetIntegrityError(
+            f"dataset database does not satisfy schema {SCHEMA_VERSION}: {exc}"
+        ) from exc
+
+
 def _installed_from_sidecar(path: Path) -> InstalledDataset:
     sidecar = _sidecar_path(path)
     try:
@@ -503,6 +514,7 @@ def validate_installed_dataset(dataset: InstalledDataset) -> InstalledDataset:
         raise DatasetIncompatible("dataset does not provide lexical capability")
     if actual_capabilities != dataset.capabilities:
         raise DatasetIntegrityError("dataset capabilities do not match its sidecar")
+    _validate_database_structure(dataset.path, actual_capabilities)
     return dataset
 
 
@@ -723,6 +735,7 @@ def download_dataset(
             raise DatasetIntegrityError("dataset coverage does not match the manifest")
         if capabilities != artifact.capabilities:
             raise DatasetIntegrityError("dataset capabilities do not match the manifest")
+        _validate_database_structure(db_temp, capabilities)
         installed_at = _now()
         _write_sidecar(sidecar_temp, artifact, installed_at)
         os.replace(db_temp, final_path)

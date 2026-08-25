@@ -131,8 +131,8 @@ sections:
     heading_slug: architecture-constraints
     line_span:
       - 40
-      - 55
-    section_hash: 0e8a5d900e90c1bb48298a54091d4a9527f6db96b719a8cc9b973104624c0af7
+      - 58
+    section_hash: c8e68f2abf448dae08ecc038f00293aba9b226b001eed57826c0a8e5db79b0f5
     summary: Architecture Constraints
     text: "# Architecture Constraints
 
@@ -147,25 +147,85 @@ sections:
       write partial caches.
 
       - The CLI resolves default cached or vendored artifacts for ordinary reads and
-      exposes `dictionary status` for current SQL counts.
+      exposes `dictionary status` for current SQL counts and source provenance.
 
-      - `SCHEMA_VERSION` is an exact artifact compatibility key. Current schema 7 clients
-      select and open only schema 7 artifacts; schema families are stored side by side
-      under `s<schema>` paths.
+      - `SCHEMA_VERSION` is an exact artifact compatibility key. Schema 10 clients select
+      and open only schema 10 artifacts; schema families are stored side by side under
+      `s<schema>` paths and schema 9 artifacts must be rebuilt from source.
 
       - Metadata records schema version, base language, coverage, profile, capabilities,
-      creation time, builder version, and source provenance.
+      creation time, builder version, dictionary source format and contract, and source
+      provenance.
 
-      - `lexemes` is present for the lexical capability. Semantic and dictionary tables
-      are capability-specific.
+      - `lexemes` is present for the lexical capability. Semantic, dictionary, search,
+      and headword relation tables are capability-specific.
 
-      - Default builds select `lexical,semantic,dictionary` and automatic pinned full
-      FrequencyWords enrichment.
+      - Default builds select `lexical,semantic,dictionary,search` and automatic pinned
+      full FrequencyWords enrichment.
+
+      - `search` provides indexed fuzzy headword and dictionary-text search; dictionary-text
+      search requires both `dictionary` and `search`.
 
       - Frequency is enrichment, not a capability.
 
       - External dictionary and corpus data remain separate from the Apache-2.0 code
       and retain their licensing obligations.
+
+
+      Managed dataset variants are capability presets rather than exact mirrors of named
+      build profiles: `runtime` provides `lexical,semantic` and remains the recommended
+      default; `lexical` is the smallest projection; `dictionary` provides `lexical,semantic,dictionary`
+      and includes explicit headword relations without search indexes; and `rich` provides
+      `lexical,semantic,dictionary,search`. They form a strict capability chain so automatic
+      installed-dataset resolution has one maximal result. The client tests this publisher
+      contract so capability declarations cannot drift from schema construction.
+
+
+      Schema 10 finalization validates foreign keys and `PRAGMA quick_check`, runs `ANALYZE`,
+      compacts the immutable artifact, and omits unused reverse indexes unless a protected
+      workload justifies them. `sense_topics` uses Option B: a `(topic, sense_id)` `WITHOUT
+      ROWID` table."
+    links: []
+  - section_id: md:section:docs/architecture.md::schema-10-freeze-and-bump-policy
+    doc_path: docs/architecture.md
+    heading_path:
+      - Architecture Constraints
+      - Schema 10 freeze and bump policy
+    heading_slug: schema-10-freeze-and-bump-policy
+    line_span:
+      - 59
+      - 68
+    section_hash: 570e953418fef9572cd78e1bf8c77de7eaeb04f87ded570e603909583c7b2b6a
+    summary: Schema 10 freeze and bump policy
+    text: "## Schema 10 freeze and bump policy
+
+
+      Schema 10 is frozen at the `v0.4.0` release boundary. The structured contract
+      in `lexhint.schema_contract` is the reviewable definition of the published SQLite
+      layout. It covers required tables, ordered columns, primary and foreign keys,
+      required indexes, `WITHOUT ROWID` tables, capability relationships, and persisted
+      format versions. Runtime and managed dataset validation check that contract before
+      capability-specific queries begin. SQLite `application_id` and `user_version`
+      identify a Lexhint schema-10 file for diagnostics, while metadata `schema_version`
+      remains authoritative.
+
+
+      A future change requires a schema bump unless it is proven compatible with existing
+      schema-10 readers. Bump for required table or column additions, removals, or renames;
+      primary-key or runtime-required foreign-key changes; required-index changes that
+      alter query assumptions; incompatible JSON payload encodings; deterministic sense-ID
+      type or anchor changes; or search-index construction changes that an existing
+      reader would interpret differently. Schema 10 also covers the `lh1` public sense-ID
+      interpretation, source provenance encoding, and the persisted forms, pronunciations,
+      glosses, topics, tags, examples, synonyms, antonyms, relation tags, and semantic
+      source-topic JSON arrays.
+
+
+      Optional metadata keys, diagnostics, error messages, rendering, additive runtime
+      helpers, compatible performance work, and additional validation do not require
+      a schema bump when stored and queried semantics remain unchanged. A schema bump
+      requires rebuilding and republishing every managed variant. Schema 9 artifacts
+      are never migrated in place.
 
 
       <!-- archledger: no accepted records for this section yet -->"
@@ -176,8 +236,8 @@ sections:
       - Context and Scope
     heading_slug: context-and-scope
     line_span:
-      - 56
-      - 59
+      - 69
+      - 72
     section_hash: a7ca364b5483b1ef18d844fd9fd04f8e1601068348542bcab5b5ead068481073
     summary: Context and Scope
     text: "# Context and Scope
@@ -193,8 +253,8 @@ sections:
       - Business context
     heading_slug: business-context
     line_span:
-      - 60
-      - 68
+      - 73
+      - 81
     section_hash: 686bbcf24f4e70b0625498689388ea2f1bbce60ef3187c3e161772ec68bb446b
     summary: Business context
     text: "## Business context
@@ -221,8 +281,8 @@ sections:
       - Technical context
     heading_slug: technical-context
     line_span:
-      - 69
-      - 77
+      - 82
+      - 90
     section_hash: 985ba3847a0ed4bd1694ae1d21a3735dbd01f400c87d8ae567b35ecffd40ecc2
     summary: Technical context
     text: "## Technical context
@@ -243,8 +303,8 @@ sections:
       - Business Context
     heading_slug: business-context-2
     line_span:
-      - 78
-      - 81
+      - 91
+      - 94
     section_hash: 192e6f8f23e13bb25a7e3d93211002aa48a30ec4fab5863449c28ecca403029f
     summary: Business Context
     text: "## Business Context
@@ -259,8 +319,8 @@ sections:
       - Technical Context
     heading_slug: technical-context-2
     line_span:
-      - 82
-      - 85
+      - 95
+      - 98
     section_hash: 5b91554f689baf6bcc85dfa374c35a9f3ff4e2dc636eb9ae39236411eb130aa1
     summary: Technical Context
     text: "## Technical Context
@@ -274,8 +334,8 @@ sections:
       - Solution Strategy
     heading_slug: solution-strategy
     line_span:
-      - 86
       - 99
+      - 112
     section_hash: 9f82b00a99c7fc9d417f87edbd4c41abfac67ef07ca66da77c3263065dbc453c
     summary: Solution Strategy
     text: "# Solution Strategy
@@ -316,8 +376,8 @@ sections:
       - Strategy Items
     heading_slug: strategy-items
     line_span:
-      - 100
-      - 103
+      - 113
+      - 116
     section_hash: e31c139a95abf895c0a65f82aeed6b073a7cf0e66ea24d13f953476d66233d9e
     summary: Strategy Items
     text: "## Strategy Items
@@ -331,9 +391,9 @@ sections:
       - Building Block View
     heading_slug: building-block-view
     line_span:
-      - 104
-      - 118
-    section_hash: d8459a6c44a45d0c5a49b197ae97120e8dc24e6fe80761d1008ef5f69a9d3a2a
+      - 117
+      - 133
+    section_hash: 7594d98a573c9f41443bbd542fa3ba52c835010f8c780b59ff0169b9be14c9e6
     summary: Building Block View
     text: "# Building Block View
 
@@ -342,7 +402,9 @@ sections:
 
 
       - `lexhint.lexicon.Lexicon` owns read-only artifact access, lexical lookup, prefix
-      completion, segmentation, dictionary inspection, and semantic evidence queries.
+      completion, fuzzy suggestions, headword matching, indexed definition search, explicit
+      headword relation lookup and resolution, segmentation, dictionary inspection,
+      and semantic evidence queries.
 
       - `lexhint.schema` defines schema and capability validation for the self-describing
       SQLite artifact.
@@ -351,7 +413,10 @@ sections:
       applies the immutable build plan.
 
       - `lexhint.extract` converts source records into curated lexical and dictionary
-      data.
+      data plus explicit relation candidates.
+
+      - `lexhint.wiktextract_types` documents the narrow upstream JSONL contract consumed
+      by Lexhint without depending on Wiktextract at runtime.
 
       - `lexhint.semantics` projects source topics into the stable `SemanticDomain`
       taxonomy.
@@ -359,18 +424,21 @@ sections:
       - `lexhint.frequency` and `lexhint.sources` resolve corpus enrichment and source
       provenance.
 
-      - `lexhint.store` persists lexemes, domains, rich dictionary tables, metadata,
-      and indexes.
+      - `lexhint.store` persists lexemes, domains, rich dictionary tables, headword
+      relations, search indexes, metadata, and indexes.
 
       - `lexhint.cli` exposes build and runtime operations in human-readable and JSON
       forms.
 
+      - `tools/inspect_wiktextract.py` and `tools/profile_wiktextract_relations.py`
+      are developer-only local source analysis tools.
 
-      The public package exports `Lexicon` and `SemanticDomain` as the principal consumer
-      interface. It also exports `SCHEMA_VERSION`, `DATASET_VARIANTS`, `DATASET_VARIANT_NAMES`,
-      `DEFAULT_DATASET_VARIANT`, and `supported_base_languages()` for the separate dataset
-      publisher contract. Build and source helpers remain available from their owning
-      modules."
+
+      The public package exports `Lexicon`, `HeadwordRelation`, `DictionarySearchHit`,
+      and `SemanticDomain` as the principal consumer interface. It also exports `SCHEMA_VERSION`,
+      `DATASET_VARIANTS`, `DATASET_VARIANT_NAMES`, `DEFAULT_DATASET_VARIANT`, and `supported_base_languages()`
+      for the separate dataset publisher contract. Build and source helpers remain available
+      from their owning modules."
     links:
       - source_id: py:class:lexhint/lexicon.py::Lexicon
         source_path: lexhint/lexicon.py
@@ -378,7 +446,7 @@ sections:
         impact: unknown
         reason: The building-block view names the Lexicon component.
         tracked_hashes:
-          body_hash: fbd7a21e82b0f2e75590145c32bf1ed906af4584856301a2d60a8d8a655a6bcb
+          body_hash: ce9dfac41c3c14388cb285959003e4e9fe56a1fb0a631b627437eb51d30420ef
   - section_id: md:section:docs/architecture.md::consumer-interface
     doc_path: docs/architecture.md
     heading_path:
@@ -386,19 +454,43 @@ sections:
       - Consumer interface
     heading_slug: consumer-interface
     line_span:
-      - 119
-      - 139
-    section_hash: d740aa00b9c7bcf19c871dc2c80e72230462bdd71935d75538a2e0c70caf625d
+      - 134
+      - 153
+    section_hash: 7bce7fa195733c6cb0d6f7da13f9bda8ca25323d1828a8b4f3d95d5962627841
     summary: Consumer interface
-    text:
-      "## Consumer interface\n\n```python\nfrom lexhint import Lexicon, SemanticDomain\n\
-      \nlexicon = Lexicon.from_path(\"en.sqlite3\")\ncompletions = lexicon.complete(\"\
-      comp\")\nsegments = lexicon.segment(\"chatgpt\")\ntext = \"The compiler is 8.3.2.\"\
-      \nstart = text.index(\"8.3.2\")\nevidence = lexicon.supports_domain(\n    text,\
-      \ target=(start, start + len(\"8.3.2\")), domain=SemanticDomain.COMPUTING\n)\n\
-      ```\n\nThe consumer decides what an unknown run, version, or candidate should\
-      \ mean. Lexhint ends at evidence.\n\n\n\n<!-- archledger: no accepted records\
-      \ for this section yet -->"
+    text: '## Consumer interface
+
+
+      ```python
+
+      from lexhint import Lexicon, SemanticDomain
+
+
+      lexicon = Lexicon.from_path("en.sqlite3")
+
+      completions = lexicon.complete("comp")
+
+      suggestions = lexicon.suggest("complier")
+
+      headwords = lexicon.match_headwords("comp*", syntax="glob")
+
+      relations = lexicon.relations("colour")
+
+      targets = lexicon.resolve_headword("colours")
+
+      hits = lexicon.search_definitions("computer program", fields=("glosses",), match="all")
+
+      ```
+
+
+      The consumer decides what an unknown run, version, or candidate should mean. Lexhint
+      ends at evidence. Relation following is always explicit and does not alter `entries()`
+      exact lookup.
+
+
+
+
+      <!-- archledger: no accepted records for this section yet -->'
     links: []
   - section_id: md:section:docs/architecture.md::runtime-view
     doc_path: docs/architecture.md
@@ -406,8 +498,8 @@ sections:
       - Runtime View
     heading_slug: runtime-view
     line_span:
-      - 140
-      - 141
+      - 154
+      - 155
     section_hash: 0ba1bc07231883ae7704c4c555be5db38e24a36949655efbda1f3efc4e9eb657
     summary: Runtime View
     text: "# Runtime View"
@@ -419,9 +511,9 @@ sections:
       - Lexical lookup and segmentation
     heading_slug: lexical-lookup-and-segmentation
     line_span:
-      - 142
-      - 149
-    section_hash: a762ea2edf272558e73dc014499d66057b2fc02330adadc542e6361bcd4f5936
+      - 156
+      - 163
+    section_hash: 5c4e739b7d5e7d26c05c9da1ab176689e57f8bcb7258865fa621cc14626e6c46
     summary: Lexical lookup and segmentation
     text: "## Lexical lookup and segmentation
 
@@ -434,16 +526,46 @@ sections:
       capabilities before queries.
 
       3. An optional locale such as `GB` or `US` is runtime presentation state. It does
-      not change artifact resolution or physical English dataset identity.
+      not change artifact resolution or physical English dataset identity. Regional
+      source tags are defined once in `languages.py` and used by runtime ordering.
 
-      4. `word()` and `contains()` query dictionary-derived lexemes. `word()` exposes
-      casing attestation already stored in the lexeme row. `complete()` performs bounded
-      normalized prefix completion through exact lookup and indexed lexical range queries.
-      `segment()` evaluates known spans using authoritative full coverage, case flags,
-      dynamic programming, and optional corpus rank, while retaining strict surface-case
-      acceptance.
+      4. `word()` and `contains()` query lexical keys. `complete()` performs bounded
+      normalized prefix completion through exact lookup and indexed lexical range queries;
+      it is not fuzzy correction. `suggest()` uses bounded n-gram candidates, `match_headwords()`
+      uses safe glob/regex scans, and `search_definitions()` joins the indexed sense-term
+      table without exposing SQLite details. `segment()` evaluates known spans using
+      authoritative full coverage, case flags, dynamic programming, and optional corpus
+      rank, while retaining strict surface-case acceptance.
 
       5. Runtime reads do not acquire missing data or write to the artifact."
+    links: []
+  - section_id: md:section:docs/architecture.md::dictionary-relations
+    doc_path: docs/architecture.md
+    heading_path:
+      - Runtime View
+      - Dictionary relations
+    heading_slug: dictionary-relations
+    line_span:
+      - 164
+      - 169
+    section_hash: 9129f5f4f693fa56007be86c63e0ea17f0f5b3e6a58c43c618625d69bee676a4
+    summary: Dictionary relations
+    text: "## Dictionary relations
+
+
+      1. Build-time defensive extraction projects only the narrow Lexhint-owned Wiktextract
+      fields. It retains redirects, `alt_of`, and `form_of` as typed relation candidates
+      and drops unrelated upstream fields.
+
+      2. Schema 10 stores deterministic sense IDs, compact source provenance, and normalized
+      `redirect`, `alternative`, `form_of`, `synonym`, `antonym`, `hypernym`, `hyponym`,
+      and `related` headword rows only with the `dictionary` capability. Sense-level
+      synonyms and antonyms remain attached to their exact senses, while incoming relations
+      use the target index.
+
+      3. `relations(word)` performs bounded exact source lookup. `resolve_headword(word)`
+      follows only the requested relation types. Neither operation is implicit in `entries()`
+      or fuzzy search."
     links: []
   - section_id: md:section:docs/architecture.md::semantic-evidence
     doc_path: docs/architecture.md
@@ -452,9 +574,9 @@ sections:
       - Semantic evidence
     heading_slug: semantic-evidence
     line_span:
-      - 150
-      - 160
-    section_hash: 8343183ccbeafc219e77f36f8d6279522f0683c8c53910c0835fa8a91d14f857
+      - 170
+      - 182
+    section_hash: b119dc689eea932e7e142ad09fdead9a4e036350c306b8be3f8b1dbafe1f7ac1
     summary: Semantic evidence
     text: "## Semantic evidence
 
@@ -475,6 +597,10 @@ sections:
       evidence.
 
 
+      The public dictionary API distinguishes sense-scoped relations from unsense-disambiguated
+      headword relations and exposes `sense_by_id()` and `incoming_relations()`.
+
+
 
 
       <!-- archledger: no accepted records for this section yet -->"
@@ -485,9 +611,9 @@ sections:
       - Deployment View
     heading_slug: deployment-view
     line_span:
-      - 161
-      - 176
-    section_hash: a8fcebb99b3edbc7f95088530e92cac94234f7b77f4afe941d37d9a7eb49244f
+      - 183
+      - 198
+    section_hash: 9410e9a3a64c06caf486c2ecac302e767887436ac07432f9ac15def502a499fb
     summary: Deployment View
     text: "# Deployment View
 
@@ -502,11 +628,12 @@ sections:
       - Artifact paths are selected by the caller or build workflow; CLI `--path` is
       an explicit override.
 
-      - `dictionary status` reports current row counts and metadata without rebuilding
-      the artifact.
+      - `dictionary status` reports current row counts, schema, capabilities, source
+      format, source contract, and provenance without rebuilding the artifact.
 
       - A complete local artifact supports offline lexical, segmentation, dictionary,
-      and semantic reads when the corresponding capabilities are present.
+      semantic, fuzzy, headword, relation, and definition-search reads when the corresponding
+      capabilities are present.
 
       - Generated artifacts contain source and hash provenance for dictionary and corpus
       inputs.
@@ -527,8 +654,8 @@ sections:
       - Cross-cutting Concepts
     heading_slug: cross-cutting-concepts
     line_span:
-      - 177
-      - 178
+      - 199
+      - 200
     section_hash: 123dcca719a6d5f1dcd7fb73e8ea138a9470d204bbb7291e5c6e0cbcf99201de
     summary: Cross-cutting Concepts
     text: "# Cross-cutting Concepts"
@@ -540,9 +667,9 @@ sections:
       - Capability-specific schema
     heading_slug: capability-specific-schema
     line_span:
-      - 179
-      - 184
-    section_hash: 66a32be1ab7c0195ddc98b94a1fa9984c1d0148acb21dc6459150c4367a3984e
+      - 201
+      - 208
+    section_hash: dd22598f09087dd851056b8a8e833f162749cf9b94eb58eaa1bea8b8e3cdc3f3
     summary: Capability-specific schema
     text: "### Capability-specific schema
 
@@ -553,14 +680,45 @@ sections:
       a compatibility range, controls SQLite access.
 
 
-      Schema 7 metadata is explicit and self-describing. `lexemes` is always present
-      for lexical capability and already stores lowercase, titlecase, and uppercase
-      attestation flags exposed by `WordEvidence`. `lexeme_domains` exists only for
-      `semantic`; each row stores bounded deterministic weight and source-topic provenance.
-      Rich `entries`, `senses`, `sense_topics`, forms, and pronunciations exist only
-      for `dictionary`. Old partial-cache schemas are rejected and must be rebuilt.
-      Prefix completion uses the existing `lexemes.word` primary-key range and does
-      not require a schema change."
+      Schema 10 metadata is explicit and self-describing. `lexemes` is always present
+      for lexical capability and stores lowercase, titlecase, and uppercase attestation
+      flags exposed by `WordEvidence`. `lexeme_domains` exists only for `semantic`;
+      rich `entries`, `senses`, `sense_topics`, and `headword_relations` exist only
+      for `dictionary`; `lexeme_ngrams` exists for `search`; and `sense_search_terms`
+      exists for `dictionary` plus `search`. Search and relation metadata record index
+      and row counts, and projections remove claims for excluded structures. Schema
+      9 artifacts are rejected and must be rebuilt; schema 9 and schema 10 dataset families
+      remain side by side on disk.
+
+
+      Managed dataset variants select capability subsets in a strict chain: `lexical`,
+      `runtime` (`lexical,semantic`), `dictionary` (`lexical,semantic,dictionary`),
+      and `rich` (`lexical,semantic,dictionary,search`). A dictionary projection supports
+      full entry/sense/topic inspection, explicit relation lookup, rendering, semantic
+      context, and completion while intentionally omitting fuzzy suggestion and indexed
+      definition/reverse search. Only rich includes both search structures."
+    links: []
+  - section_id: md:section:docs/architecture.md::source-contract-and-diagnostics
+    doc_path: docs/architecture.md
+    heading_path:
+      - Cross-cutting Concepts
+      - Source contract and diagnostics
+    heading_slug: source-contract-and-diagnostics
+    line_span:
+      - 209
+      - 212
+    section_hash: 64bdcff8c536c40e95c9d5affbb65026d6534ffd06face2a291351aecd438ff7
+    summary: Source contract and diagnostics
+    text: "### Source contract and diagnostics
+
+
+      The build consumes a narrow Lexhint-owned TypedDict contract for the fields it
+      intentionally retains: lexical identity, POS, senses, topics, forms, IPA sounds,
+      etymology, examples, synonyms, antonyms, redirects, `alt_of`, and `form_of`. Translations,
+      descendants, broader linkage taxonomies, audio URLs, IDs, raw glosses, categories,
+      templates, and unknown fields are not persisted. Extraction diagnostics and the
+      local inspection tool report retained and dropped fields without weakening defensive
+      runtime checks."
     links: []
   - section_id: md:section:docs/architecture.md::provenance-and-data-lifecycle
     doc_path: docs/architecture.md
@@ -569,19 +727,40 @@ sections:
       - Provenance and data lifecycle
     heading_slug: provenance-and-data-lifecycle
     line_span:
-      - 185
-      - 188
-    section_hash: f02f8586fca72897baa47963fd0ce17dfb0d1e6f0a0ad8ed0b242f4a24e3c64c
+      - 213
+      - 216
+    section_hash: fef9cdfed0460c85957977a2359675c62a62e730e610bec11b2fadcff5c20373
     summary: Provenance and data lifecycle
     text: "### Provenance and data lifecycle
 
 
-      Metadata records `dictionary_source`, `dictionary_source_sha256`, `frequency_source`,
-      and `frequency_source_sha256`, alongside profile, capabilities, creation time,
-      and builder version. Remote dictionary input is hashed while streamed. Automatic
-      FrequencyWords sources are cached by pinned revision and language, validated against
-      an atomic SHA-256 sidecar, and downloaded through temporary files followed by
-      atomic rename."
+      Metadata records `dictionary_source`, `dictionary_source_sha256`, `dictionary_source_format`,
+      `dictionary_source_contract`, `frequency_source`, and `frequency_source_sha256`,
+      alongside profile, capabilities, creation time, and builder version. Remote dictionary
+      input is hashed while streamed. Automatic FrequencyWords sources are cached by
+      pinned revision and language, validated against an atomic SHA-256 sidecar, and
+      downloaded through temporary files followed by atomic rename."
+    links: []
+  - section_id: md:section:docs/architecture.md::relation-decision-evidence
+    doc_path: docs/architecture.md
+    heading_path:
+      - Cross-cutting Concepts
+      - Relation decision evidence
+    heading_slug: relation-decision-evidence
+    line_span:
+      - 217
+      - 220
+    section_hash: 0632f97d0dbe5fc87875480d8444291a0f5224fadbe2397890bd64ca68208bd7
+    summary: Relation decision evidence
+    text: "### Relation decision evidence
+
+
+      The schema 10 benchmark compares a pre-schema-10 relation layout with compact
+      compound-key tables and immutable index finalization. On the smoke profile, the
+      candidate measured 204,800 raw bytes and 36,558 gzip bytes versus 425,984 raw
+      bytes and 96,183 gzip bytes for the baseline. Suggestion and definition-search
+      timings were slower in this two-iteration run, so the measurements are comparative
+      evidence rather than English-dataset estimates."
     links: []
   - section_id: md:section:docs/architecture.md::errors-and-offline-behavior
     doc_path: docs/architecture.md
@@ -590,8 +769,8 @@ sections:
       - Errors and offline behavior
     heading_slug: errors-and-offline-behavior
     line_span:
-      - 189
-      - 192
+      - 221
+      - 224
     section_hash: 504b258446748da0fd3736a54fbb2ef1c4a4c78ae59ad20ec313a94a8b69182d
     summary: Errors and offline behavior
     text: "### Errors and offline behavior
@@ -610,18 +789,26 @@ sections:
       - Verification and licensing
     heading_slug: verification-and-licensing
     line_span:
-      - 193
-      - 198
-    section_hash: 849b2f2474ae43b5b85e951ed30f0b003a341d5ad2c23aa857173adcb20ac908
+      - 225
+      - 232
+    section_hash: 4e42aeb7d5c767e7ff66ceaf8ab0f75501600ba74b85e1e3e1ce61edb32c3282
     summary: Verification and licensing
     text: "### Verification and licensing
 
 
       Tests cover read-only behavior, no-network guards, segmentation, case attestation,
       virtual-boundary semantic target anchoring, schema and capability validation,
-      frequency policy, semantic target exclusion, CLI contracts, and source extraction.
-      External dictionary and corpus data remain subject to the obligations documented
-      in `DATA_SOURCES.md`."
+      frequency policy, semantic target exclusion, CLI contracts, source extraction,
+      relation extraction/API/CLI/projection, and the managed four-variant resolver
+      chain. External dictionary and corpus data remain subject to the obligations documented
+      in `DATA_SOURCES.md`.
+
+
+      Raw bulk Wiktextract input does not contain Kaikki postprocessed website `sense.id`
+      values. Lexhint therefore ignores that field, retains sparse `senseid` and Wikidata
+      provenance when available, and generates a versioned deterministic `lh1-<language>-<encoded>`
+      sense ID. High-cardinality translations and derived graphs remain optional data
+      rather than core tables."
     links: []
   - section_id: md:section:docs/architecture.md::explicit-immutable-managed-dataset-artifacts
     doc_path: docs/architecture.md
@@ -630,9 +817,9 @@ sections:
       - Explicit immutable managed dataset artifacts
     heading_slug: explicit-immutable-managed-dataset-artifacts
     line_span:
-      - 199
-      - 202
-    section_hash: 01498a6f9d821ccf3a15b54b530dc5bc67b319e08a5abd35df8c5d7a3068875e
+      - 233
+      - 238
+    section_hash: 79674cd40a6acf62121dbd3b624e5c68c3fdf1f7e272baf36afd3dfc224e3696
     summary: Explicit immutable managed dataset artifacts
     text: "## Explicit immutable managed dataset artifacts
 
@@ -645,7 +832,14 @@ sections:
       install the database and sidecar metadata. Runtime Lexicon construction resolves
       only installed files and never contacts the network automatically. The highest-capability
       compatible installed variant is selected by default, while callers may pin a variant
-      and release version."
+      and release version.
+
+
+      Managed variants are capability presets: `runtime` is the recommended `lexical,semantic`
+      artifact, `dictionary` is the `lexical,semantic,dictionary` projection for dictionary
+      inspection without search indexes, and `rich` adds `search` for fuzzy suggestions
+      and indexed definition/reverse search. The strict capability chain keeps automatic
+      selection unambiguous."
     links: []
   - section_id: md:section:docs/architecture.md::architecture-decisions
     doc_path: docs/architecture.md
@@ -653,9 +847,9 @@ sections:
       - Architecture Decisions
     heading_slug: architecture-decisions
     line_span:
-      - 203
-      - 220
-    section_hash: fc21bdbe862a02eb2ebb8a1f23b88a8146c2d5326c84f8a89bab6ad3f2067699
+      - 239
+      - 261
+    section_hash: 73d7af386bb5da733935013d80fc594990909ef67d386c41aa46095a5ffb6f6b
     summary: Architecture Decisions
     text: "# Architecture Decisions
 
@@ -666,9 +860,14 @@ sections:
       - **Use a self-describing SQLite artifact.** Schema, language, coverage, profile,
       capabilities, and provenance are validated at runtime.
 
-      - **Separate lexical, semantic, and dictionary capabilities.** Consumers can select
-      the evidence they need without allowing data from an older artifact to leak into
-      a fresh build.
+      - **Separate lexical, semantic, dictionary, and search capabilities.** Consumers
+      can select evidence and index size intentionally without allowing data from an
+      older artifact to leak into a fresh build.
+
+      - **Use deterministic sense identity and compact schema 10 artifacts.** Every
+      retained sense receives a versioned Lexhint-owned ID based on stable identity
+      fields and legitimate upstream provenance. Published artifacts use explicit schema
+      10 rebuilds, compact compound-key tables, and read-only finalization checks.
 
       - **Use indexed lexical ranges for completion.** `complete()` is a local read-only
       normalized prefix query with exact-match priority and explicit frequency or lexical
@@ -700,6 +899,21 @@ sections:
       - **Keep a narrow consumer boundary.** Lexhint supplies evidence; downstream consumers
       own interpretation and speech rendering.
 
+      - **Do not mirror the full Wiktextract schema or adopt online provider plugins,
+      runtime caches, raw Wiktionary parsing, translations, or audio persistence.**
+
+      - **Keep sense_topics compact.** Option B stores `(topic, sense_id)` without redundant
+      entry IDs or unused indexes.
+
+      - **Separate dictionary content from search indexes.** The named `dictionary`
+      profile preserves dictionary fidelity without the larger search structures.
+
+      - **Freeze schema 10 as an explicit compatibility boundary.** The structural contract,
+      capability-aware validator, exact metadata version check, deterministic `lh1`
+      identity, persisted JSON formats, and search-index version are part of the artifact
+      contract. Incompatible changes require schema 11 and a full rebuild of all managed
+      variants.
+
 
       <!-- archledger: no accepted records for this section yet -->"
     links: []
@@ -709,8 +923,8 @@ sections:
       - Quality Requirements
     heading_slug: quality-requirements
     line_span:
-      - 221
-      - 233
+      - 262
+      - 274
     section_hash: 61548126e8f7083475a2b2f666ba38b82c68723bb20e6824ec92ede370148d13
     summary: Quality Requirements
     text: "# Quality Requirements
@@ -754,8 +968,8 @@ sections:
       - Quality Requirements Overview
     heading_slug: quality-requirements-overview
     line_span:
-      - 234
-      - 237
+      - 275
+      - 278
     section_hash: e4fcba446f1815baef2891cdcd035305de881546ee296ca1f1e16acaa478cd6e
     summary: Quality Requirements Overview
     text: "## Quality Requirements Overview
@@ -770,8 +984,8 @@ sections:
       - Quality Scenarios
     heading_slug: quality-scenarios
     line_span:
-      - 238
-      - 241
+      - 279
+      - 282
     section_hash: 5918e1b96bf6890315337575fcda0c066866631fa21b35d215e3de0a6ee771c7
     summary: Quality Scenarios
     text: "## Quality Scenarios
@@ -785,8 +999,8 @@ sections:
       - Risks and Technical Debt
     heading_slug: risks-and-technical-debt
     line_span:
-      - 242
-      - 250
+      - 283
+      - 291
     section_hash: d809a5ae7d5c4f9234675f80188a63ee2ba6dce5414e6463d76a1f2d2e173c66
     summary: Risks and Technical Debt
     text: "# Risks and Technical Debt
@@ -819,8 +1033,8 @@ sections:
       - Risk Overview
     heading_slug: risk-overview
     line_span:
-      - 251
-      - 254
+      - 292
+      - 295
     section_hash: b63ad8bc76454d7710f7779bd73eff44171dc04156e15276a7a483c8dd40e1f1
     summary: Risk Overview
     text: "## Risk Overview
@@ -834,8 +1048,8 @@ sections:
       - Glossary
     heading_slug: glossary
     line_span:
-      - 255
-      - 268
+      - 296
+      - 309
     section_hash: b3ad228bcf1e660359958b0af10c9d15d81a27bed1416785f43fceef6b2600c3
     summary: Glossary
     text: "# Glossary
@@ -874,9 +1088,9 @@ sections:
 
       <!-- archledger: no accepted records for this section yet -->"
     links: []
-last_fresh_scan_version: 12
-last_fresh_hash: 8928486b7b64d41dc638c34517528930ddc4b1fecb30fc165139dc342217c194
+last_fresh_scan_version: 14
+last_fresh_hash: 96cc59ac95b28573d7ed43cf6e503f1561de88dbf10dfb28d1350f344c2eab5d
 notes:
-  Final completion implementation validated; linked runtime and architecture
-  docs remain current.
-version: 44
+  Schema 10 structural validation and architecture freeze policy reviewed; linked
+  documentation remains accurate.
+version: 49

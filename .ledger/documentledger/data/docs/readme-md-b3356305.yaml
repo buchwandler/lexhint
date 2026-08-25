@@ -60,8 +60,8 @@ sections:
     heading_slug: quick-start
     line_span:
       - 15
-      - 54
-    section_hash: b889d45d0e1d9384c8c9b7cc6cda776947f9141fc2f584e55ce7c4d239288abf
+      - 55
+    section_hash: 8bc7eff43b216cd60303a290354fa2c960e97d59a588aa526da44233dc4b4d8f
     summary: Quick start
     text: '## Quick start
 
@@ -99,7 +99,11 @@ sections:
 
       - `runtime` for lexical and semantic context evidence;
 
-      - `rich` for lexical, semantic, and dictionary inspection.
+      - `dictionary` for entries, senses, topics, and rich dictionary rendering without
+      search indexes;
+
+      - `rich` for everything in `dictionary`, plus fuzzy suggestions and indexed definition/reverse
+      search.
 
 
       Install several variants side by side:
@@ -145,7 +149,7 @@ sections:
         impact: unknown
         reason: Quick-start commands use the current CLI entry point.
         tracked_hashes:
-          body_hash: 9da0f22d7ec3c89685bb6e6225a4e2f91c901e2c9aa04da4e4ddf0bf599b26e1
+          body_hash: 3ba94c0d095d35f8c393cc5d776b34d4d8f50685287322ea047500ac4ed4952f
   - section_id: md:section:README.md::1-common-word-lexicon
     doc_path: README.md
     heading_path:
@@ -153,9 +157,9 @@ sections:
       - 1. Common-word lexicon
     heading_slug: 1-common-word-lexicon
     line_span:
-      - 55
-      - 98
-    section_hash: 1da8907ceab3219783624a18c49e1ec4cfbb41d25e6f54d3798d752e32e3dff2
+      - 56
+      - 103
+    section_hash: 47598da00df5fa01599ed5372835d01f62c6adea06169b7a9086d2e7efa66e5b
     summary: 1. Common-word lexicon
     text: '## 1. Common-word lexicon
 
@@ -210,8 +214,12 @@ sections:
       entries or mutates the database. `complete()` performs deterministic normalized
       lexical-key prefix completion and is not a spelling corrector. It requires only
       the `lexical` capability, returns an exact key first, and ranks remaining full-prefix
-      matches by corpus rank when available or lexical order otherwise. `segment()`
-      and semantic context operations require full authoritative coverage.
+      matches by corpus rank when available or lexical order otherwise. `suggest()`
+      is the separate bounded fuzzy-spelling API and requires `search`; `match_headwords()`
+      provides glob/regex matching; `search_definitions()` provides indexed dictionary-text
+      search and requires `dictionary` plus `search`. Search results are bounded by
+      the artifact''s available coverage. `segment()` and semantic context operations
+      require full authoritative coverage.
 
 
       The public runtime operations are:
@@ -229,7 +237,15 @@ sections:
 
       lexicon.supports_domain(text, target=(start, end), domain="computing")
 
-      lexicon.entries("compiler")  # rich artifacts only
+      rich = Lexicon("en", variant="rich")
+
+      rich.entries("compiler")
+
+      rich.suggest("complier", limit=20)
+
+      rich.match_headwords("comp*", syntax="glob")
+
+      rich.search_definitions("computer program", fields=("glosses",), match="all")
 
       ```
 
@@ -262,7 +278,7 @@ sections:
           The common-word lexicon section documents the current Lexicon runtime
           API.
         tracked_hashes:
-          body_hash: fbd7a21e82b0f2e75590145c32bf1ed906af4584856301a2d60a8d8a655a6bcb
+          body_hash: ce9dfac41c3c14388cb285959003e4e9fe56a1fb0a631b627437eb51d30420ef
   - section_id: md:section:README.md::build-an-artifact
     doc_path: README.md
     heading_path:
@@ -270,15 +286,15 @@ sections:
       - Build an artifact
     heading_slug: build-an-artifact
     line_span:
-      - 99
-      - 121
-    section_hash: c06816006cd36a0770372902329bda4eb58cddb4d0c95f7943ee87d177f79905
+      - 104
+      - 129
+    section_hash: 492e53a46618fc70f999fad6bd6acabbe900d466ad6c4d4c4e35fa69f260405b
     summary: Build an artifact
     text: "## Build an artifact
 
 
-      The default build creates a full `lexical,semantic,dictionary` artifact and automatically
-      acquires the pinned full FrequencyWords source:
+      The default build creates a full `lexical,semantic,dictionary,search` artifact
+      and automatically acquires the pinned full FrequencyWords source:
 
 
       ```bash
@@ -297,6 +313,8 @@ sections:
 
       lexhint dictionary build en --capabilities lexical,semantic --no-frequency
 
+      lexhint dictionary build en --capabilities lexical,search --no-frequency
+
       lexhint dictionary build en --profile runtime
 
       lexhint dictionary build en --frequency-source ./en_full.txt
@@ -308,9 +326,16 @@ sections:
       ```
 
 
-      Capabilities are canonicalized in the order `lexical,semantic,dictionary`. `semantic`
-      and `dictionary` require `lexical`. Profiles are shortcuts: `runtime` means `lexical,semantic`,
-      and `rich` means `lexical,semantic,dictionary`.
+      Capabilities are canonicalized in the order `lexical,semantic,dictionary,search`.
+      `semantic`, `dictionary`, and `search` require `lexical`. Dictionary-text search
+      additionally requires `dictionary`. Profiles are shortcuts: `runtime` means `lexical,semantic`,
+      `dictionary` means `lexical,semantic,dictionary` without search indexes, and `rich`
+      means `lexical,semantic,dictionary,search`.
+
+
+      `complete()` is prefix completion only; it does not correct spelling. Use `suggest()`
+      for fuzzy spelling candidates, `match_headwords()` for glob/regex lexical-key
+      matching, and `search_definitions()` for indexed dictionary sense search.
 
 
       Frequency enrichment is independent of capabilities. Use `--no-frequency` for
@@ -326,7 +351,7 @@ sections:
         impact: unknown
         reason: Artifact construction is implemented by build_dictionary.
         tracked_hashes:
-          body_hash: 8c5ba30bafcada1083bc76a5ed8cb7575ffc54d63a05af3235c281046abcaa2f
+          body_hash: 52279953ce5c6cd69b9365f6c5556723a54e4e85398811fcd72eb841122eed3a
   - section_id: md:section:README.md::cli-queries
     doc_path: README.md
     heading_path:
@@ -334,11 +359,23 @@ sections:
       - CLI queries
     heading_slug: cli-queries
     line_span:
-      - 122
-      - 152
-    section_hash: 128a8d15541eae9f985f998ea823069f1c4db037e240a84d064a3a287a87da1a
+      - 130
+      - 170
+    section_hash: 4b8ea2355733ba7c7778a92872badee2e2267e75e634ac8604e1e7ed62e58d91
     summary: CLI queries
     text: '## CLI queries
+
+
+      The default download installs the `runtime` variant. Install the `rich` variant
+      before using search-capable commands such as `suggest`, `headwords`, or `dictionary
+      search`:
+
+
+      ```bash
+
+      lexhint dataset download en --variant rich
+
+      ```
 
 
       ```bash
@@ -354,6 +391,15 @@ sections:
       lexhint complete comp -l en --limit 10
 
       lexhint --json complete comp -l en --limit 10
+
+      lexhint suggest compilar -l en --variant rich --limit 10
+
+      lexhint headwords ''comp*'' -l en --variant rich --syntax glob
+
+      lexhint dictionary search "large feline" -l en --variant rich --fields glosses
+      --match all
+
+      lexhint --json dictionary search "large feline" -l en --variant rich
 
       lexhint dictionary word compiler -l en --variant rich
 
@@ -399,12 +445,9 @@ sections:
       are also supported. `--width` controls human output from 40 through 240 columns.
 
 
-      Use `--json` for stable, complete machine-readable output. POS selection applies
-      to JSON entries, while `--detail`, `--show`, `--hide`, and `--width` are human-only
-      options. `dictionary status` reports current SQL row counts, capabilities, provenance,
-      size, and build metadata without rebuilding. Use `--path` as an advanced override
-      when inspecting a specific artifact. Rich dictionary lookup reports a controlled
-      capability error for compact runtime artifacts.'
+      Human CLI output uses ANSI color automatically on interactive terminals. Use `--no-color`
+      or the `NO_COLOR` environment variable to disable it. Color is never emitted for
+      JSON or non-TTY stdout.'
     links:
       - source_id: py:function:lexhint/cli.py::main
         source_path: lexhint/cli.py
@@ -412,7 +455,50 @@ sections:
         impact: unknown
         reason: CLI queries are implemented by the CLI entry point.
         tracked_hashes:
-          body_hash: 9da0f22d7ec3c89685bb6e6225a4e2f91c901e2c9aa04da4e4ddf0bf599b26e1
+          body_hash: 3ba94c0d095d35f8c393cc5d776b34d4d8f50685287322ea047500ac4ed4952f
+  - section_id: md:section:README.md::dictionary-schema-10-contract
+    doc_path: README.md
+    heading_path:
+      - lexhint
+      - Dictionary schema 10 contract
+    heading_slug: dictionary-schema-10-contract
+    line_span:
+      - 171
+      - 183
+    section_hash: e12fed24a7e8ab3955561eab153f84288392177b8dc97ed88bc81123cc9b33fb
+    summary: Dictionary schema 10 contract
+    text: "## Dictionary schema 10 contract
+
+
+      Schema 10 dictionary entries expose a versioned deterministic `sense_id` in JSON
+      and through `Lexicon.sense_by_id()`. The ID is Lexhint-owned and stable across
+      equivalent builds, not a permanent Wiktionary ID. Raw upstream `senseid` and Wikidata
+      values, when available, appear separately as namespaced source provenance. Entry-level
+      synonyms, antonyms, hypernyms, hyponyms, and related terms are headword relations;
+      sense-level synonyms and antonyms remain attached to their exact senses.
+
+
+      Use the incoming relation view when a target headword is the subject of the lookup:
+
+
+      ```bash
+
+      lexhint dictionary relations love --incoming --variant dictionary
+
+      ```
+
+
+      Schema 10 artifacts are rebuilt from raw source rather than migrated. The `dictionary`
+      variant contains full dictionary content without search indexes. The `rich` variant
+      adds the larger fuzzy and definition-search indexes.
+
+      Use `--json` for stable, complete machine-readable output. POS selection applies
+      to JSON entries, while `--detail`, `--show`, `--hide`, and `--width` are human-only
+      options. `dictionary status` reports current SQL row counts, capabilities, provenance,
+      size, and build metadata without rebuilding. Use `--path` as an advanced override
+      when inspecting a specific artifact. Rich dictionary lookup reports a controlled
+      capability error for compact runtime artifacts."
+    links: []
   - section_id: md:section:README.md::data-and-scope
     doc_path: README.md
     heading_path:
@@ -420,8 +506,8 @@ sections:
       - Data and scope
     heading_slug: data-and-scope
     line_span:
-      - 153
-      - 158
+      - 184
+      - 189
     section_hash: 038d7efedac49ea191bc45937f04bac949f1a8e1f8143f23075e1199350ea65b
     summary: Data and scope
     text: "## Data and scope
@@ -443,8 +529,8 @@ sections:
       - Development
     heading_slug: development
     line_span:
-      - 159
-      - 170
+      - 190
+      - 201
     section_hash: 705b0f1766d21ffc58fc19bec39c6626b75fb11ebe3d0391b017e609d62a9f3b
     summary: Development
     text: '## Development
@@ -469,9 +555,9 @@ sections:
 
       ```'
     links: []
-last_fresh_scan_version: 12
-last_fresh_hash: bfb0be20c3c88ac7485558029a4ad92b1ef62b21acf8640ebe114699fba4cae9
+last_fresh_scan_version: 14
+last_fresh_hash: 2aa5ac96108f3659d7a72e2039d7c1e30fc40092ccfa6961fdb949ff927a068f
 notes:
-  Final completion implementation validated; linked runtime and architecture
-  docs remain current.
-version: 44
+  Schema 10 structural validation and architecture freeze policy reviewed; linked
+  documentation remains accurate.
+version: 49

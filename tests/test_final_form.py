@@ -21,6 +21,7 @@ from lexhint.cli import main
 from lexhint.models import LexicalSegment
 from lexhint.schema import normalize_capabilities
 from lexhint.status import read_artifact_status
+from lexhint.store import create_schema, set_metadata
 
 FIXTURE = Path(__file__).parent / "fixtures" / "kaikki-mini.jsonl"
 
@@ -169,6 +170,25 @@ def test_schema_and_language_errors_are_controlled(tmp_path: Path) -> None:
         connection.execute("INSERT INTO metadata VALUES ('language', 'en')")
         connection.commit()
     with pytest.raises(LexiconIncompatible, match="schema 1"):
+        Lexicon.from_path(path)
+
+
+def test_structural_artifact_errors_are_controlled(tmp_path: Path) -> None:
+    path = tmp_path / "malformed.sqlite3"
+    with closing(sqlite3.connect(path)) as connection:
+        create_schema(connection, ("lexical", "semantic", "dictionary"))
+        set_metadata(
+            connection,
+            {
+                "schema_version": "10",
+                "language": "en",
+                "coverage": "full",
+                "capabilities": "lexical,semantic,dictionary",
+            },
+        )
+        connection.execute("DROP TABLE senses")
+        connection.commit()
+    with pytest.raises(LexiconIncompatible, match="structure"):
         Lexicon.from_path(path)
 
 

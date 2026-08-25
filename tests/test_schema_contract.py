@@ -14,6 +14,14 @@ from lexhint import (
     supported_base_languages,
 )
 from lexhint.schema import PROFILES, normalize_capabilities
+from lexhint.schema_contract import (
+    SCHEMA_CONTRACT,
+    SQLITE_APPLICATION_ID,
+    SQLITE_USER_VERSION,
+    SchemaContractError,
+    inspect_schema,
+    validate_artifact_structure,
+)
 from lexhint.store import create_schema
 
 
@@ -118,7 +126,7 @@ def test_manifest_requires_filename_and_manifest_schema_agreement() -> None:
         datasets._manifest_artifacts(release, manifest)
 
 
-def test_schema_8_search_tables_are_capability_gated() -> None:
+def test_search_tables_are_capability_gated() -> None:
     def tables(capabilities: str) -> set[str]:
         connection = sqlite3.connect(":memory:")
         selection = (
@@ -142,3 +150,88 @@ def test_schema_8_search_tables_are_capability_gated() -> None:
     assert "lexeme_ngrams" in lexical_search
     assert "sense_search_terms" not in lexical_search
     assert {"lexeme_ngrams", "sense_search_terms"} <= rich
+
+
+@pytest.mark.parametrize(
+    ("profile", "capabilities"),
+    (
+        ("lexical", ("lexical",)),
+        ("runtime", PROFILES["runtime"]),
+        ("dictionary", ("lexical", "semantic", "dictionary")),
+        ("rich", PROFILES["rich"]),
+    ),
+)
+def test_schema10_contract_is_frozen(profile: str, capabilities: tuple[str, ...]) -> None:
+    connection = sqlite3.connect(":memory:")
+    try:
+        create_schema(connection, capabilities)
+        validate_artifact_structure(connection, capabilities)
+        assert set(inspect_schema(connection)) == set(SCHEMA_CONTRACT[profile].tables)
+    finally:
+        connection.close()
+
+
+def test_schema10_contract_rejects_required_column_change() -> None:
+    connection = sqlite3.connect(":memory:")
+    try:
+        create_schema(connection, ("lexical",))
+        connection.execute("ALTER TABLE lexemes RENAME COLUMN word TO token")
+        with pytest.raises(SchemaContractError, match="bump SCHEMA_VERSION"):
+            validate_artifact_structure(connection, ("lexical",))
+    finally:
+        connection.close()
+
+
+def test_schema10_contract_rejects_missing_table_and_index() -> None:
+    connection = sqlite3.connect(":memory:")
+    try:
+        create_schema(connection, PROFILES["runtime"])
+        connection.execute("DROP TABLE lexeme_domains")
+        with pytest.raises(SchemaContractError, match="tables"):
+            validate_artifact_structure(connection, PROFILES["runtime"])
+    finally:
+        connection.close()
+
+    connection = sqlite3.connect(":memory:")
+    try:
+        create_schema(connection, ("lexical",))
+        connection.execute("DROP INDEX lexemes_corpus_rank_idx")
+        with pytest.raises(SchemaContractError, match="lexemes_corpus_rank_idx"):
+            validate_artifact_structure(connection, ("lexical",))
+    finally:
+        connection.close()
+
+
+def test_schema10_contract_rejects_primary_key_and_without_rowid_changes() -> None:
+    connection = sqlite3.connect(":memory:")
+    try:
+        create_schema(connection, ("lexical",))
+        connection.execute("DROP TABLE lexemes")
+        connection.execute(
+            "CREATE TABLE lexemes (word TEXT, entry_count INTEGER NOT NULL, "
+            "has_lowercase INTEGER NOT NULL, has_titlecase INTEGER NOT NULL, "
+            "has_uppercase INTEGER NOT NULL, corpus_count INTEGER, corpus_rank INTEGER)"
+        )
+        with pytest.raises(SchemaContractError, match="primary_key"):
+            validate_artifact_structure(connection, ("lexical",))
+    finally:
+        connection.close()
+
+    connection = sqlite3.connect(":memory:")
+    try:
+        create_schema(connection, PROFILES["dictionary"])
+        connection.execute("DROP TABLE sense_topics")
+        connection.execute(
+            "CREATE TABLE sense_topics (topic TEXT NOT NULL, sense_id INTEGER NOT NULL, "
+            "PRIMARY KEY (topic, sense_id), "
+            "FOREIGN KEY(sense_id) REFERENCES senses(id) ON DELETE CASCADE)"
+        )
+        with pytest.raises(SchemaContractError, match="without_rowid"):
+            validate_artifact_structure(connection, PROFILES["dictionary"])
+    finally:
+        connection.close()
+
+
+def test_sqlite_header_identity_constants_are_schema10_specific() -> None:
+    assert SQLITE_APPLICATION_ID == 0x4C584831
+    assert SQLITE_USER_VERSION == 10

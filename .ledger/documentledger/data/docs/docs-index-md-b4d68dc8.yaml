@@ -59,7 +59,9 @@ sections:
       info`, `dataset validate`, and `dataset remove` for local management; `dataset
       available` and `dataset download` are the networked catalog operations."
     links: []
-last_fresh_scan_version: 2
-last_fresh_hash: f2397703c84977f75baa8ba01bbeb01828396807847f62036f58df84a80bfb0d
-notes: Bootstrap documentation completed after scan version 2. (intentionally unlinked)
-version: 34
+last_fresh_scan_version: 14
+last_fresh_hash: 635c8d2f4b44244ee873b9d27171e401c372bb1f1b95e59667dfb5b2d63732e7
+notes:
+  Schema 10 structural validation and architecture freeze policy reviewed; linked
+  documentation remains accurate. (intentionally unlinked)
+version: 49

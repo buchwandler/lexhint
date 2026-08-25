@@ -18,6 +18,8 @@ def test_schema10_uses_compact_tables_and_finalizes_artifact(tmp_path: Path) -> 
     try:
         assert connection.execute("PRAGMA quick_check").fetchone() == ("ok",)
         assert connection.execute("PRAGMA foreign_key_check").fetchall() == []
+        assert connection.execute("PRAGMA application_id").fetchone() == (0x4C584831,)
+        assert connection.execute("PRAGMA user_version").fetchone() == (10,)
         sql = {
             row[0]: str(row[1] or "")
             for row in connection.execute(

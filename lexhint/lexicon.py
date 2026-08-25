@@ -31,6 +31,7 @@ from .models import (
     SenseRecord,
     WordEvidence,
 )
+from .schema_contract import SchemaContractError, validate_artifact_structure
 from .search import (
     FIELD_WEIGHTS,
     capped_term_frequency,
@@ -227,6 +228,15 @@ class Lexicon:
         capabilities = self._metadata.get("capabilities", "")
         if "lexical" not in {item for item in capabilities.split(",") if item}:
             raise LexiconIncompatible("lexicon metadata does not declare lexical capability")
+        try:
+            with closing(self._connect()) as connection:
+                validate_artifact_structure(
+                    connection, (item for item in capabilities.split(",") if item)
+                )
+        except (OSError, sqlite3.DatabaseError, SchemaContractError) as exc:
+            raise LexiconIncompatible(
+                f"lexicon structure does not satisfy schema {SCHEMA_VERSION}: {exc}"
+            ) from exc
 
     @property
     def schema_version(self) -> str:

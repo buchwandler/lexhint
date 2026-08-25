@@ -7,7 +7,7 @@ section: architecture_decisions
 title: Architecture Decisions
 order: 90
 status: accepted
-version: 14
+version: 15
 body_format: markdown
 ---
 
@@ -26,6 +26,6 @@ The current architecture records these decisions.
 - **Keep the runtime read-only and offline by default.** Acquisition belongs to explicit build workflows.
 - **Keep a narrow consumer boundary.** Lexhint supplies evidence; downstream consumers own interpretation and speech rendering.
 - **Do not mirror the full Wiktextract schema or adopt online provider plugins, runtime caches, raw Wiktionary parsing, translations, or audio persistence.**
-
 - **Keep sense_topics compact.** Option B stores `(topic, sense_id)` without redundant entry IDs or unused indexes.
 - **Separate dictionary content from search indexes.** The named `dictionary` profile preserves dictionary fidelity without the larger search structures.
+- **Freeze schema 10 as an explicit compatibility boundary.** The structural contract, capability-aware validator, exact metadata version check, deterministic `lh1` identity, persisted JSON formats, and search-index version are part of the artifact contract. Incompatible changes require schema 11 and a full rebuild of all managed variants.

@@ -75,7 +75,7 @@ def test_managed_dataset_variants_match_named_profiles() -> None:
     assert datasets.DATASET_VARIANTS["rich"].capabilities == PROFILES["rich"]
 
 
-def test_schema_8_rich_search_artifact_is_remote_compatible() -> None:
+def test_rich_search_artifact_contract() -> None:
     artifact = datasets.DatasetArtifact(
         "en",
         "rich",
@@ -97,7 +97,7 @@ def test_schema_8_rich_search_artifact_is_remote_compatible() -> None:
     assert datasets._remote_compatible(artifact)
 
 
-def test_schema_8_dictionary_artifact_is_compatible_without_search() -> None:
+def test_dictionary_artifact_contract_without_search() -> None:
     artifact = datasets.DatasetArtifact(
         "en",
         "dictionary",

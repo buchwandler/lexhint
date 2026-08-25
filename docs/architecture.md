@@ -1,6 +1,6 @@
 ---
 title: "Architecture Documentation"
-version: 25
+version: 26
 generator: "archledger 0.4.0"
 arc42_template_version: "9.0-EN"
 ---
@@ -55,6 +55,14 @@ The architecture is constrained by a local, self-describing SQLite artifact and 
 Managed dataset variants are capability presets rather than exact mirrors of named build profiles: `runtime` provides `lexical,semantic` and remains the recommended default; `lexical` is the smallest projection; `dictionary` provides `lexical,semantic,dictionary` and includes explicit headword relations without search indexes; and `rich` provides `lexical,semantic,dictionary,search`. They form a strict capability chain so automatic installed-dataset resolution has one maximal result. The client tests this publisher contract so capability declarations cannot drift from schema construction.
 
 Schema 10 finalization validates foreign keys and `PRAGMA quick_check`, runs `ANALYZE`, compacts the immutable artifact, and omits unused reverse indexes unless a protected workload justifies them. `sense_topics` uses Option B: a `(topic, sense_id)` `WITHOUT ROWID` table.
+
+## Schema 10 freeze and bump policy
+
+Schema 10 is frozen at the `v0.4.0` release boundary. The structured contract in `lexhint.schema_contract` is the reviewable definition of the published SQLite layout. It covers required tables, ordered columns, primary and foreign keys, required indexes, `WITHOUT ROWID` tables, capability relationships, and persisted format versions. Runtime and managed dataset validation check that contract before capability-specific queries begin. SQLite `application_id` and `user_version` identify a Lexhint schema-10 file for diagnostics, while metadata `schema_version` remains authoritative.
+
+A future change requires a schema bump unless it is proven compatible with existing schema-10 readers. Bump for required table or column additions, removals, or renames; primary-key or runtime-required foreign-key changes; required-index changes that alter query assumptions; incompatible JSON payload encodings; deterministic sense-ID type or anchor changes; or search-index construction changes that an existing reader would interpret differently. Schema 10 also covers the `lh1` public sense-ID interpretation, source provenance encoding, and the persisted forms, pronunciations, glosses, topics, tags, examples, synonyms, antonyms, relation tags, and semantic source-topic JSON arrays.
+
+Optional metadata keys, diagnostics, error messages, rendering, additive runtime helpers, compatible performance work, and additional validation do not require a schema bump when stored and queried semantics remain unchanged. A schema bump requires rebuilding and republishing every managed variant. Schema 9 artifacts are never migrated in place.
 
 <!-- archledger: no accepted records for this section yet -->
 
@@ -235,9 +243,9 @@ The current architecture records these decisions.
 - **Keep the runtime read-only and offline by default.** Acquisition belongs to explicit build workflows.
 - **Keep a narrow consumer boundary.** Lexhint supplies evidence; downstream consumers own interpretation and speech rendering.
 - **Do not mirror the full Wiktextract schema or adopt online provider plugins, runtime caches, raw Wiktionary parsing, translations, or audio persistence.**
-
 - **Keep sense_topics compact.** Option B stores `(topic, sense_id)` without redundant entry IDs or unused indexes.
 - **Separate dictionary content from search indexes.** The named `dictionary` profile preserves dictionary fidelity without the larger search structures.
+- **Freeze schema 10 as an explicit compatibility boundary.** The structural contract, capability-aware validator, exact metadata version check, deterministic `lh1` identity, persisted JSON formats, and search-index version are part of the artifact contract. Incompatible changes require schema 11 and a full rebuild of all managed variants.
 
 <!-- archledger: no accepted records for this section yet -->
 

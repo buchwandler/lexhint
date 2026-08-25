@@ -21,10 +21,19 @@ from .models import (
     RelatedTerm,
     Sense,
 )
+from .schema_contract import (
+    SCHEMA_VERSION as _SCHEMA_VERSION,
+)
+from .schema_contract import (
+    SQLITE_APPLICATION_ID,
+    SQLITE_USER_VERSION,
+    SchemaContractError,
+    canonical_capabilities,
+    validate_artifact_structure,
+)
 from .search import search_tokens, word_ngrams
 
-SCHEMA_VERSION = "10"
-
+SCHEMA_VERSION = _SCHEMA_VERSION
 MAX_STABLE_SENSE_ID = (1 << 63) - 1
 
 
@@ -501,6 +510,18 @@ def create_schema(
 
 def finalize_artifact(connection: sqlite3.Connection) -> None:
     """Validate and compact an immutable schema 10 artifact."""
+    artifact_metadata = metadata(connection)
+    if artifact_metadata.get("schema_version") != SCHEMA_VERSION:
+        raise SchemaContractError(
+            f"artifact finalization requires schema {SCHEMA_VERSION}, "
+            f"got {artifact_metadata.get('schema_version', 'unknown')}"
+        )
+    capabilities = canonical_capabilities(
+        item for item in artifact_metadata.get("capabilities", "").split(",") if item
+    )
+    validate_artifact_structure(connection, capabilities)
+    connection.execute(f"PRAGMA application_id = {SQLITE_APPLICATION_ID}")
+    connection.execute(f"PRAGMA user_version = {SQLITE_USER_VERSION}")
     connection.commit()
     foreign_keys = connection.execute("PRAGMA foreign_key_check").fetchall()
     if foreign_keys:

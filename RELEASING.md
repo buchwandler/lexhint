@@ -4,6 +4,10 @@ Use this checklist for a code release. Lexhint publishes the Python package sepa
 Managed SQLite artifacts currently use schema 10. Rebuild and republish every managed dataset variant after schema or capability changes; do not migrate immutable older-schema artifacts in place. The `dictionary` variant advertises `lexical,semantic,dictionary` without search indexes, while rich artifacts advertise `lexical,semantic,dictionary,search` and runtime remains `lexical,semantic`. Schema 10 artifacts use deterministic Lexhint sense IDs, Option B topic indexing, and immutable finalization checks.
 The package uses dynamic setuptools-scm versioning. A Git-less source archive resolves to `0+unknown` and must never be published.
 
+## Schema 10 artifact freeze
+
+Schema 10 is frozen at the `v0.4.0` release boundary. The metadata `schema_version` is an exact compatibility key. Changes to required tables, columns, keys, runtime-required indexes, persisted JSON encodings, deterministic sense identity, or search-index interpretation require a schema bump and a rebuild of all `lexical`, `runtime`, `dictionary`, and `rich` managed variants. Compatible diagnostics, rendering, additive APIs, and validation may remain within schema 10.
+
 ## Quality checks
 
 Run these from a clean checkout with the declared development and documentation dependencies installed:
@@ -46,12 +50,13 @@ Confirm that `lexhint/py.typed` is packaged. Confirm that the wheel and sdist do
 
 ## Version safety
 
-The publication workflow checks out complete Git history and derives the expected package version from the GitHub release tag. For the v0.2.0 release, the installed package must report exactly `0.2.0`, never `0+unknown`.
+The publication workflow checks out complete Git history and derives the expected package version from the Git release tag. The installed package must report the exact tag version, never `0+unknown`.
 
 The equivalent local check is:
 
 ```bash
-EXPECTED_VERSION=0.2.0 \
+TAG="${TAG:?set TAG to the release tag}"
+EXPECTED_VERSION="${TAG#v}" \
   python -c 'import os, lexhint; actual = lexhint.__version__; expected = os.environ["EXPECTED_VERSION"]; assert actual == expected and actual != "0+unknown", (expected, actual); print(actual)'
 ```
 
