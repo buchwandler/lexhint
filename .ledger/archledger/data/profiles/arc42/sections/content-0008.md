@@ -10,6 +10,7 @@ status: accepted
 version: 18
 body_format: markdown
 ---
+
 ### Capability-specific schema
 
 Schema metadata is explicit and self-describing. `language`, `locale`, `variant`, `schema_version`, and `dataset_version` remain separate dimensions. Locale is optional and does not create `en-GB` or `en-US` artifacts. Strict equality, not a compatibility range, controls SQLite access.
@@ -37,6 +38,5 @@ Capability, coverage, schema, language, and missing-artifact failures have contr
 ### Verification and licensing
 
 Tests cover read-only behavior, no-network guards, segmentation, case attestation, virtual-boundary semantic target anchoring, schema and capability validation, frequency policy, semantic target exclusion, CLI contracts, source extraction, relation extraction/API/CLI/projection, and the managed four-variant resolver chain. External dictionary and corpus data remain subject to the obligations documented in `DATA_SOURCES.md`.
-
 
 Raw bulk Wiktextract input does not contain Kaikki postprocessed website `sense.id` values. Lexhint therefore ignores that field, retains sparse `senseid` and Wikidata provenance when available, and generates a versioned deterministic `lh1-<language>-<encoded>` sense ID. High-cardinality translations and derived graphs remain optional data rather than core tables.

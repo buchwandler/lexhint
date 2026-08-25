@@ -54,7 +54,6 @@ The architecture is constrained by a local, self-describing SQLite artifact and 
 
 Managed dataset variants are capability presets rather than exact mirrors of named build profiles: `runtime` provides `lexical,semantic` and remains the recommended default; `lexical` is the smallest projection; `dictionary` provides `lexical,semantic,dictionary` and includes explicit headword relations without search indexes; and `rich` provides `lexical,semantic,dictionary,search`. They form a strict capability chain so automatic installed-dataset resolution has one maximal result. The client tests this publisher contract so capability declarations cannot drift from schema construction.
 
-
 Schema 10 finalization validates foreign keys and `PRAGMA quick_check`, runs `ANALYZE`, compacts the immutable artifact, and omits unused reverse indexes unless a protected workload justifies them. `sense_topics` uses Option B: a `(topic, sense_id)` `WITHOUT ROWID` table.
 
 <!-- archledger: no accepted records for this section yet -->
@@ -78,8 +77,6 @@ The consumer decides what an unknown run, version, or candidate should mean. Lex
 - FrequencyWords enriches existing lexemes with corpus fields.
 - A local SQLite artifact is the runtime boundary.
 - No service endpoint or daemon is required.
-
-
 
 ## Business Context
 
@@ -140,8 +137,6 @@ hits = lexicon.search_definitions("computer program", fields=("glosses",), match
 
 The consumer decides what an unknown run, version, or candidate should mean. Lexhint ends at evidence. Relation following is always explicit and does not alter `entries()` exact lookup.
 
-
-
 <!-- archledger: no accepted records for this section yet -->
 
 # Runtime View
@@ -167,10 +162,7 @@ The consumer decides what an unknown run, version, or candidate should mean. Lex
 3. Nearby words are queried in batches. Domain weights receive configurable distance decay, with adjacent eligible tokens at distance 1.
 4. Results preserve cue text, character spans, token distance, and contribution weight. The candidate cannot validate itself. Domain results are hints rather than sense-disambiguated semantic certainty, and missing evidence is not negative evidence.
 
-
 The public dictionary API distinguishes sense-scoped relations from unsense-disambiguated headword relations and exposes `sense_by_id()` and `incoming_relations()`.
-
-
 
 <!-- archledger: no accepted records for this section yet -->
 
@@ -185,8 +177,6 @@ Lexhint is deployed as a local Python package and a local SQLite evidence artifa
 - Generated artifacts contain source and hash provenance for dictionary and corpus inputs.
 - Build downloads and replacements use temporary files and atomic rename.
 - Generated external datasets are distributed separately from code according to `DATA_SOURCES.md`.
-
-
 
 <!-- archledger: no accepted records for this section yet -->
 
@@ -220,10 +210,7 @@ Capability, coverage, schema, language, and missing-artifact failures have contr
 
 Tests cover read-only behavior, no-network guards, segmentation, case attestation, virtual-boundary semantic target anchoring, schema and capability validation, frequency policy, semantic target exclusion, CLI contracts, source extraction, relation extraction/API/CLI/projection, and the managed four-variant resolver chain. External dictionary and corpus data remain subject to the obligations documented in `DATA_SOURCES.md`.
 
-
 Raw bulk Wiktextract input does not contain Kaikki postprocessed website `sense.id` values. Lexhint therefore ignores that field, retains sparse `senseid` and Wikidata provenance when available, and generates a versioned deterministic `lh1-<language>-<encoded>` sense ID. High-cardinality translations and derived graphs remain optional data rather than core tables.
-
-
 
 ## Explicit immutable managed dataset artifacts
 
@@ -264,8 +251,6 @@ The current architecture records these decisions.
 | Resilience        | Read-only runtime access, source hashes, temporary downloads, and atomic replacement                             | A failed build does not replace an existing artifact with partial output.                          |
 | Maintainability   | Focused runtime and build modules, capability-specific schema, and boundary tests                                | Schema, extraction, semantic projection, storage, and CLI behavior can be checked independently.   |
 | Compliance        | External resources remain separate from code and provenance is embedded in artifacts                             | A distributor can review data obligations before distributing generated artifacts.                 |
-
-
 
 ## Quality Requirements Overview
 

@@ -10,6 +10,7 @@ status: accepted
 version: 15
 body_format: markdown
 ---
+
 ## Lexical lookup and segmentation
 
 1. The consumer constructs `Lexicon` from one local SQLite artifact, resolved from the vendored, configured cache, or schema-aware managed dataset path when no override is supplied.
@@ -30,6 +31,5 @@ body_format: markdown
 2. Context distances are measured from the target character span. Every lexical token overlapping a non-empty target is excluded. If no lexical token overlaps, the target is a virtual insertion boundary and no real token is discarded.
 3. Nearby words are queried in batches. Domain weights receive configurable distance decay, with adjacent eligible tokens at distance 1.
 4. Results preserve cue text, character spans, token distance, and contribution weight. The candidate cannot validate itself. Domain results are hints rather than sense-disambiguated semantic certainty, and missing evidence is not negative evidence.
-
 
 The public dictionary API distinguishes sense-scoped relations from unsense-disambiguated headword relations and exposes `sense_by_id()` and `incoming_relations()`.

@@ -1,0 +1,110 @@
+schema_version: 1
+object_type: commit_audit_sheet
+versioning:
+  schema_version: 1
+  revision: 3
+release_version: v0.4.0
+git_base_ref: v0.3.0
+git_base_sha: 530fbd657bac58bc7908afb6c10da5daaf7bb59a
+git_head_ref: HEAD
+git_head_sha: d441ad9b0637092ffdfee6f4f677774bf05c10f1
+git_range: 530fbd657bac58bc7908afb6c10da5daaf7bb59a..d441ad9b0637092ffdfee6f4f677774bf05c10f1
+commit_count: 2
+rows:
+  - sha: 6d8916b57a2299a3f9effc903b4c5d2be749ea44
+    source_ref: git:6d8916b57a2299a3f9effc903b4c5d2be749ea44
+    short_sha: 6d8916b
+    changed_paths:
+      - DATA_SOURCES.md
+      - RELEASING.md
+    stats:
+      files_changed: 0
+      insertions: 3
+      deletions: 3
+    inspected: true
+    inspected_paths:
+      - DATA_SOURCES.md
+      - RELEASING.md
+    observed_behavior:
+      Intermediate documentation-only schema version update superseded
+      by the final schema 10 documentation in the release range
+    public_impact: none
+    decision: internal
+    evidence_subject: "chore: update schema version"
+    target_entry_id: entry-0001
+    notes:
+      No separate public release note; the final documentation state is covered
+      by the schema 10 entry
+  - sha: d441ad9b0637092ffdfee6f4f677774bf05c10f1
+    source_ref: git:d441ad9b0637092ffdfee6f4f677774bf05c10f1
+    short_sha: d441ad9
+    changed_paths:
+      - .ledger/archledger/data/document-state.json
+      - .ledger/archledger/data/profiles/arc42/sections/content-0002.md
+      - .ledger/archledger/data/profiles/arc42/sections/content-0006.md
+      - .ledger/archledger/data/profiles/arc42/sections/content-0008.md
+      - .ledger/archledger/data/profiles/arc42/sections/content-0009.md
+      - DATA_SOURCES.md
+      - README.md
+      - RELEASING.md
+      - benchmarks/README.md
+      - benchmarks/schemas/__init__.py
+      - benchmarks/schemas/current_v9.py
+      - benchmarks/schemas/current_v9_readonly_finalized.py
+      - benchmarks/schemas/current_v9_without_rowid.py
+      - benchmarks/schemas/schema10_candidate.py
+      - docs/architecture.md
+      - lexhint/__init__.py
+      - lexhint/builder.py
+      - lexhint/cli.py
+      - lexhint/extract.py
+      - lexhint/lexicon.py
+      - lexhint/models.py
+      - lexhint/render.py
+      - lexhint/schema.py
+      - lexhint/store.py
+      - lexhint/wiktextract_types.py
+      - tests/test_benchmark_harness.py
+      - tests/test_cli_dataset.py
+      - tests/test_dataset_catalog.py
+      - tests/test_dataset_install.py
+      - tests/test_dataset_resolver.py
+      - tests/test_dictionary_render.py
+      - tests/test_relations.py
+      - tests/test_schema_contract.py
+      - tests/test_sense_identity.py
+      - tests/test_storage_finalization.py
+    stats:
+      files_changed: 0
+      insertions: 891
+      deletions: 135
+    inspected: true
+    inspected_paths:
+      - DATA_SOURCES.md
+      - README.md
+      - RELEASING.md
+      - lexhint/__init__.py
+      - lexhint/builder.py
+      - lexhint/cli.py
+      - lexhint/extract.py
+      - lexhint/lexicon.py
+      - lexhint/models.py
+      - lexhint/render.py
+      - lexhint/schema.py
+      - lexhint/store.py
+      - lexhint/wiktextract_types.py
+      - tests/test_relations.py
+      - tests/test_sense_identity.py
+      - tests/test_storage_finalization.py
+    observed_behavior:
+      Schema 10 dictionary artifacts expose deterministic Lexhint-owned
+      sense IDs, preserve namespaced source sense provenance, support a dictionary profile
+      without search indexes, retain additional entry relations with incoming lookup,
+      and validate and compact built artifacts before publication
+    public_impact: public
+    decision: accepted
+    evidence_subject: "feat: schema 10 with sense_id"
+    target_entry_id: entry-0002
+    notes:
+      Reviewed implementation, public API and CLI changes, documentation, and focused
+      regression tests
