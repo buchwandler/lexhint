@@ -13,7 +13,13 @@ from importlib.resources import files
 from pathlib import Path
 
 from .download import cached_dictionary_path
-from .languages import is_regional_source_tag, locale_spec, normalize_language, normalize_locale
+from .languages import (
+    is_regional_source_tag,
+    normalize_language,
+    normalize_locale,
+    source_tags_match_locale,
+    source_tags_match_region,
+)
 from .models import (
     ContextCue,
     DictionaryEntry,
@@ -25,12 +31,14 @@ from .models import (
     HeadwordRelation,
     LexicalSegment,
     Pronunciation,
+    PronunciationGroup,
     RelatedTerm,
     SemanticDomain,
     Sense,
     SenseRecord,
     WordEvidence,
 )
+from .render import normalize_pos
 from .schema_contract import SchemaContractError, validate_artifact_structure
 from .search import (
     FIELD_WEIGHTS,
@@ -71,11 +79,7 @@ class LexiconCoverageError(RuntimeError):
 def _locale_rank(tags: tuple[str, ...], locale: str | None) -> int:
     if locale is None:
         return 0
-    spec = locale_spec("en", locale)
-    assert spec is not None
-    normalized = {tag.casefold() for tag in tags}
-    preferred = {tag.casefold() for tag in spec.preferred_source_tags}
-    if normalized & preferred:
+    if source_tags_match_locale(tags, "en", locale):
         return 0
     if any(is_regional_source_tag(tag) for tag in tags):
         return 2
@@ -742,6 +746,51 @@ class Lexicon:
             )
         )
         return replace(entry, senses=senses, forms=forms, pronunciations=pronunciations)
+
+    def pronunciations(
+        self,
+        word: str,
+        *,
+        region: str | None = None,
+        include_neutral: bool = False,
+        include_pos: frozenset[str] | None = None,
+    ) -> tuple[PronunciationGroup, ...]:
+        """Return grouped pronunciations for *word* with optional filtering."""
+        self._require("dictionary")
+        if region is not None and self.locale is not None:
+            raise ValueError("region cannot be combined with a Lexicon locale")
+        normalized_pos = (
+            frozenset(normalize_pos(value) for value in include_pos)
+            if include_pos is not None
+            else None
+        )
+        filtered = region is not None or self.locale is not None
+        groups: dict[str, list[Pronunciation]] = {}
+        seen: dict[str, set[tuple[str, tuple[str, ...]]]] = {}
+        for entry in self.entries(word):
+            pos = normalize_pos(entry.pos or "entry")
+            if normalized_pos is not None and pos not in normalized_pos:
+                continue
+            group = groups.setdefault(pos, [])
+            seen_for_pos = seen.setdefault(pos, set())
+            for pronunciation in entry.pronunciations:
+                if filtered:
+                    if not pronunciation.tags:
+                        if not include_neutral:
+                            continue
+                    elif region is not None:
+                        if not source_tags_match_region(pronunciation.tags, region):
+                            continue
+                    elif not source_tags_match_locale(
+                        pronunciation.tags, self.language, self.locale or ""
+                    ):
+                        continue
+                key = (pronunciation.ipa, pronunciation.tags)
+                if key in seen_for_pos:
+                    continue
+                seen_for_pos.add(key)
+                group.append(pronunciation)
+        return tuple(PronunciationGroup(pos, tuple(groups[pos])) for pos in groups if groups[pos])
 
     def entries(self, word: str, *, all_case_variants: bool = False) -> tuple[DictionaryEntry, ...]:
         self._require("dictionary")

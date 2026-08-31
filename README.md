@@ -168,6 +168,39 @@ The `--show` and `--hide` options accept repeatable comma-separated fields. Cano
 
 Human CLI output uses ANSI color automatically on interactive terminals. Use `--no-color` or the `NO_COLOR` environment variable to disable it. Color is never emitted for JSON or non-TTY stdout.
 
+## Pronunciation lookup
+
+Return only pronunciation data, grouped by part of speech:
+
+```bash
+lexhint dictionary pronunciation love
+```
+
+Filter by an exact retained source region or accent tag:
+
+```bash
+lexhint dictionary pronunciation love --region Canada
+```
+
+Select pronunciations through a locale profile:
+
+```bash
+lexhint dictionary pronunciation love --locale en_US
+lexhint dictionary pronunciation love --locale en_GB
+lexhint dictionary pronunciation love --locale en_CA
+```
+
+`--region` performs exact normalized source-tag matching. `--locale` maps a locale to its configured set of retained pronunciation tags. Use global `--json` for machine-readable results.
+
+The same query is available through the Python API:
+
+```python
+from lexhint import Lexicon
+
+american = Lexicon("en", locale="en_US").pronunciations("love")
+canadian = Lexicon("en").pronunciations("love", region="Canada")
+```
+
 ## Dictionary schema 10 contract
 
 Schema 10 dictionary entries expose a versioned deterministic `sense_id` in JSON and through `Lexicon.sense_by_id()`. The ID is Lexhint-owned and stable across equivalent builds, not a permanent Wiktionary ID. Raw upstream `senseid` and Wikidata values, when available, appear separately as namespaced source provenance. Entry-level synonyms, antonyms, hypernyms, hyponyms, and related terms are headword relations; sense-level synonyms and antonyms remain attached to their exact senses.

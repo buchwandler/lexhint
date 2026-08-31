@@ -9,7 +9,13 @@ import pytest
 
 from lexhint import Lexicon
 from lexhint.builder import build_dictionary
-from lexhint.languages import normalize_locale, supported_base_languages
+from lexhint.languages import (
+    normalize_locale,
+    normalize_source_region_tag,
+    source_tags_match_locale,
+    source_tags_match_region,
+    supported_base_languages,
+)
 from lexhint.models import DictionaryEntry, Form, Pronunciation, Sense
 from lexhint.render import (
     DictionaryRenderOptions,
@@ -25,6 +31,13 @@ def test_locale_normalization_and_base_language_contract() -> None:
     assert normalize_locale("en", "en_GB") == "GB"
     assert normalize_locale("en", "US") == "US"
     assert normalize_locale("en", "en-US") == "US"
+    assert normalize_locale("en", "en_CA") == "CA"
+    assert normalize_locale("en", "en-CA") == "CA"
+    assert normalize_locale("en", "CA") == "CA"
+    assert normalize_source_region_tag("general_american") == "general-american"
+    assert source_tags_match_region(("General American",), "GENERAL-AMERICAN")
+    assert source_tags_match_locale(("Received-Pronunciation",), "en", "en_GB")
+    assert not source_tags_match_region(("American",), "America")
     assert supported_base_languages() == ("cs", "de", "en", "es", "fr", "it", "pt")
     with pytest.raises(ValueError, match="unsupported locale 'AU'"):
         normalize_locale("en", "AU")

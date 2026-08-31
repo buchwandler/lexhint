@@ -40,6 +40,7 @@ from .models import (
     DictionaryEntry,
     DomainEvidence,
     LexicalSegment,
+    PronunciationGroup,
     WordEvidence,
 )
 from .render import (
@@ -196,6 +197,34 @@ def _parser() -> argparse.ArgumentParser:
     search.add_argument("--match", choices=("all", "any"), default="all")
     search.add_argument("--limit", type=int, default=50)
 
+    pronunciation = dictionary_sub.add_parser(
+        "pronunciation",
+        help="show pronunciations, optionally filtered by region or locale",
+    )
+    pronunciation.add_argument("values", nargs="+")
+    pronunciation.add_argument("-l", "--language", choices=sorted(SUPPORTED_LANGUAGES))
+    _artifact_selector(pronunciation)
+    selector = pronunciation.add_mutually_exclusive_group()
+    selector.add_argument(
+        "--region",
+        help="source pronunciation region/accent, such as Canada or Central-American",
+    )
+    selector.add_argument(
+        "--locale",
+        help="locale pronunciation profile, such as en_US or en_GB",
+    )
+    pronunciation.add_argument(
+        "--pos",
+        action="append",
+        metavar="POS",
+        help="show only comma-separated parts of speech",
+    )
+    pronunciation.add_argument(
+        "--include-neutral",
+        action="store_true",
+        help="also include pronunciations without regional tags",
+    )
+
     relations = dictionary_sub.add_parser("relations", help="show explicit headword relationships")
     relations.add_argument("values", nargs="+")
     relations.add_argument("-l", "--language", choices=sorted(SUPPORTED_LANGUAGES))
@@ -339,6 +368,20 @@ def _context(values: Sequence[DomainEvidence], style: TerminalStyle) -> None:
         print(f"{style.bold(evidence.domain.value)}  {evidence.score:.2f}")
         for cue in evidence.cues:
             print(f"  {cue.text}  distance={cue.distance}  weight={cue.weight:.2f}")
+
+
+def _pronunciations(word: str, values: Sequence[PronunciationGroup], style: TerminalStyle) -> None:
+    print(style.bold(word))
+    if not values:
+        return
+    for group in values:
+        pos = group.pos
+        print(f"  {style.bold_magenta(pos)}")
+        for pronunciation in group.pronunciations:
+            ipa = pronunciation.ipa
+            tags = pronunciation.tags
+            suffix = f" [{', '.join(tags)}]" if tags else ""
+            print(f"    {ipa}{suffix}")
 
 
 def _status(info: ArtifactStatus, style: TerminalStyle) -> None:
@@ -682,6 +725,52 @@ def _run(args: argparse.Namespace, *, style: TerminalStyle, json_output: bool) -
             else:
                 for target_value in targets:
                     print(target_value)
+        return 0
+    if args.dictionary_command == "pronunciation":
+        language, word = _language(args.values, args.language)
+        if args.include_neutral and args.region is None and args.locale is None:
+            raise ValueError("--include-neutral requires --region or --locale")
+        locale = normalize_locale(language, args.locale)
+        include_pos, _ = resolve_pos_filters(args.pos)
+        lexicon = Lexicon(
+            language,
+            variant=args.variant,
+            dataset_version=args.dataset_version,
+            path=args.path,
+            locale=locale,
+        )
+        groups = lexicon.pronunciations(
+            word,
+            region=args.region,
+            include_neutral=args.include_neutral,
+            include_pos=include_pos,
+        )
+        entries = lexicon.entries(word) if not groups else ()
+        if json_output:
+            _json(
+                {
+                    "language": language,
+                    "locale": lexicon.locale,
+                    "region": args.region,
+                    "word": word,
+                    "include_neutral": args.include_neutral,
+                    "entries": [asdict(value) for value in groups],
+                }
+            )
+        else:
+            if groups:
+                _pronunciations(word, groups, style)
+            else:
+                print(style.bold(word))
+                if not entries:
+                    message = "no dictionary entries found"
+                elif args.region is not None:
+                    message = f"no pronunciations matched region {args.region}"
+                elif lexicon.locale is not None:
+                    message = f"no pronunciations matched locale {lexicon.locale}"
+                else:
+                    message = "no pronunciations retained"
+                print(f"  {style.yellow(message)}")
         return 0
     if args.dictionary_command == "project":
         path = project_artifact(
