@@ -1,0 +1,83 @@
+schema_version: 1
+object_type: commit_audit_sheet
+versioning:
+  schema_version: 1
+  revision: 3
+release_version: v0.4.2
+git_base_ref: v0.4.1
+git_base_sha: 3e8f8f0c3abd320cd1cbe61e0e82e7b088803749
+git_head_ref: HEAD
+git_head_sha: a2fc2bdf38884a3ea363a7180b675c0934f459a5
+git_range: 3e8f8f0c3abd320cd1cbe61e0e82e7b088803749..a2fc2bdf38884a3ea363a7180b675c0934f459a5
+commit_count: 2
+rows:
+  - sha: b556ff6947d8a07bac19e30ba763a999bf161339
+    source_ref: git:b556ff6947d8a07bac19e30ba763a999bf161339
+    short_sha: b556ff6
+    changed_paths:
+      - README.md
+      - docs/index.md
+      - lexhint/datasets.py
+      - tests/test_dataset_static_catalog.py
+      - tests/test_schema_contract.py
+    stats:
+      files_changed: 0
+      insertions: 608
+      deletions: 4
+    inspected: true
+    inspected_paths:
+      - README.md
+      - docs/index.md
+      - lexhint/datasets.py
+      - tests/test_dataset_static_catalog.py
+      - tests/test_schema_contract.py
+    observed_behavior:
+      Added static catalog resolution for compatible dataset artifacts,
+      immutable release asset downloads, strict catalog validation, and legacy API fallback
+      when the catalog is unavailable or lacks an exact historical version
+    public_impact: public
+    decision: accepted
+    evidence_subject: "feat: add support for lexhint-datasets catalog"
+    target_entry_key: dataset-catalog
+    target_entry_id: entry-0001
+    notes: Reviewed implementation, documentation, and focused catalog and schema tests
+  - sha: a2fc2bdf38884a3ea363a7180b675c0934f459a5
+    source_ref: git:a2fc2bdf38884a3ea363a7180b675c0934f459a5
+    short_sha: a2fc2bd
+    changed_paths:
+      - README.md
+      - lexhint/__init__.py
+      - lexhint/cli.py
+      - lexhint/languages.py
+      - lexhint/lexicon.py
+      - lexhint/models.py
+      - tests/test_cli_pronunciation.py
+      - tests/test_locales.py
+      - tests/test_pronunciations.py
+    stats:
+      files_changed: 0
+      insertions: 594
+      deletions: 10
+    inspected: true
+    inspected_paths:
+      - README.md
+      - lexhint/__init__.py
+      - lexhint/cli.py
+      - lexhint/languages.py
+      - lexhint/lexicon.py
+      - lexhint/models.py
+      - tests/test_cli_pronunciation.py
+      - tests/test_locales.py
+      - tests/test_pronunciations.py
+    observed_behavior:
+      Added grouped pronunciation lookup with part-of-speech filtering,
+      normalized region and locale matching, optional neutral pronunciations, and human-readable
+      or JSON CLI output
+    public_impact: public
+    decision: accepted
+    evidence_subject: "feat: pronunciation lookup"
+    target_entry_key: pronunciation-lookup
+    target_entry_id: entry-0002
+    notes:
+      Reviewed implementation, public exports, documentation, and focused pronunciation
+      and locale tests
