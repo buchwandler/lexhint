@@ -68,3 +68,40 @@ def test_dictionary_variant_is_available_to_dataset_and_query_parsers() -> None:
     query = parser.parse_args(["word", "love", "-l", "en", "--variant", "dictionary"])
     assert download.variant == "dictionary"
     assert query.variant == "dictionary"
+
+
+def test_dataset_available_cli_lists_all_schema10_languages(
+    monkeypatch: pytest.MonkeyPatch, capsys: pytest.CaptureFixture[str]
+) -> None:
+    artifacts = tuple(
+        datasets.DatasetArtifact(
+            language,
+            "runtime",
+            "2026.08.28",
+            f"data-{language}-2026.08.28",
+            "2026-09-01T00:00:00Z",
+            2,
+            datasets.SCHEMA_VERSION,
+            "runtime",
+            "full",
+            ("lexical", "semantic"),
+            123,
+            456,
+            f"lexhint-{language}-runtime-s10-2026.08.28.sqlite3.gz",
+            "a" * 64,
+            "https://example.test/asset",
+        )
+        for language in ("cs", "de", "en")
+    )
+    monkeypatch.setattr("lexhint.cli.available_datasets", lambda **kwargs: artifacts)
+
+    assert main(["dataset", "available"]) == 0
+    output = capsys.readouterr().out
+    assert "cs runtime s10" in output
+    assert "de runtime s10" in output
+    assert "en runtime s10" in output
+
+    assert main(["--json", "dataset", "available"]) == 0
+    payload = json.loads(capsys.readouterr().out)
+    assert {item["language"] for item in payload["available"]} == {"cs", "de", "en"}
+    assert {item["schema_version"] for item in payload["available"]} == {"10"}

@@ -312,3 +312,34 @@ def test_catalog_artifact_installs_through_existing_integrity_path(
 
     assert installed.path.read_bytes() == database
     assert installed.sha256 == record["asset"]["sha256"]
+
+
+def test_catalog_refresh_replaces_stale_cache_and_lists_all_schema10_languages(
+    monkeypatch: pytest.MonkeyPatch, tmp_path: Path
+) -> None:
+    monkeypatch.setenv("LEXHINT_CACHE_DIR", str(tmp_path))
+    old_payload = catalog(catalog_record(language="de"))
+    new_payload = catalog(
+        catalog_record(language="de"),
+        catalog_record(language="cs"),
+        catalog_record(language="cs", schema="9"),
+        catalog_record(language="cs", schema="8"),
+    )
+    calls: list[dict[str, object]] = []
+    responses = iter((old_payload, new_payload))
+
+    def fake_request(url: str, **kwargs: object) -> Response:
+        assert url == datasets.DATASET_CATALOG_URL
+        calls.append(kwargs)
+        response = Response(json.dumps(next(responses)).encode())
+        response.headers = {"ETag": "old" if len(calls) == 1 else "new"}
+        return response
+
+    monkeypatch.setattr(datasets, "request", fake_request)
+    assert {item.language for item in datasets.available_datasets()} == {"de"}
+    refreshed = datasets.available_datasets()
+    assert {item.language for item in refreshed} == {"cs", "de"}
+    assert {item.schema_version for item in refreshed} == {SCHEMA_VERSION}
+    assert calls[1]["headers"] == {"If-None-Match": "old"}
+    cached = json.loads(datasets._catalog_cache_path().read_text())
+    assert len(cached["artifacts"]) == 4
