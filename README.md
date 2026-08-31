@@ -25,7 +25,7 @@ lexhint context "The compiler is 8.3.2." -l en --target 16:21
 lexhint complete comp -l en
 ```
 
-`lexhint dataset download` is the only networked step. `Lexicon`, query commands, and dataset inventory commands use installed files and do not silently contact GitHub.
+`lexhint dataset download` is the only networked step. It reads the committed `lexhint-datasets` catalog, then downloads the selected asset from its immutable GitHub Release URL. The catalog is an index, not a replacement for release manifests: detailed provenance remains in each release's `datasets-v2.json`. `Lexicon`, query commands, and local dataset inventory use installed files and do not silently contact GitHub.
 
 The download default is the `runtime` variant (`lexical,semantic`). Optional variants are:
 
@@ -150,7 +150,7 @@ lexhint dictionary word compiler -l en --variant rich
 lexhint dictionary status en --variant runtime
 ```
 
-All artifact-consuming query commands accept `--variant` and `--dataset-version`; `--path` remains an explicit custom-file override. Use `--json` for one JSON document on stdout. Dataset `list`, `info`, and `validate` are local; `available` and `download` access the published catalog.
+All artifact-consuming query commands accept `--variant` and `--dataset-version`; `--path` remains an explicit custom-file override. Use `--json` for one JSON document on stdout. Dataset `list`, `info`, and `validate` are local; `available` and `download` read the static catalog. Exact schema equality is required, and historical releases remain usable through catalog entries or the compatibility Releases API fallback.
 
 Dictionary word output has three human-readable detail levels. The default `standard` view shows all senses with compact metadata. Use `compact` for a deliberately short shell view, or `full` for every field retained by the local Lexhint dictionary model:
 

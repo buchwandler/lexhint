@@ -23,6 +23,11 @@ from .schema_contract import SchemaContractError, validate_artifact_structure
 from .store import SCHEMA_VERSION
 
 DATASET_REPOSITORY = "buchwandler/lexhint-datasets"
+DATASET_CATALOG_URL = (
+    "https://raw.githubusercontent.com/buchwandler/lexhint-datasets/main/catalog/datasets.json"
+)
+SUPPORTED_CATALOG_VERSION = 1
+SUPPORTED_CATALOG_RUNTIME_CONTRACT = 1
 GITHUB_API = "https://api.github.com"
 MANIFEST_NAME = "datasets-v2.json"
 SUPPORTED_MANIFEST_VERSION = 2
@@ -69,6 +74,10 @@ class DatasetError(RuntimeError):
 
 class DatasetCatalogError(DatasetError):
     """The remote release catalog could not be read or parsed."""
+
+
+class _DatasetCatalogTransportError(DatasetCatalogError):
+    """The static dataset catalog could not be fetched."""
 
 
 class DatasetDownloadError(DatasetError):
@@ -230,6 +239,269 @@ def _version_from_tag(tag: str) -> str:
     return _release_identity(tag)[1]
 
 
+def _catalog_url() -> str:
+    return os.environ.get("LEXHINT_DATASET_CATALOG_URL") or DATASET_CATALOG_URL
+
+
+def _fetch_catalog() -> Mapping[str, object]:
+    try:
+        with request(
+            _catalog_url(),
+            accept="application/json",
+            token=os.environ.get("LEXHINT_GITHUB_TOKEN"),
+        ) as response:
+            payload = json.load(response)
+    except (HTTPError, URLError, OSError) as exc:
+        raise _DatasetCatalogTransportError(f"could not fetch dataset catalog: {exc}") from exc
+    except (TypeError, ValueError, json.JSONDecodeError) as exc:
+        raise DatasetCatalogError("dataset catalog is not valid JSON") from exc
+    if not isinstance(payload, Mapping):
+        raise DatasetCatalogError("dataset catalog must contain an object")
+    return payload
+
+
+def _catalog_url_for_release(release_tag: str, asset: str) -> str:
+    return f"https://github.com/{DATASET_REPOSITORY}/releases/download/{release_tag}/{asset}"
+
+
+def _catalog_artifact(raw: object) -> DatasetArtifact:
+    if not isinstance(raw, Mapping):
+        raise DatasetCatalogError("dataset catalog contains an invalid artifact")
+    artifact_id = raw.get("id")
+    language_raw = raw.get("language")
+    variant_raw = raw.get("variant")
+    dataset_version = raw.get("dataset_version")
+    schema_version = raw.get("schema_version")
+    profile = raw.get("profile")
+    coverage = raw.get("coverage")
+    capabilities_raw = raw.get("capabilities")
+    release_tag = raw.get("release_tag")
+    release_published_at = raw.get("release_published_at")
+    manifest = raw.get("manifest")
+    asset = raw.get("asset")
+    if (
+        not isinstance(artifact_id, str)
+        or not artifact_id
+        or not isinstance(language_raw, str)
+        or not isinstance(variant_raw, str)
+        or not isinstance(dataset_version, str)
+        or not dataset_version
+        or not isinstance(schema_version, str)
+        or not schema_version
+        or not isinstance(profile, str)
+        or not profile
+        or not isinstance(coverage, str)
+        or coverage != "full"
+        or not isinstance(capabilities_raw, list)
+        or not isinstance(release_tag, str)
+        or not release_tag
+        or not isinstance(release_published_at, str)
+        or not release_published_at
+        or not isinstance(manifest, Mapping)
+        or not isinstance(asset, Mapping)
+    ):
+        raise DatasetCatalogError("dataset catalog artifact is missing required fields")
+    if not re.fullmatch(r"[0-9]+", schema_version):
+        raise DatasetCatalogError(f"invalid catalog schema version {schema_version!r}")
+    try:
+        language = _language(language_raw)
+    except DatasetNotFound as exc:
+        raise DatasetCatalogError(str(exc)) from exc
+    try:
+        variant = _variant(variant_raw)
+    except ValueError as exc:
+        raise DatasetCatalogError(str(exc)) from exc
+    if any(not isinstance(item, str) for item in capabilities_raw):
+        raise DatasetIncompatible(
+            f"catalog artifact {artifact_id!r} declares inconsistent capabilities"
+        )
+    capabilities = tuple(item for item in capabilities_raw if isinstance(item, str))
+    expected_capabilities = DATASET_VARIANTS[variant].capabilities
+    if capabilities != expected_capabilities:
+        raise DatasetIncompatible(
+            f"catalog artifact {artifact_id!r} declares inconsistent capabilities"
+        )
+    try:
+        _part(dataset_version, "version")
+    except ValueError as exc:
+        raise DatasetCatalogError(str(exc)) from exc
+    release_language, release_version = _release_identity(release_tag)
+    if (
+        not release_tag.startswith("data-")
+        or release_version != dataset_version
+        or (release_language is not None and release_language != language)
+    ):
+        raise DatasetCatalogError(
+            f"catalog artifact {artifact_id!r} has an inconsistent release tag"
+        )
+    manifest_url = manifest.get("url")
+    manifest_sha256 = manifest.get("sha256")
+    asset_name = asset.get("name")
+    asset_url = asset.get("url")
+    asset_sha256 = asset.get("sha256")
+    compressed_size = asset.get("compressed_size")
+    uncompressed_size = asset.get("uncompressed_size")
+    if not (
+        isinstance(manifest_url, str)
+        and manifest_url
+        and isinstance(manifest_sha256, str)
+        and manifest_sha256
+        and isinstance(asset_name, str)
+        and asset_name
+        and isinstance(asset_url, str)
+        and asset_url
+        and isinstance(asset_sha256, str)
+        and asset_sha256
+    ):
+        raise DatasetCatalogError(f"catalog artifact {artifact_id!r} has invalid URL or hash data")
+    if not re.fullmatch(r"[0-9a-f]{64}", manifest_sha256) or not re.fullmatch(
+        r"[0-9a-f]{64}", asset_sha256
+    ):
+        raise DatasetCatalogError(f"catalog artifact {artifact_id!r} has an invalid SHA-256")
+    if (
+        isinstance(compressed_size, bool)
+        or not isinstance(compressed_size, int)
+        or compressed_size <= 0
+        or isinstance(uncompressed_size, bool)
+        or not isinstance(uncompressed_size, int)
+        or uncompressed_size <= 0
+    ):
+        raise DatasetCatalogError(f"catalog artifact {artifact_id!r} has invalid asset sizes")
+    expected_asset = f"lexhint-{language}-{variant}-s{schema_version}-{dataset_version}.sqlite3.gz"
+    if asset_name != expected_asset:
+        raise DatasetCatalogError(
+            f"catalog artifact {artifact_id!r} has an inconsistent asset filename"
+        )
+    if asset_url != _catalog_url_for_release(release_tag, asset_name):
+        raise DatasetCatalogError(f"catalog artifact {artifact_id!r} has an inconsistent asset URL")
+    if manifest_url != _catalog_url_for_release(release_tag, MANIFEST_NAME):
+        raise DatasetCatalogError(
+            f"catalog artifact {artifact_id!r} has an inconsistent manifest URL"
+        )
+    return DatasetArtifact(
+        language=language,
+        variant=variant,
+        dataset_version=dataset_version,
+        release_tag=release_tag,
+        release_published_at=release_published_at,
+        manifest_version=SUPPORTED_MANIFEST_VERSION,
+        schema_version=schema_version,
+        profile=profile,
+        coverage=coverage,
+        capabilities=capabilities,
+        compressed_size=compressed_size,
+        uncompressed_size=uncompressed_size,
+        asset=asset_name,
+        sha256=asset_sha256,
+        download_url=asset_url,
+    )
+
+
+def _catalog_artifacts(payload: Mapping[str, object]) -> tuple[DatasetArtifact, ...]:
+    catalog_version = payload.get("catalog_version")
+    if type(catalog_version) is not int or catalog_version != SUPPORTED_CATALOG_VERSION:
+        raise DatasetCatalogError(f"unsupported dataset catalog version {catalog_version!r}")
+    runtime_contract = payload.get("runtime_contract")
+    if type(runtime_contract) is not int or runtime_contract != SUPPORTED_CATALOG_RUNTIME_CONTRACT:
+        raise DatasetCatalogError(f"unsupported dataset runtime contract {runtime_contract!r}")
+    if payload.get("repository") != DATASET_REPOSITORY:
+        raise DatasetCatalogError("dataset catalog repository does not match Lexhint")
+    raw_artifacts = payload.get("artifacts")
+    if not isinstance(raw_artifacts, list) or not raw_artifacts:
+        raise DatasetCatalogError("dataset catalog must contain a non-empty artifacts list")
+    result: list[DatasetArtifact] = []
+    ids: set[str] = set()
+    slots: set[tuple[str, str, str, str]] = set()
+    for raw in raw_artifacts:
+        artifact = _catalog_artifact(raw)
+        if not isinstance(raw, Mapping):
+            raise DatasetCatalogError("dataset catalog contains an invalid artifact")
+        raw_id = raw.get("id")
+        if not isinstance(raw_id, str):
+            raise DatasetCatalogError("dataset catalog artifact has an invalid id")
+        if raw_id in ids:
+            raise DatasetCatalogError(f"duplicate dataset catalog artifact id {raw_id!r}")
+        ids.add(raw_id)
+        slot = (
+            artifact.language,
+            artifact.variant,
+            artifact.schema_version,
+            artifact.dataset_version,
+        )
+        if slot in slots:
+            raise DatasetCatalogError(f"duplicate dataset catalog artifact slot {slot!r}")
+        slots.add(slot)
+        result.append(artifact)
+    return tuple(result)
+
+
+def _catalog_remote_artifacts(
+    *,
+    language: str | None = None,
+    version: str | None = None,
+    variant: str | None = None,
+) -> tuple[DatasetArtifact, ...]:
+    artifacts = _catalog_artifacts(_fetch_catalog())
+    normalized_language = _language(language) if language is not None else None
+    requested_version = _version_from_tag(version) if version is not None else None
+    selected_variant = _variant(variant) if variant is not None else None
+    matching = tuple(
+        artifact
+        for artifact in artifacts
+        if (normalized_language is None or artifact.language == normalized_language)
+        and (requested_version is None or artifact.dataset_version == requested_version)
+        and (selected_variant is None or artifact.variant == selected_variant)
+    )
+    if version is not None:
+        if not matching:
+            raise DatasetNotFound("catalog has no requested dataset version")
+        compatible = tuple(artifact for artifact in matching if _remote_compatible(artifact))
+        if not compatible:
+            schemas = ", ".join(sorted({item.schema_version for item in matching}))
+            raise DatasetIncompatible(
+                f"Dataset {requested_version} uses schema {schemas}; "
+                f"this Lexhint requires schema {SCHEMA_VERSION}."
+            )
+        return tuple(
+            sorted(
+                compatible,
+                key=lambda item: (item.language, item.variant, item.asset),
+            )
+        )
+
+    compatible = tuple(artifact for artifact in matching if _remote_compatible(artifact))
+    if matching and not compatible:
+        incompatible_schemas = {
+            artifact.schema_version
+            for artifact in matching
+            if artifact.schema_version != SCHEMA_VERSION
+        }
+        if incompatible_schemas:
+            schemas = ", ".join(sorted(incompatible_schemas))
+            requested = normalized_language or "the requested language"
+            raise DatasetIncompatible(
+                f"No compatible {requested} dataset found for Lexhint schema "
+                f"{SCHEMA_VERSION}. Available artifacts use schema {schemas}."
+            )
+    selected: dict[tuple[str, str], DatasetArtifact] = {}
+    for artifact in compatible:
+        key = (artifact.language, artifact.variant)
+        current = selected.get(key)
+        if current is None or (
+            artifact.release_published_at,
+            artifact.dataset_version,
+            artifact.release_tag,
+            artifact.asset,
+        ) > (
+            current.release_published_at,
+            current.dataset_version,
+            current.release_tag,
+            current.asset,
+        ):
+            selected[key] = artifact
+    return tuple(sorted(selected.values(), key=lambda item: (item.language, item.variant)))
+
+
 def _manifest_artifacts(
     release: Mapping[str, object], manifest: Mapping[str, object]
 ) -> tuple[DatasetArtifact, ...]:
@@ -382,7 +654,7 @@ def _releases(version: str | None) -> list[Mapping[str, object]]:
     )
 
 
-def _remote_artifacts(
+def _legacy_remote_artifacts(
     *,
     language: str | None = None,
     version: str | None = None,
@@ -439,6 +711,7 @@ def _remote_artifacts(
         if compatible:
             return compatible
         if version is not None:
+            assert requested_version is not None
             if language_items:
                 schemas = ", ".join(sorted({item.schema_version for item in language_items}))
                 raise DatasetIncompatible(
@@ -461,6 +734,22 @@ def _remote_artifacts(
             f"Newest available artifacts use schema {newest}."
         )
     raise DatasetNotFound("no published release contains the requested language")
+
+
+def _remote_artifacts(
+    *,
+    language: str | None = None,
+    version: str | None = None,
+    variant: str | None = None,
+) -> tuple[DatasetArtifact, ...]:
+    try:
+        return _catalog_remote_artifacts(language=language, version=version, variant=variant)
+    except _DatasetCatalogTransportError:
+        return _legacy_remote_artifacts(language=language, version=version, variant=variant)
+    except DatasetNotFound:
+        if version is None:
+            raise
+        return _legacy_remote_artifacts(language=language, version=version, variant=variant)
 
 
 def available_datasets(

@@ -63,6 +63,10 @@ def test_public_dataset_variants_match_named_profiles() -> None:
 
 
 def test_remote_resolution_filters_schema_before_ranking(monkeypatch: pytest.MonkeyPatch) -> None:
+    def catalog_unavailable(**kwargs: object) -> None:
+        raise datasets._DatasetCatalogTransportError("test")
+
+    monkeypatch.setattr(datasets, "_catalog_remote_artifacts", catalog_unavailable)
     newer = artifact("2026.10.01", "11")
     compatible = artifact("2026.09.01", SCHEMA_VERSION)
     releases = [{"tag_name": newer.release_tag}, {"tag_name": compatible.release_tag}]
@@ -76,6 +80,10 @@ def test_remote_resolution_filters_schema_before_ranking(monkeypatch: pytest.Mon
 
 
 def test_explicit_schema_mismatch_does_not_fall_back(monkeypatch: pytest.MonkeyPatch) -> None:
+    def catalog_unavailable(**kwargs: object) -> None:
+        raise datasets._DatasetCatalogTransportError("test")
+
+    monkeypatch.setattr(datasets, "_catalog_remote_artifacts", catalog_unavailable)
     incompatible = artifact("2026.10.15", "7")
     monkeypatch.setattr(
         datasets,
