@@ -1,0 +1,39 @@
+schema_version: 1
+object_type: commit_audit_sheet
+versioning:
+  schema_version: 1
+  revision: 3
+release_version: v0.4.1
+git_base_ref: v0.4.0
+git_base_sha: fc3b2c85cacd49c7d9ade5145f81b2ca7aded755
+git_head_ref: HEAD
+git_head_sha: 9f874d463b2815fd13b792f9c4841f818e5cff94
+git_range: fc3b2c85cacd49c7d9ade5145f81b2ca7aded755..9f874d463b2815fd13b792f9c4841f818e5cff94
+commit_count: 1
+rows:
+- sha: 9f874d463b2815fd13b792f9c4841f818e5cff94
+  source_ref: git:9f874d463b2815fd13b792f9c4841f818e5cff94
+  short_sha: 9f874d4
+  changed_paths:
+  - lexhint/datasets.py
+  - tests/test_dataset_catalog.py
+  stats:
+    files_changed: 0
+    insertions: 118
+    deletions: 14
+  inspected: true
+  inspected_paths:
+  - lexhint/datasets.py
+  - tests/test_dataset_catalog.py
+  observed_behavior: Dataset catalog resolution recognizes language-qualified release
+    tags, validates that tagged manifests and artifacts use the tagged language, supports
+    language-specific release lookup with fallback to an unqualified legacy release,
+    and aggregates compatible artifacts across languages when resolving the latest
+    releases. The focused dataset catalog tests cover legacy and language-qualified
+    tag identity plus language consistency checks.
+  public_impact: public
+  decision: accepted
+  evidence_subject: 'feat: allow lang tags'
+  target_entry_key: dataset-language-tags
+  target_entry_id: entry-0001
+  notes: Verified with pytest -q tests/test_dataset_catalog.py.
