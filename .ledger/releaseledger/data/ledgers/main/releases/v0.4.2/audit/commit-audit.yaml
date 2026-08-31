@@ -2,14 +2,14 @@ schema_version: 1
 object_type: commit_audit_sheet
 versioning:
   schema_version: 1
-  revision: 3
+  revision: 5
 release_version: v0.4.2
 git_base_ref: v0.4.1
 git_base_sha: 3e8f8f0c3abd320cd1cbe61e0e82e7b088803749
 git_head_ref: HEAD
-git_head_sha: a2fc2bdf38884a3ea363a7180b675c0934f459a5
-git_range: 3e8f8f0c3abd320cd1cbe61e0e82e7b088803749..a2fc2bdf38884a3ea363a7180b675c0934f459a5
-commit_count: 2
+git_head_sha: 3f47015f908d903b3b0a3536445c1beee463dcfb
+git_range: 3e8f8f0c3abd320cd1cbe61e0e82e7b088803749..3f47015f908d903b3b0a3536445c1beee463dcfb
+commit_count: 4
 rows:
   - sha: b556ff6947d8a07bac19e30ba763a999bf161339
     source_ref: git:b556ff6947d8a07bac19e30ba763a999bf161339
@@ -81,3 +81,68 @@ rows:
     notes:
       Reviewed implementation, public exports, documentation, and focused pronunciation
       and locale tests
+  - sha: e6678806d5e79e528a70c3e552b1b5bbb524cbf0
+    source_ref: git:e6678806d5e79e528a70c3e552b1b5bbb524cbf0
+    short_sha: e667880
+    changed_paths:
+      - .ledger/releaseledger/data/ledgers/main/events/events.jsonl
+      - .ledger/releaseledger/data/ledgers/main/releases/v0.4.2/audit/commit-audit.yaml
+      - .ledger/releaseledger/data/ledgers/main/releases/v0.4.2/entries/entry-0001.md
+      - .ledger/releaseledger/data/ledgers/main/releases/v0.4.2/entries/entry-0002.md
+      - .ledger/releaseledger/data/ledgers/main/releases/v0.4.2/release.md
+      - docs/changelog.md
+    stats:
+      files_changed: 0
+      insertions: 191
+      deletions: 0
+    inspected: true
+    inspected_paths:
+      - docs/changelog.md
+    observed_behavior:
+      Regenerated the v0.4.2 changelog section from the releaseledger
+      records; no product behavior was introduced
+    public_impact: internal
+    decision: internal
+    evidence_subject: "doc: changelog"
+    notes:
+      Generated release bookkeeping is intentionally excluded from public release
+      notes
+  - sha: 3f47015f908d903b3b0a3536445c1beee463dcfb
+    source_ref: git:3f47015f908d903b3b0a3536445c1beee463dcfb
+    short_sha: 3f47015
+    changed_paths:
+      - README.md
+      - docs/architecture.md
+      - docs/index.md
+      - lexhint/__init__.py
+      - lexhint/cli.py
+      - lexhint/datasets.py
+      - lexhint/download.py
+      - tests/test_dataset_catalog.py
+      - tests/test_dataset_static_catalog.py
+    stats:
+      files_changed: 0
+      insertions: 319
+      deletions: 30
+    inspected: true
+    inspected_paths:
+      - README.md
+      - docs/architecture.md
+      - docs/index.md
+      - lexhint/__init__.py
+      - lexhint/cli.py
+      - lexhint/datasets.py
+      - lexhint/download.py
+      - tests/test_dataset_catalog.py
+      - tests/test_dataset_static_catalog.py
+    observed_behavior:
+      Added a validated conditional catalog cache, all-compatible catalog
+      discovery, offline cached reads, dataset update checks, filtered bulk updates,
+      and verified superseded-version cleanup with public CLI and documentation coverage
+    public_impact: public
+    decision: accepted
+    evidence_subject: "feat: catalog commands"
+    target_entry_key: catalog-management
+    notes:
+      Reviewed the implementation diff, focused and full test results, static checks,
+      and user documentation

@@ -48,7 +48,6 @@ For reproducibility, install and select an exact release:
 lexhint dataset download en --variant runtime --version 2026.08.20
 ```
 
-
 View all compatible catalog downloads, check installed datasets, and update them:
 
 ```bash

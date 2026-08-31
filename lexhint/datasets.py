@@ -370,6 +370,7 @@ def _fetch_catalog() -> Mapping[str, object]:
                 f"could not fetch dataset catalog: {exc}"
             ) from cache_exc
 
+
 def _catalog_url_for_release(release_tag: str, asset: str) -> str:
     return f"https://github.com/{DATASET_REPOSITORY}/releases/download/{release_tag}/{asset}"
 
@@ -1047,7 +1048,6 @@ def resolve_installed_dataset(
     return max(maxima, key=_release_key)
 
 
-
 def _dataset_order(value: InstalledDataset | DatasetArtifact) -> tuple[str, str, str, str]:
     return (
         value.release_published_at,
@@ -1069,9 +1069,7 @@ def check_dataset_updates(
         installed = tuple(item for item in installed if item.variant == selected_variant)
     if not installed:
         return ()
-    remote = _catalog_remote_artifacts(
-        language=language, variant=variant, offline=offline
-    )
+    remote = _catalog_remote_artifacts(language=language, variant=variant, offline=offline)
     newest_remote = {(item.language, item.variant): item for item in remote}
     groups: dict[tuple[str, str], list[InstalledDataset]] = {}
     for item in installed:
@@ -1121,11 +1119,10 @@ def update_datasets(
             )
         for old in list_installed_datasets(status.language):
             if old.variant == status.variant and old.dataset_version != target_version:
-                remove_dataset(
-                    old.language, variant=old.variant, version=old.dataset_version
-                )
+                remove_dataset(old.language, variant=old.variant, version=old.dataset_version)
         result.append(installed)
     return tuple(result)
+
 
 def _installed_for_artifact(
     artifact: DatasetArtifact, *, already_installed: bool

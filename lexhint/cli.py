@@ -481,9 +481,7 @@ def _run_dataset(args: argparse.Namespace, *, json_output: bool) -> int:
         return 0
 
     if args.dataset_command == "check":
-        statuses = check_dataset_updates(
-            args.language, variant=args.variant, offline=args.offline
-        )
+        statuses = check_dataset_updates(args.language, variant=args.variant, offline=args.offline)
         payload = {"updates": [status.as_dict() for status in statuses]}
         if json_output:
             _json(payload)
@@ -509,10 +507,7 @@ def _run_dataset(args: argparse.Namespace, *, json_output: bool) -> int:
             _json(payload)
         else:
             for item in installed_items:
-                print(
-                    f"Updated {item.language}/{item.variant} "
-                    f"{item.dataset_version}: {item.path}"
-                )
+                print(f"Updated {item.language}/{item.variant} {item.dataset_version}: {item.path}")
         return 0
     if args.dataset_command == "list":
         installed_items = list_installed_datasets(args.language)

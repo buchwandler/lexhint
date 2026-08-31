@@ -286,6 +286,7 @@ def test_offline_catalog_access_uses_cache_without_request(
     result = datasets.available_datasets(offline=True)
     assert len(result) == 1
 
+
 def test_catalog_artifact_installs_through_existing_integrity_path(
     tmp_path: Path,
     monkeypatch: pytest.MonkeyPatch,
