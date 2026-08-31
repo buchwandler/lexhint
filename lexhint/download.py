@@ -3,6 +3,7 @@ from __future__ import annotations
 import os
 import sys
 import urllib.request
+from collections.abc import Mapping
 from importlib.metadata import PackageNotFoundError, version
 from pathlib import Path
 from typing import BinaryIO, cast
@@ -43,17 +44,26 @@ def data_dir() -> Path:
 
 
 def request(
-    url: str, *, accept: str | None = None, token: str | None = None, timeout: float = 30.0
+    url: str,
+    *,
+    accept: str | None = None,
+    token: str | None = None,
+    headers: Mapping[str, str] | None = None,
+    timeout: float = 30.0,
 ) -> BinaryIO:
     """Open a URL with Lexhint headers and bounded network time."""
-    headers = {"User-Agent": user_agent()}
+    request_headers = {"User-Agent": user_agent()}
     if accept:
-        headers["Accept"] = accept
+        request_headers["Accept"] = accept
     if token:
-        headers["Authorization"] = f"Bearer {token}"
+        request_headers["Authorization"] = f"Bearer {token}"
+    if headers:
+        request_headers.update(headers)
     return cast(
         BinaryIO,
-        urllib.request.urlopen(urllib.request.Request(url, headers=headers), timeout=timeout),
+        urllib.request.urlopen(
+            urllib.request.Request(url, headers=request_headers), timeout=timeout
+        ),
     )
 
 

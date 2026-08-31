@@ -206,6 +206,10 @@ The build consumes a narrow Lexhint-owned TypedDict contract for the fields it i
 
 Metadata records `dictionary_source`, `dictionary_source_sha256`, `dictionary_source_format`, `dictionary_source_contract`, `frequency_source`, and `frequency_source_sha256`, alongside profile, capabilities, creation time, and builder version. Remote dictionary input is hashed while streamed. Automatic FrequencyWords sources are cached by pinned revision and language, validated against an atomic SHA-256 sidecar, and downloaded through temporary files followed by atomic rename.
 
+
+The static dataset catalog is a small validated cache under the platform cache directory or `LEXHINT_CACHE_DIR`. Networked dataset operations send conditional refresh metadata and atomically replace catalog bytes only after schema and artifact validation. Transport failures reuse a valid cache, while malformed reachable catalogs remain errors. Offline `dataset available` and `dataset check` use cached catalog data; dataset installation and update remain networked operations.
+
+`dataset available` exposes all catalog artifacts compatible with the running SQLite schema, including historical versions. `dataset check` compares the newest compatible artifact with every selected installed language and variant. `dataset update` processes all installed slots by default, installs and validates replacements atomically, and removes superseded versions only after successful installation. Lexicon construction and ordinary query operations remain local-only.
 ### Relation decision evidence
 
 The schema 10 benchmark compares a pre-schema-10 relation layout with compact compound-key tables and immutable index finalization. On the smoke profile, the candidate measured 204,800 raw bytes and 36,558 gzip bytes versus 425,984 raw bytes and 96,183 gzip bytes for the baseline. Suggestion and definition-search timings were slower in this two-iteration run, so the measurements are comparative evidence rather than English-dataset estimates.

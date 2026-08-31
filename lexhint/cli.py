@@ -20,10 +20,12 @@ from .datasets import (
     DatasetProgress,
     InstalledDataset,
     available_datasets,
+    check_dataset_updates,
     download_dataset,
     list_installed_datasets,
     remove_dataset,
     resolve_installed_dataset,
+    update_datasets,
     validate_datasets,
 )
 from .download import KAIKKI_RAW_URL
@@ -308,6 +310,13 @@ def _parser() -> argparse.ArgumentParser:
     available.add_argument("--language", choices=sorted(SUPPORTED_LANGUAGES))
     available.add_argument("--version", dest="dataset_version")
     available.add_argument("--variant", choices=DATASET_VARIANT_NAMES)
+
+    check = dataset_sub.add_parser("check", help="check installed datasets for updates")
+    check.add_argument("language", nargs="?", choices=sorted(SUPPORTED_LANGUAGES))
+    check.add_argument("--variant", choices=DATASET_VARIANT_NAMES)
+    update = dataset_sub.add_parser("update", help="update installed datasets")
+    update.add_argument("language", nargs="?", choices=sorted(SUPPORTED_LANGUAGES))
+    update.add_argument("--variant", choices=DATASET_VARIANT_NAMES)
     info = dataset_sub.add_parser("info", help="show an installed dataset")
     info.add_argument("language", choices=sorted(SUPPORTED_LANGUAGES))
     info.add_argument("--variant", choices=DATASET_VARIANT_NAMES)
@@ -468,6 +477,41 @@ def _run_dataset(args: argparse.Namespace, *, json_output: bool) -> int:
                     f"{remote_item.language} {remote_item.variant} "
                     f"s{remote_item.schema_version} {remote_item.dataset_version} "
                     f"{', '.join(remote_item.capabilities)} {remote_item.compressed_size:,} bytes"
+                )
+        return 0
+
+    if args.dataset_command == "check":
+        statuses = check_dataset_updates(
+            args.language, variant=args.variant, offline=args.offline
+        )
+        payload = {"updates": [status.as_dict() for status in statuses]}
+        if json_output:
+            _json(payload)
+        else:
+            for status in statuses:
+                available = status.available_version or "unavailable"
+                state = "update available" if status.update_available else "current"
+                print(
+                    f"{status.language} {status.variant} "
+                    f"{status.installed_version} -> {available} {state}"
+                )
+        return 0
+
+    if args.dataset_command == "update":
+        installed_items = update_datasets(
+            args.language,
+            variant=args.variant,
+            offline=args.offline,
+            progress=None if json_output else _dataset_progress,
+        )
+        payload = {"updated": [_dataset_value(item) for item in installed_items]}
+        if json_output:
+            _json(payload)
+        else:
+            for item in installed_items:
+                print(
+                    f"Updated {item.language}/{item.variant} "
+                    f"{item.dataset_version}: {item.path}"
                 )
         return 0
     if args.dataset_command == "list":

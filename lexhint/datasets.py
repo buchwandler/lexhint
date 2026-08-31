@@ -16,7 +16,7 @@ from pathlib import Path
 from typing import BinaryIO, cast
 from urllib.error import HTTPError, URLError
 
-from .download import SUPPORTED_LANGUAGES, data_dir, request
+from .download import SUPPORTED_LANGUAGES, cache_dir, data_dir, request
 from .languages import normalize_language, supported_base_languages
 from .schema import PROFILES
 from .schema_contract import SchemaContractError, validate_artifact_structure
@@ -156,6 +156,28 @@ class InstalledDataset:
         return value
 
 
+@dataclass(frozen=True, slots=True)
+class DatasetUpdate:
+    language: str
+    variant: str
+    schema_version: str
+    installed_version: str
+    available_version: str | None
+    path: Path
+    update_available: bool
+
+    def as_dict(self) -> dict[str, object]:
+        return {
+            "language": self.language,
+            "variant": self.variant,
+            "schema_version": self.schema_version,
+            "installed_version": self.installed_version,
+            "available_version": self.available_version,
+            "path": str(self.path),
+            "update_available": self.update_available,
+        }
+
+
 def _language(language: str) -> str:
     try:
         return normalize_language(language)
@@ -243,22 +265,110 @@ def _catalog_url() -> str:
     return os.environ.get("LEXHINT_DATASET_CATALOG_URL") or DATASET_CATALOG_URL
 
 
+_CATALOG_CACHE_NAME = "datasets-catalog.json"
+_CATALOG_CACHE_METADATA_NAME = "datasets-catalog.json.meta"
+
+
+def _catalog_cache_path() -> Path:
+    return cache_dir() / _CATALOG_CACHE_NAME
+
+
+def _catalog_cache_metadata_path() -> Path:
+    return cache_dir() / _CATALOG_CACHE_METADATA_NAME
+
+
+def _atomic_cache_write(path: Path, payload: bytes) -> None:
+    path.parent.mkdir(parents=True, exist_ok=True)
+    temp_fd, temp_name = tempfile.mkstemp(prefix=f".{path.name}-", dir=path.parent)
+    os.close(temp_fd)
+    temp_path = Path(temp_name)
+    try:
+        temp_path.write_bytes(payload)
+        os.replace(temp_path, path)
+    finally:
+        temp_path.unlink(missing_ok=True)
+
+
+def _cached_catalog() -> Mapping[str, object]:
+    path = _catalog_cache_path()
+    try:
+        payload = json.loads(path.read_text(encoding="utf-8"))
+    except (OSError, TypeError, ValueError, json.JSONDecodeError) as exc:
+        raise DatasetCatalogError(f"cached dataset catalog is unavailable: {path}") from exc
+    if not isinstance(payload, Mapping):
+        raise DatasetCatalogError("cached dataset catalog must contain an object")
+    _catalog_artifacts(payload)
+    return payload
+
+
+def _catalog_cache_headers() -> dict[str, str]:
+    try:
+        payload = json.loads(_catalog_cache_metadata_path().read_text(encoding="utf-8"))
+    except (OSError, TypeError, ValueError, json.JSONDecodeError):
+        return {}
+    if not isinstance(payload, Mapping):
+        return {}
+    return {
+        header: str(payload[header])
+        for header in ("If-None-Match", "If-Modified-Since")
+        if isinstance(payload.get(header), str) and payload[header]
+    }
+
+
 def _fetch_catalog() -> Mapping[str, object]:
+    headers = _catalog_cache_headers()
     try:
         with request(
             _catalog_url(),
             accept="application/json",
             token=os.environ.get("LEXHINT_GITHUB_TOKEN"),
+            headers=headers,
         ) as response:
-            payload = json.load(response)
-    except (HTTPError, URLError, OSError) as exc:
-        raise _DatasetCatalogTransportError(f"could not fetch dataset catalog: {exc}") from exc
-    except (TypeError, ValueError, json.JSONDecodeError) as exc:
-        raise DatasetCatalogError("dataset catalog is not valid JSON") from exc
-    if not isinstance(payload, Mapping):
-        raise DatasetCatalogError("dataset catalog must contain an object")
-    return payload
-
+            if getattr(response, "status", None) == 304:
+                return _cached_catalog()
+            payload_bytes = response.read()
+        try:
+            payload = json.loads(payload_bytes)
+        except (TypeError, ValueError, json.JSONDecodeError) as exc:
+            raise DatasetCatalogError("dataset catalog is not valid JSON") from exc
+        if not isinstance(payload, Mapping):
+            raise DatasetCatalogError("dataset catalog must contain an object")
+        _catalog_artifacts(payload)
+        _atomic_cache_write(
+            _catalog_cache_path(),
+            payload_bytes,
+        )
+        response_headers = getattr(response, "headers", None)
+        get_header = getattr(response_headers, "get", lambda _name: None)
+        metadata = {
+            request_header: value
+            for request_header, response_header in (
+                ("If-None-Match", "ETag"),
+                ("If-Modified-Since", "Last-Modified"),
+            )
+            if isinstance(value := get_header(response_header), str) and value
+        }
+        _atomic_cache_write(
+            _catalog_cache_metadata_path(),
+            (json.dumps(metadata, sort_keys=True) + "\n").encode(),
+        )
+        return payload
+    except HTTPError as exc:
+        if exc.code == 304:
+            return _cached_catalog()
+        try:
+            return _cached_catalog()
+        except DatasetCatalogError as cache_exc:
+            raise _DatasetCatalogTransportError(
+                f"could not fetch dataset catalog: {exc}"
+            ) from cache_exc
+    except (URLError, OSError) as exc:
+        try:
+            return _cached_catalog()
+        except DatasetCatalogError as cache_exc:
+            raise _DatasetCatalogTransportError(
+                f"could not fetch dataset catalog: {exc}"
+            ) from cache_exc
 
 def _catalog_url_for_release(release_tag: str, asset: str) -> str:
     return f"https://github.com/{DATASET_REPOSITORY}/releases/download/{release_tag}/{asset}"
@@ -440,8 +550,11 @@ def _catalog_remote_artifacts(
     language: str | None = None,
     version: str | None = None,
     variant: str | None = None,
+    all_compatible: bool = False,
+    offline: bool = False,
 ) -> tuple[DatasetArtifact, ...]:
-    artifacts = _catalog_artifacts(_fetch_catalog())
+    payload = _cached_catalog() if offline else _fetch_catalog()
+    artifacts = _catalog_artifacts(payload)
     normalized_language = _language(language) if language is not None else None
     requested_version = _version_from_tag(version) if version is not None else None
     selected_variant = _variant(variant) if variant is not None else None
@@ -470,6 +583,13 @@ def _catalog_remote_artifacts(
         )
 
     compatible = tuple(artifact for artifact in matching if _remote_compatible(artifact))
+    if all_compatible:
+        return tuple(
+            sorted(
+                compatible,
+                key=lambda item: (item.language, item.variant, item.dataset_version, item.asset),
+            )
+        )
     if matching and not compatible:
         incompatible_schemas = {
             artifact.schema_version
@@ -759,9 +879,13 @@ def available_datasets(
     variant: str | None = None,
     offline: bool = False,
 ) -> tuple[DatasetArtifact, ...]:
-    if offline:
-        raise DatasetCatalogError("dataset catalog access is unavailable in offline mode")
-    return _remote_artifacts(language=language, version=version, variant=variant)
+    return _catalog_remote_artifacts(
+        language=language,
+        version=version,
+        variant=variant,
+        all_compatible=True,
+        offline=offline,
+    )
 
 
 def _expected_capabilities(artifact: DatasetArtifact) -> frozenset[str]:
@@ -922,6 +1046,86 @@ def resolve_installed_dataset(
         )
     return max(maxima, key=_release_key)
 
+
+
+def _dataset_order(value: InstalledDataset | DatasetArtifact) -> tuple[str, str, str, str]:
+    return (
+        value.release_published_at,
+        value.dataset_version,
+        value.release_tag,
+        value.asset,
+    )
+
+
+def check_dataset_updates(
+    language: str | None = None,
+    *,
+    variant: str | None = None,
+    offline: bool = False,
+) -> tuple[DatasetUpdate, ...]:
+    installed = list_installed_datasets(language)
+    if variant is not None:
+        selected_variant = _variant(variant)
+        installed = tuple(item for item in installed if item.variant == selected_variant)
+    if not installed:
+        return ()
+    remote = _catalog_remote_artifacts(
+        language=language, variant=variant, offline=offline
+    )
+    newest_remote = {(item.language, item.variant): item for item in remote}
+    groups: dict[tuple[str, str], list[InstalledDataset]] = {}
+    for item in installed:
+        groups.setdefault((item.language, item.variant), []).append(item)
+    result: list[DatasetUpdate] = []
+    for key, values in sorted(groups.items()):
+        current = max(values, key=_dataset_order)
+        available = newest_remote.get(key)
+        available_version = available.dataset_version if available is not None else None
+        result.append(
+            DatasetUpdate(
+                language=current.language,
+                variant=current.variant,
+                schema_version=current.schema_version,
+                installed_version=current.dataset_version,
+                available_version=available_version,
+                path=current.path,
+                update_available=available is not None
+                and _dataset_order(available) > _dataset_order(current),
+            )
+        )
+    return tuple(result)
+
+
+def update_datasets(
+    language: str | None = None,
+    *,
+    variant: str | None = None,
+    offline: bool = False,
+    progress: Callable[[DatasetProgress], None] | None = None,
+) -> tuple[InstalledDataset, ...]:
+    statuses = check_dataset_updates(language, variant=variant, offline=offline)
+    result: list[InstalledDataset] = []
+    for status in statuses:
+        target_version = status.available_version or status.installed_version
+        if status.update_available:
+            installed = download_dataset(
+                status.language,
+                variant=status.variant,
+                version=target_version,
+                offline=offline,
+                progress=progress,
+            )
+        else:
+            installed = resolve_installed_dataset(
+                status.language, variant=status.variant, version=target_version
+            )
+        for old in list_installed_datasets(status.language):
+            if old.variant == status.variant and old.dataset_version != target_version:
+                remove_dataset(
+                    old.language, variant=old.variant, version=old.dataset_version
+                )
+        result.append(installed)
+    return tuple(result)
 
 def _installed_for_artifact(
     artifact: DatasetArtifact, *, already_installed: bool
@@ -1154,9 +1358,12 @@ __all__ = [
     "DatasetIntegrityError",
     "DatasetNotFound",
     "DatasetProgress",
+    "DatasetUpdate",
     "InstalledDataset",
+    "check_dataset_updates",
     "available_datasets",
     "download_dataset",
+    "update_datasets",
     "list_installed_datasets",
     "remove_dataset",
     "resolve_installed_dataset",

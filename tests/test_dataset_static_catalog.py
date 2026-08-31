@@ -274,11 +274,17 @@ def test_catalog_corruption_does_not_use_legacy_fallback(
         datasets._remote_artifacts(language="en")
 
 
-def test_offline_catalog_access_makes_no_request(monkeypatch: pytest.MonkeyPatch) -> None:
+def test_offline_catalog_access_uses_cache_without_request(
+    monkeypatch: pytest.MonkeyPatch, tmp_path: Path
+) -> None:
+    monkeypatch.setenv("LEXHINT_CACHE_DIR", str(tmp_path))
+    datasets._atomic_cache_write(
+        datasets._catalog_cache_path(),
+        json.dumps(catalog(catalog_record())).encode(),
+    )
     monkeypatch.setattr(datasets, "request", lambda *args, **kwargs: pytest.fail("network used"))
-    with pytest.raises(datasets.DatasetCatalogError, match="offline"):
-        datasets.available_datasets(offline=True)
-
+    result = datasets.available_datasets(offline=True)
+    assert len(result) == 1
 
 def test_catalog_artifact_installs_through_existing_integrity_path(
     tmp_path: Path,

@@ -25,8 +25,7 @@ lexhint context "The compiler is 8.3.2." -l en --target 16:21
 lexhint complete comp -l en
 ```
 
-`lexhint dataset download` is the only networked step. It reads the committed `lexhint-datasets` catalog, then downloads the selected asset from its immutable GitHub Release URL. The catalog is an index, not a replacement for release manifests: detailed provenance remains in each release's `datasets-v2.json`. `Lexicon`, query commands, and local dataset inventory use installed files and do not silently contact GitHub.
-
+`lexhint dataset download` and `lexhint dataset update` are the operations that download dataset assets. They read the `lexhint-datasets` catalog, cache and conditionally refresh that catalog, then download selected assets from immutable GitHub Release URLs. The catalog is an index, not a replacement for release manifests: detailed provenance remains in each release's `datasets-v2.json`. `Lexicon`, query commands, and local dataset inventory do not silently contact GitHub.
 The download default is the `runtime` variant (`lexical,semantic`). Optional variants are:
 
 - `lexical` for membership, frequency, and segmentation;
@@ -49,6 +48,18 @@ For reproducibility, install and select an exact release:
 lexhint dataset download en --variant runtime --version 2026.08.20
 ```
 
+
+View all compatible catalog downloads, check installed datasets, and update them:
+
+```bash
+lexhint dataset available
+lexhint dataset check
+lexhint dataset check en --variant runtime
+lexhint dataset update
+lexhint dataset update en --variant runtime
+```
+
+The catalog is cached under `LEXHINT_CACHE_DIR` (or the platform cache directory) and refreshed conditionally when dataset commands access the network. A valid cached catalog is used when refreshing fails; `--offline dataset available` and `--offline dataset check` read that cache without making a request. `dataset update` processes every installed language and variant by default, or the selected filters, and removes superseded versions only after the replacement has been verified. It does not install datasets that are not already present.
 The managed store uses `LEXHINT_DATA_DIR` when set, or the platform data directory otherwise. Artifacts are stored by base language, variant, exact SQLite schema, and dataset version. A local-build alternative is available with `lexhint dictionary build`; pass its output with `--path` when querying.
 
 For a small local artifact without FrequencyWords enrichment, build from the repository fixture with `lexhint dictionary build en --source tests/fixtures/kaikki-mini.jsonl --output /tmp/lexhint-en.sqlite3 --no-frequency` and pass `--path /tmp/lexhint-en.sqlite3` to the query commands.

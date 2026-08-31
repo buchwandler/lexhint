@@ -62,11 +62,12 @@ def test_inconsistent_variant_capabilities_are_not_remote_compatible() -> None:
     )
     assert not datasets._remote_compatible(artifact)
 
-
-def test_offline_catalog_is_rejected() -> None:
-    with pytest.raises(datasets.DatasetCatalogError, match="offline"):
+def test_offline_catalog_without_cache_is_rejected(
+    monkeypatch: pytest.MonkeyPatch, tmp_path
+) -> None:
+    monkeypatch.setenv("LEXHINT_CACHE_DIR", str(tmp_path))
+    with pytest.raises(datasets.DatasetCatalogError, match="cached dataset catalog"):
         datasets.available_datasets(offline=True)
-
 
 def test_managed_dataset_variants_match_named_profiles() -> None:
     from lexhint.schema import PROFILES
