@@ -187,3 +187,53 @@ def test_manifest_rejects_missing_release_asset() -> None:
     }
     with pytest.raises(datasets.DatasetNotFound, match="missing listed"):
         datasets._manifest_artifacts(release, manifest)
+
+
+def test_release_identity_supports_legacy_and_language_tags() -> None:
+    assert datasets._release_identity("data-2026.08.25") == (None, "2026.08.25")
+    assert datasets._release_identity("data-de-2026.08.31") == ("de", "2026.08.31")
+    assert datasets._version_from_tag("data-de-2026.08.31") == "2026.08.31"
+
+
+def _language_manifest_release(
+    language: str, tag: str
+) -> tuple[dict[str, object], dict[str, object]]:
+    asset = f"lexhint-{language}-runtime-s10-v1.sqlite3.gz"
+    release = {
+        "tag_name": tag,
+        "assets": [{"name": asset, "browser_download_url": "https://example.test/asset"}],
+    }
+    manifest = {
+        "manifest_version": 2,
+        "dataset_version": "2026.08.31",
+        "language": language,
+        "artifacts": [
+            {
+                "language": language,
+                "variant": "runtime",
+                "profile": "runtime",
+                "capabilities": ["lexical", "semantic"],
+                "coverage": "full",
+                "schema_version": "10",
+                "format": "sqlite3-gzip",
+                "asset": asset,
+                "sha256": "a" * 64,
+                "compressed_size": 1,
+                "uncompressed_size": 1,
+            }
+        ],
+    }
+    return release, manifest
+
+
+def test_language_tag_manifest_is_checked_against_artifact_languages() -> None:
+    release, manifest = _language_manifest_release("de", "data-de-2026.08.31")
+    assert datasets._manifest_artifacts(release, manifest)[0].language == "de"
+
+    mixed_release, mixed_manifest = _language_manifest_release("de", "data-de-2026.08.31")
+    mixed_manifest["artifacts"] = [
+        *mixed_manifest["artifacts"],
+        {**mixed_manifest["artifacts"][0], "language": "es"},
+    ]
+    with pytest.raises(datasets.DatasetCatalogError, match="another language"):
+        datasets._manifest_artifacts(mixed_release, mixed_manifest)

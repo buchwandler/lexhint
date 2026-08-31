@@ -204,8 +204,21 @@ def _request_json(url: str) -> object:
         raise DatasetCatalogError(f"could not read dataset catalog: {exc}") from exc
 
 
-def _release_tag(version: str) -> str:
-    return version if version.startswith("data-") else f"data-{version}"
+_RELEASE_TAG = re.compile(r"^data-(?:(?P<language>[a-z]{2})-)?(?P<version>.+)$")
+
+
+def _release_identity(tag: str) -> tuple[str | None, str]:
+    match = _RELEASE_TAG.fullmatch(tag)
+    if match is None:
+        return None, tag
+    return match.group("language"), match.group("version")
+
+
+def _release_tag(version: str, language: str | None = None) -> str:
+    if version.startswith("data-"):
+        return version
+    prefix = f"{language}-" if language else ""
+    return f"data-{prefix}{version}"
 
 
 def _asset_schema_version(asset: str) -> str | None:
@@ -214,7 +227,7 @@ def _asset_schema_version(asset: str) -> str | None:
 
 
 def _version_from_tag(tag: str) -> str:
-    return tag[5:] if tag.startswith("data-") else tag
+    return _release_identity(tag)[1]
 
 
 def _manifest_artifacts(
@@ -225,8 +238,9 @@ def _manifest_artifacts(
             f"unsupported dataset manifest version {manifest.get('manifest_version')!r}"
         )
     tag = str(release.get("tag_name", ""))
+    release_language, release_version = _release_identity(tag)
     manifest_version = str(manifest.get("dataset_version", ""))
-    if not tag or _version_from_tag(tag) != manifest_version:
+    if not tag or release_version != manifest_version:
         raise DatasetCatalogError("dataset manifest version does not match its release tag")
     assets = release.get("assets")
     if not isinstance(assets, list):
@@ -239,6 +253,14 @@ def _manifest_artifacts(
     raw_artifacts = manifest.get("artifacts")
     if not isinstance(raw_artifacts, list):
         raise DatasetCatalogError("dataset manifest has no artifacts")
+    if release_language is not None:
+        manifest_language = manifest.get("language")
+        if manifest_language is not None and manifest_language != release_language:
+            raise DatasetCatalogError("dataset manifest language does not match its release tag")
+        if any(str(item.get("language", "")) != release_language for item in raw_artifacts):
+            raise DatasetCatalogError(
+                "language-tagged release contains artifacts for another language"
+            )
     result: list[DatasetArtifact] = []
     for raw in raw_artifacts:
         if not isinstance(raw, Mapping):
@@ -333,7 +355,14 @@ def _releases(version: str | None) -> list[Mapping[str, object]]:
     url = f"{GITHUB_API}/repos/{DATASET_REPOSITORY}/releases"
     if version is not None:
         url += f"/tags/{_release_tag(version)}"
-    payload = _request_json(url)
+    try:
+        payload = _request_json(url)
+    except DatasetCatalogError as exc:
+        if version is not None:
+            raise DatasetNotFound(
+                f"dataset release {_release_tag(version)!r} was not found"
+            ) from exc
+        raise
     if version is not None:
         if not isinstance(payload, Mapping):
             raise DatasetNotFound(f"dataset release {_release_tag(version)!r} was not found")
@@ -359,49 +388,74 @@ def _remote_artifacts(
     version: str | None = None,
     variant: str | None = None,
 ) -> tuple[DatasetArtifact, ...]:
-    releases = _releases(version)
+    normalized_language = _language(language) if language is not None else None
+    requested_version = _version_from_tag(version) if version is not None else None
+    if version is None:
+        releases = _releases(None)
+    elif normalized_language is None:
+        releases = [
+            release
+            for release in _releases(None)
+            if _release_identity(str(release.get("tag_name", "")))[1] == requested_version
+        ]
+    else:
+        _parsed_language, parsed_version = _release_identity(version)
+        qualified_tag = _release_tag(parsed_version, normalized_language)
+        try:
+            releases = _releases(qualified_tag)
+        except DatasetNotFound:
+            releases = _releases(_release_tag(parsed_version))
     selected_variant = _variant(variant) if variant is not None else None
     if not releases:
         raise DatasetNotFound("no published compatible dataset release was found")
     errors: list[DatasetError] = []
     incompatible_schemas: set[str] = set()
+    aggregate = normalized_language is None
+    aggregated: dict[tuple[str, str], DatasetArtifact] = {}
     for release in releases:
         try:
             artifacts = _manifest_for_release(release)
         except DatasetError as exc:
-            if version is not None:
+            if version is not None and not aggregate:
                 raise
             errors.append(exc)
             continue
         language_items = tuple(
             artifact
             for artifact in artifacts
-            if (language is None or artifact.language == _language(language))
+            if (normalized_language is None or artifact.language == normalized_language)
             and (selected_variant is None or artifact.variant == selected_variant)
         )
-        selected = tuple(artifact for artifact in language_items if _remote_compatible(artifact))
+        compatible = tuple(artifact for artifact in language_items if _remote_compatible(artifact))
         incompatible_schemas.update(
             artifact.schema_version
             for artifact in language_items
             if artifact.schema_version != SCHEMA_VERSION
         )
-        if selected:
-            return selected
+        if aggregate:
+            for artifact in compatible:
+                aggregated.setdefault((artifact.language, artifact.variant), artifact)
+            continue
+        if compatible:
+            return compatible
         if version is not None:
             if language_items:
                 schemas = ", ".join(sorted({item.schema_version for item in language_items}))
                 raise DatasetIncompatible(
-                    f"Dataset {_version_from_tag(_release_tag(version))} uses schema {schemas}; "
+                    f"Dataset {requested_version} uses schema {schemas}; "
                     f"this Lexhint requires schema {SCHEMA_VERSION}."
                 )
             raise DatasetNotFound(
-                f"dataset release {_release_tag(version)!r} has no requested language"
+                f"dataset release {_release_tag(requested_version, normalized_language)} "
+                "has no requested language"
             )
+    if aggregate and aggregated:
+        return tuple(sorted(aggregated.values(), key=lambda item: (item.language, item.variant)))
     if errors:
         raise errors[-1]
     if incompatible_schemas:
         newest = ", ".join(sorted(incompatible_schemas))
-        requested = language or "the requested language"
+        requested = normalized_language or "the requested language"
         raise DatasetIncompatible(
             f"No compatible {requested} dataset found for Lexhint schema {SCHEMA_VERSION}. "
             f"Newest available artifacts use schema {newest}."
