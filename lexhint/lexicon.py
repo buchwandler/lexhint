@@ -38,6 +38,7 @@ from .models import (
     SenseRecord,
     WordEvidence,
 )
+from .pronunciation import normalize_ipa_body
 from .render import normalize_pos
 from .schema_contract import SchemaContractError, validate_artifact_structure
 from .search import (
@@ -765,14 +766,24 @@ class Lexicon:
             else None
         )
         filtered = region is not None or self.locale is not None
-        groups: dict[str, list[Pronunciation]] = {}
-        seen: dict[str, set[tuple[str, tuple[str, ...]]]] = {}
-        for entry in self.entries(word):
+        groups: dict[tuple[str, str], list[Pronunciation]] = {}
+        seen: dict[tuple[str, str], set[tuple[str, tuple[str, ...]]]] = {}
+        entries = self.entries(word, all_case_variants=True)
+        wanted = normalize_display_word(word)
+        entries = tuple(
+            sorted(
+                entries,
+                key=lambda entry: normalize_display_word(entry.word) != wanted,
+            )
+        )
+        for entry in entries:
+            display_word = entry.word
             pos = normalize_pos(entry.pos or "entry")
             if normalized_pos is not None and pos not in normalized_pos:
                 continue
-            group = groups.setdefault(pos, [])
-            seen_for_pos = seen.setdefault(pos, set())
+            group_key = (display_word, pos)
+            group = groups.setdefault(group_key, [])
+            seen_for_group = seen.setdefault(group_key, set())
             for pronunciation in entry.pronunciations:
                 if filtered:
                     if not pronunciation.tags:
@@ -785,12 +796,23 @@ class Lexicon:
                         pronunciation.tags, self.language, self.locale or ""
                     ):
                         continue
-                key = (pronunciation.ipa, pronunciation.tags)
-                if key in seen_for_pos:
+                body = normalize_ipa_body(pronunciation.ipa)
+                if not body:
                     continue
-                seen_for_pos.add(key)
-                group.append(pronunciation)
-        return tuple(PronunciationGroup(pos, tuple(groups[pos])) for pos in groups if groups[pos])
+                key = (body, pronunciation.tags)
+                if key in seen_for_group:
+                    continue
+                seen_for_group.add(key)
+                group.append(Pronunciation(f"[{body}]", pronunciation.tags))
+        return tuple(
+            PronunciationGroup(
+                pos=pos,
+                pronunciations=tuple(groups[(display_word, pos)]),
+                word=display_word,
+            )
+            for display_word, pos in groups
+            if groups[(display_word, pos)]
+        )
 
     def entries(self, word: str, *, all_case_variants: bool = False) -> tuple[DictionaryEntry, ...]:
         self._require("dictionary")

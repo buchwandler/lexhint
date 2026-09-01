@@ -94,7 +94,7 @@ def test_renderer_preserves_hierarchy_and_wraps_rich_fields() -> None:
     assert "           translation: Ein langes Beispiel." in output
     assert "       synonyms: affection" in output
     assert "    forms\n      loves [plural]" in output
-    assert "    pronunciations\n      /lʌv/ [US]" in output
+    assert "    pronunciations\n      [lʌv] [US]" in output
     assert all(len(line) <= 60 for line in output.splitlines())
 
 
@@ -193,3 +193,23 @@ def test_renderer_labels_quotation_kind() -> None:
         detail="full",
     )
     assert "- [quotation] A quote." in output
+
+
+def test_renderer_deduplicates_equivalent_ipa_delimiters() -> None:
+    entry = DictionaryEntry(
+        "love",
+        "noun",
+        (Sense(glosses=("A feeling.",)),),
+        pronunciations=(
+            Pronunciation("/lʌv/", ("US",)),
+            Pronunciation("[lʌv]", ("US",)),
+        ),
+    )
+    output = render_dictionary_entries(
+        "love",
+        (entry,),
+        options=DictionaryRenderOptions(fields=resolve_dictionary_fields("full"), width=60),
+        detail="full",
+    )
+    assert output.count("[lʌv] [US]") == 1
+    assert "/lʌv/" not in output

@@ -41,7 +41,7 @@ def test_default_dictionary_output_is_standard(
     assert "tags: uncountable" in output
     assert "topics: sports" in output
     assert "forms: loves" in output
-    assert "/lʌv/ [US]" in output
+    assert "[lʌv] [US]" in output
     assert "etymology:" not in output
     assert "example:" not in output
     assert "translation:" not in output
@@ -86,7 +86,7 @@ def test_full_dictionary_output_exposes_retained_fields(
         "antonyms:",
         "hate",
         "loves [plural]",
-        "/lʌv/ [US]",
+        "[lʌv] [US]",
         "Zero score in tennis.",
         "topics: sports",
         "To have strong affection for.",

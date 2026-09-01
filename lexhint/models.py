@@ -70,6 +70,7 @@ class Pronunciation:
 class PronunciationGroup:
     pos: str
     pronunciations: tuple[Pronunciation, ...]
+    word: str | None = None
 
 
 @dataclass(frozen=True, slots=True)

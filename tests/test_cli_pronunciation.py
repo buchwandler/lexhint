@@ -77,8 +77,49 @@ def pronunciation_artifact(tmp_path: Path) -> Path:
     return artifact
 
 
+@pytest.fixture
+def case_variant_artifact(tmp_path: Path) -> Path:
+    source = tmp_path / "case-variants.jsonl"
+    records = [
+        {
+            "word": "die",
+            "lang_code": "de",
+            "pos": "det",
+            "sounds": [{"ipa": "[diː]"}],
+            "senses": [{"glosses": ["the"]}],
+        },
+        {
+            "word": "die",
+            "lang_code": "de",
+            "pos": "pron",
+            "sounds": [{"ipa": "[diː]"}],
+            "senses": [{"glosses": ["that"]}],
+        },
+        {
+            "word": "Die",
+            "lang_code": "de",
+            "pos": "noun",
+            "sounds": [{"ipa": "[daɪ]"}],
+            "senses": [{"glosses": ["plural"]}],
+        },
+    ]
+    source.write_text("\n".join(json.dumps(record) for record in records) + "\n", encoding="utf-8")
+    artifact, _ = build_dictionary(
+        "de",
+        source,
+        output=tmp_path / "case-variants.sqlite3",
+        capabilities="lexical,dictionary",
+        no_frequency=True,
+    )
+    return artifact
+
+
 def cli_args(path: Path, *extra: str) -> list[str]:
     return ["dictionary", "pronunciation", "love", "--path", str(path), *extra]
+
+
+def case_cli_args(path: Path, word: str, *extra: str) -> list[str]:
+    return ["dictionary", "pronunciation", word, "-l", "de", "--path", str(path), *extra]
 
 
 def test_human_pronunciation_output_is_grouped_and_focused(
@@ -90,11 +131,52 @@ def test_human_pronunciation_output_is_grouped_and_focused(
     assert output.splitlines() == [
         "love",
         "  noun",
-        "    /multi/ [Canada, General-American, Received-Pronunciation]",
+        "    [multi] [Canada, General-American, Received-Pronunciation]",
         "  verb",
-        "    /multi/ [Canada, General-American, Received-Pronunciation]",
+        "    [multi] [Canada, General-American, Received-Pronunciation]",
     ]
     assert "not shown" not in output
+
+
+@pytest.mark.parametrize(
+    ("word", "expected"),
+    [
+        (
+            "die",
+            [
+                "die",
+                "  det",
+                "    [diː]",
+                "  pron",
+                "    [diː]",
+                "Die",
+                "  noun",
+                "    [daɪ]",
+            ],
+        ),
+        (
+            "Die",
+            [
+                "Die",
+                "  noun",
+                "    [daɪ]",
+                "die",
+                "  det",
+                "    [diː]",
+                "  pron",
+                "    [diː]",
+            ],
+        ),
+    ],
+)
+def test_cli_renders_case_variants(
+    case_variant_artifact: Path,
+    capsys: pytest.CaptureFixture[str],
+    word: str,
+    expected: list[str],
+) -> None:
+    assert main(case_cli_args(case_variant_artifact, word)) == 0
+    assert capsys.readouterr().out.splitlines() == expected
 
 
 def test_cli_locale_json_is_canonical_and_preserves_tags(
@@ -110,11 +192,29 @@ def test_cli_locale_json_is_canonical_and_preserves_tags(
     assert payload["entries"][0]["pos"] == "noun"
     assert payload["entries"][0]["pronunciations"] == [
         {
-            "ipa": "/multi/",
+            "ipa": "[multi]",
             "tags": ["Canada", "General-American", "Received-Pronunciation"],
         }
     ]
     assert "\x1b[" not in capsys.readouterr().out
+
+
+def test_cli_json_exposes_case_variant_words(
+    case_variant_artifact: Path, capsys: pytest.CaptureFixture[str]
+) -> None:
+    assert main(["--json", *case_cli_args(case_variant_artifact, "die")]) == 0
+    payload = json.loads(capsys.readouterr().out)
+    assert [(entry["word"], entry["pos"]) for entry in payload["entries"]] == [
+        ("die", "det"),
+        ("die", "pron"),
+        ("Die", "noun"),
+    ]
+    assert [entry["pronunciations"][0]["ipa"] for entry in payload["entries"]] == [
+        "[diː]",
+        "[diː]",
+        "[daɪ]",
+    ]
+    assert "\x1b[" not in json.dumps(payload)
 
 
 def test_cli_pos_and_neutral_validation(

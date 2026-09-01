@@ -180,11 +180,13 @@ Human CLI output uses ANSI color automatically on interactive terminals. Use `--
 
 ## Pronunciation lookup
 
-Return only pronunciation data, grouped by part of speech:
+Return only pronunciation data, grouped by part of speech. IPA is rendered with canonical square brackets, and focused pronunciation lookup includes all display-case variants for the normalized word:
 
 ```bash
 lexhint dictionary pronunciation love
 ```
+
+The human result uses square-bracket IPA, for example `[ˈlʌv]`. Equivalent slash and square-bracket source forms with identical tags are shown once. When display-case variants share a normalized lexical key, the requested spelling is shown first and each variant keeps its own pronunciation groups.
 
 Filter by an exact retained source region or accent tag:
 

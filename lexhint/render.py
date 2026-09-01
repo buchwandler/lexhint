@@ -8,6 +8,7 @@ from dataclasses import dataclass
 
 from .languages import locale_spec
 from .models import DictionaryEntry, Form, Pronunciation, RelatedTerm, Sense
+from .pronunciation import format_ipa, normalize_ipa_body
 from .terminal import TerminalStyle
 
 DICTIONARY_FIELDS = frozenset(
@@ -204,7 +205,7 @@ def _unique_pronunciations(values: Sequence[DictionaryEntry]) -> tuple[Pronuncia
     result: list[Pronunciation] = []
     for entry in values:
         for pronunciation in entry.pronunciations:
-            key = (pronunciation.ipa, pronunciation.tags)
+            key = (normalize_ipa_body(pronunciation.ipa), pronunciation.tags)
             if key not in seen:
                 seen.add(key)
                 result.append(pronunciation)
@@ -235,7 +236,7 @@ def _format_pronunciation(pronunciation: Pronunciation, locale: str | None = Non
     label = _regional_label(pronunciation.tags, locale)
     prefix = f"{label}: " if label else ""
     suffix = f" [{', '.join(pronunciation.tags)}]" if pronunciation.tags else ""
-    return f"{prefix}{pronunciation.ipa}{suffix}"
+    return f"{prefix}{format_ipa(pronunciation.ipa)}{suffix}"
 
 
 def _append_block(lines: list[str], block: Sequence[str]) -> None:
@@ -355,21 +356,22 @@ def _render_entry(
     lines = [f"  {style.bold_magenta(pos)}"]
     if "etymology" in fields and entry.etymology:
         _append_block(lines, _render_etymology(entry.etymology, width, style))
-    if "pronunciations" in fields and entry.pronunciations:
-        if detail == "standard":
-            block = ["    pronunciation: "]
-            block[0] += _format_pronunciation(entry.pronunciations[0], locale)
-            block.extend(
-                f"      {_format_pronunciation(value, locale)}"
-                for value in entry.pronunciations[1:]
-            )
-            block = _style_label(block, indent="    ", label="pronunciation", style=style)
-        else:
-            block = [f"    {style.cyan('pronunciations')}"]
-            block.extend(
-                f"      {_format_pronunciation(value, locale)}" for value in entry.pronunciations
-            )
-        _append_block(lines, block)
+    if "pronunciations" in fields:
+        pronunciations = _unique_pronunciations((entry,))
+        if pronunciations:
+            if detail == "standard":
+                block = ["    pronunciation: "]
+                block[0] += _format_pronunciation(pronunciations[0], locale)
+                block.extend(
+                    f"      {_format_pronunciation(value, locale)}" for value in pronunciations[1:]
+                )
+                block = _style_label(block, indent="    ", label="pronunciation", style=style)
+            else:
+                block = [f"    {style.cyan('pronunciations')}"]
+                block.extend(
+                    f"      {_format_pronunciation(value, locale)}" for value in pronunciations
+                )
+            _append_block(lines, block)
     if "forms" in fields and entry.forms:
         if detail == "standard":
             block = [f"    forms: {_format_form(entry.forms[0], locale)}"]

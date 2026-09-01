@@ -45,6 +45,7 @@ from .models import (
     PronunciationGroup,
     WordEvidence,
 )
+from .pronunciation import format_ipa
 from .render import (
     DictionaryRenderOptions,
     filter_dictionary_entries,
@@ -379,15 +380,21 @@ def _context(values: Sequence[DomainEvidence], style: TerminalStyle) -> None:
             print(f"  {cue.text}  distance={cue.distance}  weight={cue.weight:.2f}")
 
 
-def _pronunciations(word: str, values: Sequence[PronunciationGroup], style: TerminalStyle) -> None:
-    print(style.bold(word))
+def _pronunciations(
+    query_word: str, values: Sequence[PronunciationGroup], style: TerminalStyle
+) -> None:
     if not values:
+        print(style.bold(query_word))
         return
+    current_word: str | None = None
     for group in values:
-        pos = group.pos
-        print(f"  {style.bold_magenta(pos)}")
+        display_word = group.word or query_word
+        if display_word != current_word:
+            print(style.bold(display_word))
+            current_word = display_word
+        print(f"  {style.bold_magenta(group.pos)}")
         for pronunciation in group.pronunciations:
-            ipa = pronunciation.ipa
+            ipa = format_ipa(pronunciation.ipa)
             tags = pronunciation.tags
             suffix = f" [{', '.join(tags)}]" if tags else ""
             print(f"    {ipa}{suffix}")
@@ -784,7 +791,7 @@ def _run(args: argparse.Namespace, *, style: TerminalStyle, json_output: bool) -
             include_neutral=args.include_neutral,
             include_pos=include_pos,
         )
-        entries = lexicon.entries(word) if not groups else ()
+        entries = lexicon.entries(word, all_case_variants=True) if not groups else ()
         if json_output:
             _json(
                 {
