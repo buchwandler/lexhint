@@ -78,6 +78,58 @@ def pronunciation_artifact(tmp_path: Path) -> Path:
 
 
 @pytest.fixture
+def locale_fallback_artifact(tmp_path: Path) -> Path:
+    source = tmp_path / "locale-fallback.jsonl"
+    records = [
+        {
+            "word": "live",
+            "lang_code": "en",
+            "pos": "verb",
+            "sounds": [{"ipa": "[ˈlɪv]"}],
+            "senses": [{"glosses": ["to be alive"]}],
+        },
+        {
+            "word": "live",
+            "lang_code": "en",
+            "pos": "adj",
+            "sounds": [
+                {"ipa": "[ˈlaɪ̯v]"},
+                {
+                    "ipa": "[ˈlaːv]",
+                    "tags": ["General-South-African", "Southern-US"],
+                },
+            ],
+            "senses": [{"glosses": ["alive"]}],
+        },
+        {
+            "word": "live",
+            "lang_code": "en",
+            "pos": "adv",
+            "sounds": [
+                {"ipa": "[ˈlaɪ̯v]"},
+                {
+                    "ipa": "[ˈlaːv]",
+                    "tags": ["General-South-African", "Southern-US"],
+                },
+            ],
+            "senses": [{"glosses": ["in a live manner"]}],
+        },
+    ]
+    source.write_text(
+        "\n".join(json.dumps(record) for record in records) + "\n",
+        encoding="utf-8",
+    )
+    artifact, _ = build_dictionary(
+        "en",
+        source,
+        output=tmp_path / "locale-fallback.sqlite3",
+        capabilities="lexical,dictionary",
+        no_frequency=True,
+    )
+    return artifact
+
+
+@pytest.fixture
 def case_variant_artifact(tmp_path: Path) -> Path:
     source = tmp_path / "case-variants.jsonl"
     records = [
@@ -120,6 +172,76 @@ def cli_args(path: Path, *extra: str) -> list[str]:
 
 def case_cli_args(path: Path, word: str, *extra: str) -> list[str]:
     return ["dictionary", "pronunciation", word, "-l", "de", "--path", str(path), *extra]
+
+
+def test_cli_locale_uses_neutral_fallback_when_no_specific_match(
+    locale_fallback_artifact: Path,
+    capsys: pytest.CaptureFixture[str],
+) -> None:
+    assert (
+        main(
+            [
+                "dictionary",
+                "pronunciation",
+                "live",
+                "--path",
+                str(locale_fallback_artifact),
+                "--locale",
+                "en_US",
+            ]
+        )
+        == 0
+    )
+
+    assert capsys.readouterr().out.splitlines() == [
+        "live",
+        "  verb",
+        "    [ˈlɪv]",
+        "  adj",
+        "    [ˈlaɪ̯v]",
+        "  adv",
+        "    [ˈlaɪ̯v]",
+    ]
+
+
+def test_cli_json_locale_uses_the_same_fallback_selection(
+    locale_fallback_artifact: Path,
+    capsys: pytest.CaptureFixture[str],
+) -> None:
+    assert (
+        main(
+            [
+                "--json",
+                "dictionary",
+                "pronunciation",
+                "live",
+                "--path",
+                str(locale_fallback_artifact),
+                "--locale",
+                "en_US",
+            ]
+        )
+        == 0
+    )
+
+    payload = json.loads(capsys.readouterr().out)
+    assert payload["language"] == "en"
+    assert payload["locale"] == "US"
+    assert payload["region"] is None
+    assert payload["include_neutral"] is False
+    assert [(entry["pos"], entry["pronunciations"]) for entry in payload["entries"]] == [
+        ("verb", [{"ipa": "[ˈlɪv]", "tags": []}]),
+        ("adj", [{"ipa": "[ˈlaɪ̯v]", "tags": []}]),
+        ("adv", [{"ipa": "[ˈlaɪ̯v]", "tags": []}]),
+    ]
+
+
+def test_cli_locale_preserves_no_match_message(
+    pronunciation_artifact: Path,
+    capsys: pytest.CaptureFixture[str],
+) -> None:
+    assert main(cli_args(pronunciation_artifact, "--locale", "en_US", "--pos", "adjective")) == 0
+    assert "no pronunciations matched locale US" in capsys.readouterr().out
 
 
 def test_human_pronunciation_output_is_grouped_and_focused(

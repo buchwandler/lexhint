@@ -765,7 +765,6 @@ class Lexicon:
             if include_pos is not None
             else None
         )
-        filtered = region is not None or self.locale is not None
         groups: dict[tuple[str, str], list[Pronunciation]] = {}
         seen: dict[tuple[str, str], set[tuple[str, tuple[str, ...]]]] = {}
         entries = self.entries(word, all_case_variants=True)
@@ -785,17 +784,6 @@ class Lexicon:
             group = groups.setdefault(group_key, [])
             seen_for_group = seen.setdefault(group_key, set())
             for pronunciation in entry.pronunciations:
-                if filtered:
-                    if not pronunciation.tags:
-                        if not include_neutral:
-                            continue
-                    elif region is not None:
-                        if not source_tags_match_region(pronunciation.tags, region):
-                            continue
-                    elif not source_tags_match_locale(
-                        pronunciation.tags, self.language, self.locale or ""
-                    ):
-                        continue
                 body = normalize_ipa_body(pronunciation.ipa)
                 if not body:
                     continue
@@ -804,14 +792,46 @@ class Lexicon:
                     continue
                 seen_for_group.add(key)
                 group.append(Pronunciation(f"[{body}]", pronunciation.tags))
+        selected: dict[tuple[str, str], tuple[Pronunciation, ...]] = {}
+        for group_key, pronunciations in groups.items():
+            if region is None and self.locale is None:
+                values = tuple(pronunciations)
+            elif region is not None:
+                values = tuple(
+                    pronunciation
+                    for pronunciation in pronunciations
+                    if (not pronunciation.tags and include_neutral)
+                    or (pronunciation.tags and source_tags_match_region(pronunciation.tags, region))
+                )
+            else:
+                locale = self.locale or ""
+                if include_neutral:
+                    values = tuple(
+                        pronunciation
+                        for pronunciation in pronunciations
+                        if not pronunciation.tags
+                        or source_tags_match_locale(pronunciation.tags, self.language, locale)
+                    )
+                else:
+                    locale_matches = tuple(
+                        pronunciation
+                        for pronunciation in pronunciations
+                        if pronunciation.tags
+                        and source_tags_match_locale(pronunciation.tags, self.language, locale)
+                    )
+                    values = locale_matches or tuple(
+                        pronunciation for pronunciation in pronunciations if not pronunciation.tags
+                    )
+            if values:
+                selected[group_key] = values
         return tuple(
             PronunciationGroup(
                 pos=pos,
-                pronunciations=tuple(groups[(display_word, pos)]),
+                pronunciations=selected[(display_word, pos)],
                 word=display_word,
             )
             for display_word, pos in groups
-            if groups[(display_word, pos)]
+            if (display_word, pos) in selected
         )
 
     def entries(self, word: str, *, all_case_variants: bool = False) -> tuple[DictionaryEntry, ...]:

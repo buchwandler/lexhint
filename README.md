@@ -202,7 +202,7 @@ lexhint dictionary pronunciation love --locale en_GB
 lexhint dictionary pronunciation love --locale en_CA
 ```
 
-`--region` performs exact normalized source-tag matching. `--locale` maps a locale to its configured set of retained pronunciation tags. Use global `--json` for machine-readable results.
+`--region` performs exact normalized source-tag matching and remains strict. `--locale` is a pronunciation preference: it returns locale-matching pronunciations when available and otherwise falls back to an untagged pronunciation for that word and part-of-speech group. Use `--include-neutral` to include untagged pronunciations alongside matching region or locale pronunciations. Use global `--json` for machine-readable results.
 
 The same query is available through the Python API:
 
