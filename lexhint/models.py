@@ -74,6 +74,12 @@ class PronunciationGroup:
 
 
 @dataclass(frozen=True, slots=True)
+class PronunciationEntry:
+    key: str
+    groups: tuple[PronunciationGroup, ...]
+
+
+@dataclass(frozen=True, slots=True)
 class RelatedTerm:
     word: str
     relation: str

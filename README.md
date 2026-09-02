@@ -213,6 +213,23 @@ american = Lexicon("en", locale="en_US").pronunciations("love")
 canadian = Lexicon("en").pronunciations("love", region="Canada")
 ```
 
+For a complete local pronunciation export, use the lazy bulk iterator on a dictionary-capable artifact:
+
+```python
+from lexhint import Lexicon
+
+lexicon = Lexicon(
+    "en",
+    variant="dictionary",
+    dataset_version="2026.08.20",
+    locale="en-US",
+)
+for entry in lexicon.iter_pronunciations(include_neutral=True):
+    print(entry.key, entry.groups)
+```
+
+The dataset identity remains the base language (`en`); a locale such as `en-US` is a normalized presentation and filtering view over the same artifact. `iter_pronunciations()` requires the `dictionary` capability, is local-only and deterministic, and does not download missing data. It streams normalized keys in stable order and retains display-case variants, source tags, and normalized POS groups inside each entry. Tags and POS are source evidence for consumers, not pronunciation-choice guarantees.
+
 ## Dictionary schema 10 contract
 
 Schema 10 dictionary entries expose a versioned deterministic `sense_id` in JSON and through `Lexicon.sense_by_id()`. The ID is Lexhint-owned and stable across equivalent builds, not a permanent Wiktionary ID. Raw upstream `senseid` and Wikidata values, when available, appear separately as namespaced source provenance. Entry-level synonyms, antonyms, hypernyms, hyponyms, and related terms are headword relations; sense-level synonyms and antonyms remain attached to their exact senses.

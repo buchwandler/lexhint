@@ -6,7 +6,7 @@ import math
 import os
 import re
 import sqlite3
-from collections.abc import Callable, Mapping
+from collections.abc import Callable, Iterable, Iterator, Mapping
 from contextlib import closing
 from dataclasses import replace
 from importlib.resources import files
@@ -31,6 +31,7 @@ from .models import (
     HeadwordRelation,
     LexicalSegment,
     Pronunciation,
+    PronunciationEntry,
     PronunciationGroup,
     RelatedTerm,
     SemanticDomain,
@@ -648,6 +649,19 @@ class Lexicon:
                 )
         return tuple(result)
 
+    @classmethod
+    def _pronunciations_from_json(cls, value: str) -> tuple[Pronunciation, ...]:
+        data = cls._loads(value)
+        return (
+            tuple(
+                Pronunciation(str(item["ipa"]), tuple(str(tag) for tag in item.get("tags", ())))
+                for item in data
+                if isinstance(item, Mapping) and isinstance(item.get("ipa"), str)
+            )
+            if isinstance(data, list)
+            else ()
+        )
+
     def _entry(self, connection: sqlite3.Connection, row: sqlite3.Row) -> DictionaryEntry:
         def examples(value: str) -> tuple[Example, ...]:
             data = self._loads(value)
@@ -678,16 +692,7 @@ class Lexicon:
             )
 
         def pronunciations(value: str) -> tuple[Pronunciation, ...]:
-            data = self._loads(value)
-            return (
-                tuple(
-                    Pronunciation(str(item["ipa"]), tuple(str(tag) for tag in item.get("tags", ())))
-                    for item in data
-                    if isinstance(item, Mapping) and isinstance(item.get("ipa"), str)
-                )
-                if isinstance(data, list)
-                else ()
-            )
+            return self._pronunciations_from_json(value)
 
         def source_ids(value: str) -> tuple[ExternalSenseId, ...]:
             data = self._loads(value)
@@ -748,56 +753,65 @@ class Lexicon:
         )
         return replace(entry, senses=senses, forms=forms, pronunciations=pronunciations)
 
-    def pronunciations(
+    def _localized_pronunciations(
+        self, pronunciations: tuple[Pronunciation, ...]
+    ) -> tuple[Pronunciation, ...]:
+        if self.locale is None:
+            return pronunciations
+        return tuple(
+            sorted(
+                pronunciations,
+                key=lambda pronunciation: _locale_rank(pronunciation.tags, self.locale),
+            )
+        )
+
+    def _pronunciation_groups(
         self,
-        word: str,
+        values: Iterable[tuple[str, str, Iterable[Pronunciation]]],
         *,
-        region: str | None = None,
-        include_neutral: bool = False,
-        include_pos: frozenset[str] | None = None,
+        wanted_word: str | None,
+        region: str | None,
+        include_neutral: bool,
+        include_pos: frozenset[str] | None,
     ) -> tuple[PronunciationGroup, ...]:
-        """Return grouped pronunciations for *word* with optional filtering."""
-        self._require("dictionary")
-        if region is not None and self.locale is not None:
-            raise ValueError("region cannot be combined with a Lexicon locale")
         normalized_pos = (
             frozenset(normalize_pos(value) for value in include_pos)
             if include_pos is not None
             else None
         )
+        entries = tuple(values)
+        if wanted_word is not None:
+            wanted = normalize_display_word(wanted_word)
+            entries = tuple(
+                sorted(
+                    entries,
+                    key=lambda entry: normalize_display_word(entry[0]) != wanted,
+                )
+            )
         groups: dict[tuple[str, str], list[Pronunciation]] = {}
         seen: dict[tuple[str, str], set[tuple[str, tuple[str, ...]]]] = {}
-        entries = self.entries(word, all_case_variants=True)
-        wanted = normalize_display_word(word)
-        entries = tuple(
-            sorted(
-                entries,
-                key=lambda entry: normalize_display_word(entry.word) != wanted,
-            )
-        )
-        for entry in entries:
-            display_word = entry.word
-            pos = normalize_pos(entry.pos or "entry")
+        for display_word, raw_pos, raw_pronunciations in entries:
+            pos = normalize_pos(raw_pos or "entry")
             if normalized_pos is not None and pos not in normalized_pos:
                 continue
             group_key = (display_word, pos)
             group = groups.setdefault(group_key, [])
             seen_for_group = seen.setdefault(group_key, set())
-            for pronunciation in entry.pronunciations:
+            for pronunciation in self._localized_pronunciations(tuple(raw_pronunciations)):
                 body = normalize_ipa_body(pronunciation.ipa)
                 if not body:
                     continue
-                key = (body, pronunciation.tags)
-                if key in seen_for_group:
+                identity = (body, pronunciation.tags)
+                if identity in seen_for_group:
                     continue
-                seen_for_group.add(key)
+                seen_for_group.add(identity)
                 group.append(Pronunciation(f"[{body}]", pronunciation.tags))
         selected: dict[tuple[str, str], tuple[Pronunciation, ...]] = {}
         for group_key, pronunciations in groups.items():
             if region is None and self.locale is None:
-                values = tuple(pronunciations)
+                values_for_group = tuple(pronunciations)
             elif region is not None:
-                values = tuple(
+                values_for_group = tuple(
                     pronunciation
                     for pronunciation in pronunciations
                     if (not pronunciation.tags and include_neutral)
@@ -806,7 +820,7 @@ class Lexicon:
             else:
                 locale = self.locale or ""
                 if include_neutral:
-                    values = tuple(
+                    values_for_group = tuple(
                         pronunciation
                         for pronunciation in pronunciations
                         if not pronunciation.tags
@@ -819,11 +833,11 @@ class Lexicon:
                         if pronunciation.tags
                         and source_tags_match_locale(pronunciation.tags, self.language, locale)
                     )
-                    values = locale_matches or tuple(
+                    values_for_group = locale_matches or tuple(
                         pronunciation for pronunciation in pronunciations if not pronunciation.tags
                     )
-            if values:
-                selected[group_key] = values
+            if values_for_group:
+                selected[group_key] = values_for_group
         return tuple(
             PronunciationGroup(
                 pos=pos,
@@ -833,6 +847,90 @@ class Lexicon:
             for display_word, pos in groups
             if (display_word, pos) in selected
         )
+
+    def _pronunciation_groups_from_rows(
+        self,
+        rows: Iterable[sqlite3.Row],
+        *,
+        key: str,
+        include_neutral: bool,
+        include_pos: frozenset[str] | None,
+    ) -> tuple[PronunciationGroup, ...]:
+        return self._pronunciation_groups(
+            (
+                (
+                    str(row["display_word"]),
+                    str(row["pos"]),
+                    self._pronunciations_from_json(str(row["pronunciations"])),
+                )
+                for row in rows
+            ),
+            wanted_word=key,
+            region=None,
+            include_neutral=include_neutral,
+            include_pos=include_pos,
+        )
+
+    def pronunciations(
+        self,
+        word: str,
+        *,
+        region: str | None = None,
+        include_neutral: bool = False,
+        include_pos: frozenset[str] | None = None,
+    ) -> tuple[PronunciationGroup, ...]:
+        """Return grouped pronunciations for *word* with optional filtering."""
+        self._require("dictionary")
+        if region is not None and self.locale is not None:
+            raise ValueError("region cannot be combined with a Lexicon locale")
+        entries = self.entries(word, all_case_variants=True)
+        return self._pronunciation_groups(
+            ((entry.word, entry.pos, entry.pronunciations) for entry in entries),
+            wanted_word=word,
+            region=region,
+            include_neutral=include_neutral,
+            include_pos=include_pos,
+        )
+
+    def iter_pronunciations(
+        self,
+        *,
+        include_neutral: bool = False,
+        include_pos: frozenset[str] | None = None,
+    ) -> Iterator[PronunciationEntry]:
+        """Stream pronunciation-bearing normalized headwords in stable order."""
+        self._require("dictionary")
+        with closing(self._connect()) as connection:
+            rows = connection.execute(
+                "SELECT word AS normalized_word, display_word, pos, pronunciations "
+                "FROM entries WHERE pronunciations != '[]' "
+                "ORDER BY word, id"
+            )
+            current_key: str | None = None
+            buffer: list[sqlite3.Row] = []
+            for row in rows:
+                key = str(row["normalized_word"])
+                if current_key is not None and key != current_key:
+                    groups = self._pronunciation_groups_from_rows(
+                        buffer,
+                        key=current_key,
+                        include_neutral=include_neutral,
+                        include_pos=include_pos,
+                    )
+                    if groups:
+                        yield PronunciationEntry(current_key, groups)
+                    buffer.clear()
+                current_key = key
+                buffer.append(row)
+            if current_key is not None and buffer:
+                groups = self._pronunciation_groups_from_rows(
+                    buffer,
+                    key=current_key,
+                    include_neutral=include_neutral,
+                    include_pos=include_pos,
+                )
+                if groups:
+                    yield PronunciationEntry(current_key, groups)
 
     def entries(self, word: str, *, all_case_variants: bool = False) -> tuple[DictionaryEntry, ...]:
         self._require("dictionary")
