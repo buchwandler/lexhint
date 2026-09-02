@@ -1,0 +1,135 @@
+schema_version: 1
+object_type: commit_audit_sheet
+versioning:
+  schema_version: 1
+  revision: 3
+release_version: v0.4.3
+git_base_ref: v0.4.2
+git_base_sha: 52577abb617255e667afcd5d0e3425ed9cdf44e1
+git_head_ref: HEAD
+git_head_sha: e7be6cad1d9df5e69208a734b3df04ad0a15150b
+git_range: 52577abb617255e667afcd5d0e3425ed9cdf44e1..e7be6cad1d9df5e69208a734b3df04ad0a15150b
+commit_count: 4
+rows:
+  - sha: 51241d0454a1243bcc77d4b195280a070e8f0dcf
+    source_ref: git:51241d0454a1243bcc77d4b195280a070e8f0dcf
+    short_sha: 51241d0
+    changed_paths:
+      - tests/test_cli_dataset.py
+      - tests/test_dataset_static_catalog.py
+    stats:
+      files_changed: 0
+      insertions: 68
+      deletions: 0
+    inspected: true
+    inspected_paths:
+      - tests/test_cli_dataset.py
+      - tests/test_dataset_static_catalog.py
+    observed_behavior:
+      Adds regression coverage for dataset catalog refresh and schema
+      10 language listing; production behavior is unchanged by this commit.
+    public_impact: internal
+    decision: internal
+    evidence_subject: "fix: add tests"
+    notes:
+      Test-only follow-up for catalog behavior already introduced before this release
+      range.
+  - sha: 79c3e3a46d2e93887debcd97cc303140f78e3f3d
+    source_ref: git:79c3e3a46d2e93887debcd97cc303140f78e3f3d
+    short_sha: 79c3e3a
+    changed_paths:
+      - README.md
+      - lexhint/cli.py
+      - lexhint/lexicon.py
+      - lexhint/models.py
+      - lexhint/pronunciation.py
+      - lexhint/render.py
+      - tests/test_cli_dictionary_output.py
+      - tests/test_cli_pronunciation.py
+      - tests/test_dictionary_render.py
+      - tests/test_pronunciations.py
+    stats:
+      files_changed: 0
+      insertions: 354
+      deletions: 56
+    inspected: true
+    inspected_paths:
+      - README.md
+      - lexhint/cli.py
+      - lexhint/lexicon.py
+      - lexhint/models.py
+      - lexhint/pronunciation.py
+      - lexhint/render.py
+      - tests/test_cli_dictionary_output.py
+      - tests/test_cli_pronunciation.py
+      - tests/test_dictionary_render.py
+      - tests/test_pronunciations.py
+    observed_behavior:
+      Focused pronunciation lookup now renders canonical square-bracket
+      IPA, deduplicates equivalent slash and square-bracket forms by tags, and keeps
+      display-case variants in separate POS groups with the requested spelling first.
+    public_impact: public
+    decision: accepted
+    evidence_subject: "feat: improve pronuncation output"
+    target_entry_key: pronunciation-output
+    target_entry_id: entry-0002
+    notes: Reviewed implementation, documentation, and regression tests.
+  - sha: 4a6083729298094eee0bf5abaeca1deabb0f3553
+    source_ref: git:4a6083729298094eee0bf5abaeca1deabb0f3553
+    short_sha: 4a60837
+    changed_paths:
+      - README.md
+      - lexhint/lexicon.py
+      - tests/test_cli_pronunciation.py
+      - tests/test_pronunciations.py
+    stats:
+      files_changed: 0
+      insertions: 271
+      deletions: 15
+    inspected: true
+    inspected_paths:
+      - README.md
+      - lexhint/lexicon.py
+      - tests/test_cli_pronunciation.py
+      - tests/test_pronunciations.py
+    observed_behavior:
+      Locale pronunciation filtering prefers matching tagged pronunciations
+      and falls back to an untagged pronunciation per word and POS group when no locale
+      match exists; include-neutral can retain untagged results alongside matches.
+    public_impact: public
+    decision: accepted
+    evidence_subject: "feat: improve locale pronunciation support"
+    target_entry_key: locale-pronunciation-selection
+    target_entry_id: entry-0003
+    notes: Reviewed implementation, documentation, and regression tests.
+  - sha: e7be6cad1d9df5e69208a734b3df04ad0a15150b
+    source_ref: git:e7be6cad1d9df5e69208a734b3df04ad0a15150b
+    short_sha: e7be6ca
+    changed_paths:
+      - README.md
+      - lexhint/__init__.py
+      - lexhint/lexicon.py
+      - lexhint/models.py
+      - tests/test_pronunciation_iteration.py
+    stats:
+      files_changed: 0
+      insertions: 361
+      deletions: 41
+    inspected: true
+    inspected_paths:
+      - README.md
+      - lexhint/__init__.py
+      - lexhint/lexicon.py
+      - lexhint/models.py
+      - tests/test_pronunciation_iteration.py
+    observed_behavior:
+      Adds public PronunciationEntry data and a lazy Lexicon.iter_pronunciations()
+      iterator that streams normalized headwords in stable order, groups display-case
+      variants, and applies the same locale, neutral, and POS selection behavior as
+      focused lookup.
+    public_impact: public
+    decision: accepted
+    evidence_subject: "feat: new pronunctians api"
+    target_entry_key: pronunciation-iterator
+    target_entry_id: entry-0001
+    notes: Reviewed implementation, public exports, documentation, and regression tests.
