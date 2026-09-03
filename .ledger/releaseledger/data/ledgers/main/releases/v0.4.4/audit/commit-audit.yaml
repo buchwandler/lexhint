@@ -1,0 +1,45 @@
+schema_version: 1
+object_type: commit_audit_sheet
+versioning:
+  schema_version: 1
+  revision: 3
+release_version: v0.4.4
+git_base_ref: v0.4.3
+git_base_sha: c19582e4bcfb6f2d6cddffefbef1e928bb42f3d1
+git_head_ref: HEAD
+git_head_sha: f538603c8e7bc9a3d8c4aa1e367a61f72fec1041
+git_range: c19582e4bcfb6f2d6cddffefbef1e928bb42f3d1..f538603c8e7bc9a3d8c4aa1e367a61f72fec1041
+commit_count: 1
+rows:
+  - sha: f538603c8e7bc9a3d8c4aa1e367a61f72fec1041
+    source_ref: git:f538603c8e7bc9a3d8c4aa1e367a61f72fec1041
+    short_sha: f538603
+    changed_paths:
+      - lexhint/builder.py
+      - lexhint/languages.py
+      - lexhint/sources.py
+      - tests/test_locales.py
+      - tests/test_schema_contract.py
+      - tests/test_sources.py
+    stats:
+      files_changed: 0
+      insertions: 164
+      deletions: 7
+    inspected: true
+    inspected_paths:
+      - lexhint/builder.py
+      - lexhint/languages.py
+      - lexhint/sources.py
+      - tests/test_locales.py
+      - tests/test_schema_contract.py
+      - tests/test_sources.py
+    observed_behavior:
+      The language contract now accepts ja, ko, ru, th, vi, and zh;
+      FrequencyWords resolution maps Chinese to zh_cn and reads Thai's single-file ZIP
+      source, while lexical artifact builds cover the added languages.
+    public_impact: public
+    decision: accepted
+    evidence_subject: "feat: expand supported base languages"
+    target_entry_key: entry-0001
+    target_entry_id: entry-0001
+    notes: ""
