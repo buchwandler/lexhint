@@ -1,3 +1,8 @@
+[![PyPI - Version](https://img.shields.io/pypi/v/lexhint)](https://pypi.org/project/lexhint/)
+![PyPI - Python Version](https://img.shields.io/pypi/pyversions/lexhint)
+![PyPI - Downloads](https://img.shields.io/pypi/dm/lexhint)
+[![codecov](https://codecov.io/gh/buchwandler/lexhint/graph/badge.svg?token=53idb7ZCY1)](https://codecov.io/gh/buchwandler/lexhint)
+
 # lexhint
 
 Lexhint is a local lexical-evidence engine backed by self-describing SQLite language databases. It provides lexical membership, optional corpus commonness, compact-string segmentation, semantic-domain evidence, and optional rich dictionary entries.
