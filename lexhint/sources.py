@@ -12,6 +12,13 @@ from .download import cache_dir, user_agent
 from .frequency import FREQUENCYWORDS_REVISION
 from .languages import normalize_language
 
+FREQUENCYWORDS_LANGUAGE_CODES = {
+    "zh": "zh_cn",
+}
+FREQUENCYWORDS_SOURCE_FILENAMES = {
+    "th": "th_full.zip",
+}
+
 
 @dataclass(frozen=True, slots=True)
 class ResolvedFrequencySource:
@@ -48,8 +55,8 @@ def _sha256(path: Path) -> str:
     return digest.hexdigest()
 
 
-def _cache_path(language: str, revision: str) -> Path:
-    return cache_dir() / "sources" / "frequencywords" / revision / f"{language}_full.txt"
+def _cache_path(language: str, revision: str, filename: str) -> Path:
+    return cache_dir() / "sources" / "frequencywords" / revision / filename
 
 
 def _download(url: str, target: Path, *, timeout: float) -> None:
@@ -109,11 +116,13 @@ def resolve_frequency_source(
             local, "custom", "custom", "custom", str(local), _sha256(local)
         )
 
+    source_code = FREQUENCYWORDS_LANGUAGE_CODES.get(base_language, base_language)
+    source_filename = FREQUENCYWORDS_SOURCE_FILENAMES.get(base_language, f"{source_code}_full.txt")
     url = (
         "https://raw.githubusercontent.com/hermitdave/FrequencyWords/"
-        f"{FREQUENCYWORDS_REVISION}/content/2018/{base_language}/{base_language}_full.txt"
+        f"{FREQUENCYWORDS_REVISION}/content/2018/{source_code}/{source_filename}"
     )
-    target = _cache_path(base_language, FREQUENCYWORDS_REVISION)
+    target = _cache_path(base_language, FREQUENCYWORDS_REVISION, source_filename)
     if refresh:
         target.unlink(missing_ok=True)
         _sidecar_path(target).unlink(missing_ok=True)

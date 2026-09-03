@@ -10,6 +10,7 @@ import pytest
 from lexhint import Lexicon
 from lexhint.builder import build_dictionary
 from lexhint.languages import (
+    normalize_language,
     normalize_locale,
     normalize_source_region_tag,
     source_tags_match_locale,
@@ -38,7 +39,21 @@ def test_locale_normalization_and_base_language_contract() -> None:
     assert source_tags_match_region(("General American",), "GENERAL-AMERICAN")
     assert source_tags_match_locale(("Received-Pronunciation",), "en", "en_GB")
     assert not source_tags_match_region(("American",), "America")
-    assert supported_base_languages() == ("cs", "de", "en", "es", "fr", "it", "pt")
+    assert supported_base_languages() == (
+        "cs",
+        "de",
+        "en",
+        "es",
+        "fr",
+        "it",
+        "ja",
+        "ko",
+        "pt",
+        "ru",
+        "th",
+        "vi",
+        "zh",
+    )
     with pytest.raises(ValueError, match="unsupported locale 'AU'"):
         normalize_locale("en", "AU")
     with pytest.raises(ValueError, match="not supported for language 'de'"):
@@ -143,3 +158,65 @@ def test_model_tags_are_preserved() -> None:
     )
     assert entry.forms[0].tags == ("US",)
     assert entry.pronunciations[0].tags == ("UK",)
+
+
+@pytest.mark.parametrize(
+    "language",
+    (
+        "cs",
+        "de",
+        "en",
+        "es",
+        "fr",
+        "it",
+        "ja",
+        "ko",
+        "pt",
+        "ru",
+        "th",
+        "vi",
+        "zh",
+    ),
+)
+def test_every_supported_base_language_normalizes(language: str) -> None:
+    assert normalize_language(language) == language
+
+
+@pytest.mark.parametrize(
+    ("language", "word"),
+    [
+        ("ja", "家"),
+        ("ko", "집"),
+        ("ru", "дом"),
+        ("th", "บ้าน"),
+        ("vi", "nhà"),
+        ("zh", "家"),
+    ],
+)
+def test_new_base_languages_build_tiny_lexical_artifact(
+    language: str, word: str, tmp_path: Path
+) -> None:
+    assert normalize_language(language) == language
+    source = tmp_path / f"{language}.jsonl"
+    source.write_text(
+        json.dumps(
+            {
+                "word": word,
+                "lang_code": language,
+                "pos": "noun",
+                "senses": [{"glosses": ["fixture"]}],
+            },
+            ensure_ascii=False,
+        )
+        + "\n",
+        encoding="utf-8",
+    )
+    database, stats = build_dictionary(
+        language,
+        source,
+        output=tmp_path / f"{language}.sqlite3",
+        capabilities="lexical",
+        no_frequency=True,
+    )
+    assert database.is_file()
+    assert stats.words >= 1

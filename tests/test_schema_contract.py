@@ -49,7 +49,21 @@ def test_public_contract_is_single_and_importable() -> None:
     assert DATASET_VARIANT_NAMES == ("lexical", "runtime", "dictionary", "rich")
     assert tuple(DATASET_VARIANTS) == DATASET_VARIANT_NAMES
     assert DEFAULT_DATASET_VARIANT == "runtime"
-    assert supported_base_languages() == ("cs", "de", "en", "es", "fr", "it", "pt")
+    assert supported_base_languages() == (
+        "cs",
+        "de",
+        "en",
+        "es",
+        "fr",
+        "it",
+        "ja",
+        "ko",
+        "pt",
+        "ru",
+        "th",
+        "vi",
+        "zh",
+    )
 
 
 def test_public_dataset_variants_match_named_profiles() -> None:

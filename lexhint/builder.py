@@ -7,6 +7,7 @@ import os
 import sqlite3
 import tempfile
 import urllib.request
+import zipfile
 from collections.abc import Callable, Iterator
 from contextlib import contextmanager
 from dataclasses import dataclass
@@ -126,6 +127,16 @@ def _text_source(
                 io.TextIOWrapper(decompressed, encoding="utf-8") as text,
             ):
                 yield text
+        elif value.lower().endswith(".zip") or urlparse(value).path.lower().endswith(".zip"):
+            with zipfile.ZipFile(binary) as archive:
+                names = [name for name in archive.namelist() if not name.endswith("/")]
+                if len(names) != 1:
+                    raise OSError("frequency ZIP source must contain exactly one file")
+                with (
+                    archive.open(names[0]) as compressed,
+                    io.TextIOWrapper(compressed, encoding="utf-8") as text,
+                ):
+                    yield text
         else:
             with io.TextIOWrapper(binary, encoding="utf-8") as text:
                 yield text

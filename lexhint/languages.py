@@ -4,7 +4,21 @@ import re
 from collections.abc import Iterable
 from dataclasses import dataclass
 
-SUPPORTED_BASE_LANGUAGES = ("cs", "de", "en", "es", "fr", "it", "pt")
+SUPPORTED_BASE_LANGUAGES = (
+    "cs",
+    "de",
+    "en",
+    "es",
+    "fr",
+    "it",
+    "ja",
+    "ko",
+    "pt",
+    "ru",
+    "th",
+    "vi",
+    "zh",
+)
 SUPPORTED_LANGUAGES = frozenset(SUPPORTED_BASE_LANGUAGES)
 REGIONAL_SOURCE_TAGS = frozenset(
     {

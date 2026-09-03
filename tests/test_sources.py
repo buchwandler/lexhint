@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import hashlib
+import zipfile
 from pathlib import Path
 
 import pytest
@@ -8,6 +9,7 @@ import pytest
 import lexhint.sources as sources
 from lexhint import builder
 from lexhint.builder import build_dictionary
+from lexhint.frequency import iter_frequency_rows
 from lexhint.sources import resolve_frequency_source
 
 
@@ -132,3 +134,33 @@ def test_refresh_removes_cached_source_before_download(
     assert resolved is not None
     assert resolved.path == target
     assert downloaded == [target]
+
+
+def test_frequencywords_aliases_and_zip_source(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    monkeypatch.setattr(sources, "cache_dir", lambda: tmp_path)
+    downloaded: list[tuple[str, Path]] = []
+
+    def fake_download(url: str, path: Path, *, timeout: float) -> None:
+        downloaded.append((url, path))
+        path.parent.mkdir(parents=True, exist_ok=True)
+        if url.endswith("/th/th_full.zip"):
+            with zipfile.ZipFile(path, "w") as archive:
+                archive.writestr("th_full.txt", "บ้าน 10\n")
+        else:
+            path.write_text("家 10\n", encoding="utf-8")
+
+    monkeypatch.setattr(sources, "_download", fake_download)
+    thai = resolve_frequency_source("th", refresh=True)
+    chinese = resolve_frequency_source("zh", refresh=True)
+    assert thai is not None and chinese is not None
+    assert thai.source_url.endswith("/th/th_full.zip")
+    assert thai.path.name == "th_full.zip"
+    assert chinese.source_url.endswith("/zh_cn/zh_cn_full.txt")
+    assert chinese.path.name == "zh_cn_full.txt"
+
+    with builder._text_source(thai.path) as handle:
+        assert [row.word for row in iter_frequency_rows(handle)] == ["บ้าน"]
+    assert downloaded[0][0].endswith("/th/th_full.zip")
+    assert downloaded[1][0].endswith("/zh_cn/zh_cn_full.txt")
