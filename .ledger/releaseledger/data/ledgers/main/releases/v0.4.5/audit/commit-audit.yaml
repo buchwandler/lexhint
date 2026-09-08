@@ -1,0 +1,61 @@
+schema_version: 1
+object_type: commit_audit_sheet
+versioning:
+  schema_version: 1
+  revision: 3
+release_version: v0.4.5
+git_base_ref: v0.4.4
+git_base_sha: 8d7725f4c72249f660c6ce1ec41d2ef23ad378d5
+git_head_ref: HEAD
+git_head_sha: c781201f81674897d3b0208acb6539db3a8a003f
+git_range: 8d7725f4c72249f660c6ce1ec41d2ef23ad378d5..c781201f81674897d3b0208acb6539db3a8a003f
+commit_count: 2
+rows:
+  - sha: d0ba51271aaa45e310689bce18df35cfd7687f7c
+    source_ref: git:d0ba51271aaa45e310689bce18df35cfd7687f7c
+    short_sha: d0ba512
+    changed_paths:
+      - README.md
+    stats:
+      files_changed: 0
+      insertions: 5
+      deletions: 0
+    inspected: true
+    inspected_paths:
+      - README.md
+    observed_behavior:
+      README now exposes package version, supported Python versions,
+      download activity, and coverage status through project badges
+    public_impact: docs
+    decision: accepted
+    stale: false
+    evidence_subject: "doc: badges"
+    target_entry_key: readme-status-badges
+    target_entry_id: entry-0001
+    notes: Documentation-only discoverability improvement
+  - sha: c781201f81674897d3b0208acb6539db3a8a003f
+    source_ref: git:c781201f81674897d3b0208acb6539db3a8a003f
+    short_sha: c781201
+    changed_paths:
+      - lexhint/languages.py
+      - tests/test_locales.py
+      - tests/test_schema_contract.py
+    stats:
+      files_changed: 0
+      insertions: 18
+      deletions: 0
+    inspected: true
+    inspected_paths:
+      - lexhint/languages.py
+      - tests/test_locales.py
+      - tests/test_schema_contract.py
+    observed_behavior:
+      The public supported base-language contract adds Greek, Indonesian,
+      Kurdish, Malay, Polish, and Turkish
+    public_impact: public
+    decision: accepted
+    stale: false
+    evidence_subject: "feat: add more languages"
+    target_entry_key: additional-base-languages
+    target_entry_id: entry-0002
+    notes: Schema-10 persistence and runtime artifact layout are unchanged

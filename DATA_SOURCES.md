@@ -4,13 +4,15 @@ Lexhint code is Apache-2.0 licensed. External dictionary and corpus data are not
 
 ## Artifact dimensions
 
-Published artifacts are selected by four independent values:
+Published artifact identity is selected by four values:
 
 - `language`: supported physical/base dictionary language such as `en`;
-- `locale`: optional runtime preference such as `GB` or `US`, never a separate artifact;
-- `variant`: capability profile, one of `lexical`, `runtime`, or `rich`;
+- `variant`: capability profile, one of `lexical`, `runtime`, `dictionary`, or `rich`;
 - `schema_version`: exact SQLite compatibility key, currently `10`;
 - `dataset_version`: published data snapshot.
+
+`locale` is a separate optional runtime preference such as `GB` or `US`; it is
+never part of artifact identity.
 
 Lexhint requires exact schema equality. A schema-10 client skips releases for other schema families and never opens an incompatible installed database. Schema 9 artifacts must be rebuilt from raw source. English locale preferences use the same base-language frequency source, because no regional frequency corpus is supplied here.
 

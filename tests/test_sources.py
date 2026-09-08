@@ -162,5 +162,13 @@ def test_frequencywords_aliases_and_zip_source(
 
     with builder._text_source(thai.path) as handle:
         assert [row.word for row in iter_frequency_rows(handle)] == ["บ้าน"]
+    additional = tuple(
+        (language, resolve_frequency_source(language, refresh=True))
+        for language in ("el", "id", "ku", "ms", "pl", "tr")
+    )
+    for language, resolved in additional:
+        assert resolved is not None
+        assert resolved.source_url.endswith(f"/{language}/{language}_full.txt")
+        assert resolved.path.name == f"{language}_full.txt"
     assert downloaded[0][0].endswith("/th/th_full.zip")
     assert downloaded[1][0].endswith("/zh_cn/zh_cn_full.txt")

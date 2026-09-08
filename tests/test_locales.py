@@ -171,15 +171,21 @@ def test_model_tags_are_preserved() -> None:
     (
         "cs",
         "de",
+        "el",
         "en",
         "es",
         "fr",
+        "id",
         "it",
         "ja",
         "ko",
+        "ku",
+        "ms",
+        "pl",
         "pt",
         "ru",
         "th",
+        "tr",
         "vi",
         "zh",
     ),
@@ -191,15 +197,28 @@ def test_every_supported_base_language_normalizes(language: str) -> None:
 @pytest.mark.parametrize(
     ("language", "word"),
     [
+        ("cs", "čas"),
+        ("de", "haus"),
+        ("el", "σπίτι"),
+        ("en", "house"),
+        ("es", "casa"),
+        ("fr", "maison"),
+        ("id", "rumah"),
+        ("it", "casa"),
         ("ja", "家"),
         ("ko", "집"),
+        ("ku", "mal"),
+        ("ms", "rumah"),
+        ("pl", "dom"),
+        ("pt", "casa"),
         ("ru", "дом"),
         ("th", "บ้าน"),
+        ("tr", "ev"),
         ("vi", "nhà"),
         ("zh", "家"),
     ],
 )
-def test_new_base_languages_build_tiny_lexical_artifact(
+def test_supported_base_languages_build_tiny_lexical_artifact(
     language: str, word: str, tmp_path: Path
 ) -> None:
     assert normalize_language(language) == language
