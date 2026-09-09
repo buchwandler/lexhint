@@ -226,6 +226,12 @@ def _parser() -> argparse.ArgumentParser:
     build.add_argument(
         "--no-frequency", action="store_true", help="disable default FrequencyWords enrichment"
     )
+    build.add_argument(
+        "--source-variant", choices=("native", "english"), default=None,
+        help="Wiktionary source variant",
+    )
+    build.add_argument("--source-edition", help="Wiktionary source edition")
+    build.add_argument("--source-metadata-language", help="Wiktionary metadata language")
     build.add_argument("--frequency-source", help="custom local or HTTP frequency source")
     build.add_argument(
         "--refresh-frequency",
@@ -1060,6 +1066,9 @@ def _run(args: argparse.Namespace, *, style: TerminalStyle, json_output: bool) -
             profile=args.profile,
             frequency_source=args.frequency_source,
             no_frequency=args.no_frequency,
+            source_variant=args.source_variant,
+            source_edition=args.source_edition,
+            source_metadata_language=args.source_metadata_language,
             refresh_frequency=args.refresh_frequency,
             offline=args.offline,
             progress=report,
