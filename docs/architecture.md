@@ -54,6 +54,8 @@ The architecture is constrained by a local, self-describing SQLite artifact and 
 
 Managed dataset variants are capability presets rather than exact mirrors of named build profiles: `runtime` provides `lexical,semantic` and remains the recommended default; `lexical` is the smallest projection; `dictionary` provides `lexical,semantic,dictionary` and includes explicit headword relations without search indexes; and `rich` provides `lexical,semantic,dictionary,search`. They form a strict capability chain so automatic installed-dataset resolution has one maximal result. The client tests this publisher contract so capability declarations cannot drift from schema construction.
 
+Managed dataset identity has two independent dimensions: `language` is the lexical target, while `source_variant` is `native` or `english`. Native uses the matching Wiktionary edition and is the deterministic default; English uses `enwiktionary` and is an explicit alternative or fallback when no native artifact exists. Catalog v2 and local paths include source variant, while v1 catalogs, source-unqualified releases, and legacy sidecars normalize to native. Provenance records the exact Wiktionary edition and metadata language without changing the SQLite schema 10 structure.
+
 Schema 10 finalization validates foreign keys and `PRAGMA quick_check`, runs `ANALYZE`, compacts the immutable artifact, and omits unused reverse indexes unless a protected workload justifies them. `sense_topics` uses Option B: a `(topic, sense_id)` `WITHOUT ROWID` table.
 
 ## Schema 10 freeze and bump policy
@@ -128,6 +130,7 @@ The package is organized around a local artifact runtime and focused build modul
 - `tools/inspect_wiktextract.py` and `tools/profile_wiktextract_relations.py` are developer-only local source analysis tools.
 
 The public package exports `Lexicon`, `HeadwordRelation`, `DictionarySearchHit`, and `SemanticDomain` as the principal consumer interface. It also exports `SCHEMA_VERSION`, `DATASET_VARIANTS`, `DATASET_VARIANT_NAMES`, `DEFAULT_DATASET_VARIANT`, and `supported_base_languages()` for the separate dataset publisher contract. Build and source helpers remain available from their owning modules.
+The public publisher contract also exposes `SOURCE_VARIANTS` and `normalize_source_variant()`.
 
 ## Consumer interface
 

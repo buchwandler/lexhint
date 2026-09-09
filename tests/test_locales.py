@@ -40,23 +40,45 @@ def test_locale_normalization_and_base_language_contract() -> None:
     assert source_tags_match_locale(("Received-Pronunciation",), "en", "en_GB")
     assert not source_tags_match_region(("American",), "America")
     assert supported_base_languages() == (
+        "ar",
+        "az",
+        "bg",
+        "ca",
+        "ceb",
         "cs",
         "de",
         "el",
         "en",
         "es",
         "fr",
+        "ga",
+        "he",
+        "hi",
+        "hu",
+        "hy",
         "id",
         "it",
         "ja",
         "ko",
         "ku",
+        "la",
+        "lt",
+        "lv",
+        "mr",
         "ms",
+        "nl",
         "pl",
         "pt",
+        "ro",
         "ru",
+        "sv",
+        "ta",
+        "te",
         "th",
+        "tl",
         "tr",
+        "uk",
+        "ur",
         "vi",
         "zh",
     )
@@ -64,6 +86,43 @@ def test_locale_normalization_and_base_language_contract() -> None:
         normalize_locale("en", "AU")
     with pytest.raises(ValueError, match="not supported for language 'de'"):
         normalize_locale("de", "GB")
+
+
+@pytest.mark.parametrize(
+    "language",
+    (
+        "ca",
+        "sv",
+        "lv",
+        "lt",
+        "nl",
+        "ro",
+        "hu",
+        "bg",
+        "uk",
+        "ga",
+        "la",
+        "ar",
+        "hy",
+        "az",
+        "ceb",
+        "he",
+        "hi",
+        "mr",
+        "tl",
+        "ta",
+        "te",
+        "ur",
+    ),
+)
+def test_expanded_languages_are_normalized(language: str) -> None:
+    assert normalize_language(language) == language
+
+
+@pytest.mark.parametrize("language", ["xx", "abcd"])
+def test_unknown_language_codes_are_rejected(language: str) -> None:
+    with pytest.raises(ValueError, match="unsupported Lexhint language"):
+        normalize_language(language)
 
 
 def test_locale_orders_retained_source_tags_and_keeps_neutral_order(tmp_path: Path) -> None:

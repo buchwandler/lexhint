@@ -38,6 +38,16 @@ The download default is the `runtime` variant (`lexical,semantic`). Optional var
 - `dictionary` for entries, senses, topics, and rich dictionary rendering without search indexes;
 - `rich` for everything in `dictionary`, plus fuzzy suggestions and indexed definition/reverse search.
 
+Dataset source and capability are independent selectors. `language` is always the lexical target language. `source_variant=native` reads the matching Wiktionary edition, while `source_variant=english` reads the English Wiktionary edition and keeps English source metadata. Native is the default when available; English is the fallback for a target language with no native publication.
+
+```bash
+lexhint dataset download de --source-variant native
+lexhint dataset download de --source-variant english
+lexhint dictionary search -l de --source-variant english Haus
+lexhint dataset list --language de --source-variant english
+```
+
+Both source variants can be installed simultaneously. Their canonical paths include language, source variant, capability variant, schema, and version. Historical source-unqualified catalog entries, release assets, and sidecars continue to mean `native`.
 Install several variants side by side:
 
 ```bash
@@ -64,7 +74,7 @@ lexhint dataset update en --variant runtime
 ```
 
 The catalog is cached under `LEXHINT_CACHE_DIR` (or the platform cache directory) and refreshed conditionally when dataset commands access the network. A valid cached catalog is used when refreshing fails; `--offline dataset available` and `--offline dataset check` read that cache without making a request. `dataset update` processes every installed language and variant by default, or the selected filters, and removes superseded versions only after the replacement has been verified. It does not install datasets that are not already present.
-The managed store uses `LEXHINT_DATA_DIR` when set, or the platform data directory otherwise. Artifacts are stored by base language, variant, exact SQLite schema, and dataset version. A local-build alternative is available with `lexhint dictionary build`; pass its output with `--path` when querying.
+The managed store is keyed by lexical target language, source variant, capability variant, exact SQLite schema, and dataset version. New artifacts use `datasets/<language>/<source_variant>/<variant>/s<schema>/<version>/lexhint.sqlite3`; existing native artifacts in the historical layout remain readable. A local-build alternative is available with `lexhint dictionary build`; pass its output with `--path` when querying.
 
 For a small local artifact without FrequencyWords enrichment, build from the repository fixture with `lexhint dictionary build en --source tests/fixtures/kaikki-mini.jsonl --output /tmp/lexhint-en.sqlite3 --no-frequency` and pass `--path /tmp/lexhint-en.sqlite3` to the query commands.
 
@@ -77,6 +87,7 @@ from lexhint import Lexicon
 
 lexicon = Lexicon("en")  # highest installed compatible variant
 runtime = Lexicon("en", variant="runtime")
+english_metadata = Lexicon("de", source_variant="english")
 pinned = Lexicon("en", variant="runtime", dataset_version="2026.08.20")
 info = lexicon.word("compiler")
 print(info.known, info.frequency_rank, info.has_lowercase, info.has_titlecase, info.has_uppercase)
@@ -165,7 +176,7 @@ lexhint dictionary word compiler -l en --variant rich
 lexhint dictionary status en --variant runtime
 ```
 
-All artifact-consuming query commands accept `--variant` and `--dataset-version`; `--path` remains an explicit custom-file override. Use `--json` for one JSON document on stdout. Dataset `list`, `info`, and `validate` are local; `available` and `download` read the static catalog. Exact schema equality is required, and historical releases remain usable through catalog entries or the compatibility Releases API fallback.
+All artifact-consuming query commands accept `--source-variant`, `--variant`, and `--dataset-version`; `--path` remains an explicit custom-file override and cannot be combined with selectors. Native is preferred when source is omitted. Use `--json` for one JSON document on stdout. Dataset `list`, `info`, and `validate` are local; `available` and `download` read the static catalog. Exact schema equality is required, and historical releases remain usable through catalog entries or the compatibility Releases API fallback.
 
 Dictionary word output has three human-readable detail levels. The default `standard` view shows all senses with compact metadata. Use `compact` for a deliberately short shell view, or `full` for every field retained by the local Lexhint dictionary model:
 

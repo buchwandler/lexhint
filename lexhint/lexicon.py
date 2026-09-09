@@ -109,15 +109,25 @@ class Lexicon:
         language: str,
         *,
         variant: str | None = None,
+        source_variant: str | None = None,
         dataset_version: str | None = None,
         path: str | Path | None = None,
         locale: str | None = None,
     ) -> None:
-        if path is not None and (variant is not None or dataset_version is not None):
-            raise ValueError("path cannot be combined with variant or dataset_version")
+        if path is not None and (
+            source_variant is not None or variant is not None or dataset_version is not None
+        ):
+            raise ValueError(
+                "path cannot be combined with source_variant, variant, or dataset_version"
+            )
         self.language = normalize_language(language)
         self.locale = normalize_locale(self.language, locale)
         self.variant = variant
+        from .datasets import normalize_source_variant
+
+        self.source_variant = (
+            normalize_source_variant(source_variant) if source_variant is not None else None
+        )
         self.dataset_version = dataset_version
         self.path = Path(path).expanduser() if path is not None else self._resolve_path()
         if not self.path.is_file():
@@ -165,10 +175,17 @@ class Lexicon:
     def _resolve_path(self) -> Path:
         from .datasets import DatasetAmbiguous, DatasetError, resolve_installed_dataset
 
-        if self.variant is not None or self.dataset_version is not None:
+        if (
+            self.source_variant is not None
+            or self.variant is not None
+            or self.dataset_version is not None
+        ):
             try:
                 return resolve_installed_dataset(
-                    self.language, variant=self.variant, version=self.dataset_version
+                    self.language,
+                    variant=self.variant,
+                    source_variant=self.source_variant,
+                    version=self.dataset_version,
                 ).path
             except DatasetAmbiguous:
                 raise

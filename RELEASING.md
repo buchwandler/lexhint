@@ -2,6 +2,9 @@
 
 Use this checklist for a code release. Lexhint publishes the Python package separately from language SQLite artifacts. Runtime commands require a local artifact, either built locally or installed from the dataset distribution.
 Managed SQLite artifacts currently use schema 10. Rebuild and republish every managed dataset variant after schema or capability changes; do not migrate immutable older-schema artifacts in place. The `dictionary` variant advertises `lexical,semantic,dictionary` without search indexes, while rich artifacts advertise `lexical,semantic,dictionary,search` and runtime remains `lexical,semantic`. Schema 10 artifacts use deterministic Lexhint sense IDs, Option B topic indexing, and immutable finalization checks.
+Published datasets distinguish the lexical target language from the Wiktionary source variant. Use `native` for the matching edition and `english` for `enwiktionary`; source-qualified catalog identities, release tags, assets, install paths, and sidecars allow both to coexist. Source-unqualified historical releases remain native. Catalog v2 is preferred by new clients, with v1 compatibility retained.
+
+Source provenance includes the exact Wiktionary edition and metadata language in additive SQLite metadata keys. This does not change schema 10, so no schema bump is required for source-variant support.
 The package uses dynamic setuptools-scm versioning. A Git-less source archive resolves to `0+unknown` and must never be published.
 
 ## Schema 10 artifact freeze

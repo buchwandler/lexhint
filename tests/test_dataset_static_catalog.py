@@ -68,6 +68,42 @@ def catalog(*records: dict[str, Any]) -> dict[str, Any]:
     }
 
 
+def test_v2_catalog_keeps_native_and_english_identity() -> None:
+    native = catalog_record(language="de")
+    native["source_variant"] = "native"
+    native["wiktionary_edition"] = "dewiktionary"
+    native["metadata_language"] = "de"
+    native["release_tag"] = "data-de-native-2026.08.31"
+    native["id"] = "de/native/runtime/s10/2026.08.31"
+    native["asset"]["name"] = "lexhint-de-native-runtime-s10-2026.08.31.sqlite3.gz"
+    native["asset"]["url"] = datasets._catalog_url_for_release(
+        native["release_tag"], native["asset"]["name"]
+    )
+    native["manifest"]["url"] = datasets._catalog_url_for_release(
+        native["release_tag"], "datasets-v2.json"
+    )
+    english = copy.deepcopy(native)
+    english["source_variant"] = "english"
+    english["wiktionary_edition"] = "enwiktionary"
+    english["metadata_language"] = "en"
+    english["release_tag"] = "data-de-english-2026.08.31"
+    english["manifest"]["url"] = datasets._catalog_url_for_release(
+        english["release_tag"], "datasets-v2.json"
+    )
+    english["id"] = "de/english/runtime/s10/2026.08.31"
+    english["asset"]["name"] = "lexhint-de-english-runtime-s10-2026.08.31.sqlite3.gz"
+    english["asset"]["url"] = datasets._catalog_url_for_release(
+        english["release_tag"], english["asset"]["name"]
+    )
+    payload = catalog(native, english)
+    payload["catalog_version"] = 2
+    payload["runtime_contract"] = 2
+    result = datasets._catalog_artifacts(payload)
+    assert {item.source_variant for item in result} == {"native", "english"}
+    english_artifact = next(item for item in result if item.source_variant == "english")
+    assert english_artifact.metadata_language == "en"
+
+
 def test_valid_catalog_maps_to_dataset_artifact() -> None:
     result = datasets._catalog_artifacts(catalog(catalog_record()))
 

@@ -70,6 +70,16 @@ def test_dictionary_variant_is_available_to_dataset_and_query_parsers() -> None:
     assert query.variant == "dictionary"
 
 
+def test_source_variant_is_available_to_dataset_and_query_parsers() -> None:
+    parser = _parser()
+    download = parser.parse_args(["dataset", "download", "ceb", "--source-variant", "english"])
+    query = parser.parse_args(
+        ["dictionary", "search", "-l", "ceb", "--source-variant", "english", "Haus"]
+    )
+    assert download.source_variant == "english"
+    assert query.source_variant == "english"
+
+
 def test_dataset_available_cli_lists_all_schema10_languages(
     monkeypatch: pytest.MonkeyPatch, capsys: pytest.CaptureFixture[str]
 ) -> None:

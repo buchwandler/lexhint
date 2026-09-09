@@ -12,6 +12,7 @@ from .datasets import (
     DATASET_VARIANT_NAMES,
     DATASET_VARIANTS,
     DEFAULT_DATASET_VARIANT,
+    SOURCE_VARIANTS,
     DatasetUpdate,
     DatasetVariantSpec,
     InstalledDataset,
@@ -19,6 +20,7 @@ from .datasets import (
     check_dataset_updates,
     download_dataset,
     list_installed_datasets,
+    normalize_source_variant,
     remove_dataset,
     update_datasets,
 )
@@ -62,6 +64,8 @@ from .store import SCHEMA_VERSION
 __all__ = [
     "ContextCue",
     "SCHEMA_VERSION",
+    "SOURCE_VARIANTS",
+    "normalize_source_variant",
     "DATASET_VARIANTS",
     "DATASET_VARIANT_NAMES",
     "DEFAULT_DATASET_VARIANT",

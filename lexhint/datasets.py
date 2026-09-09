@@ -24,13 +24,17 @@ from .store import SCHEMA_VERSION
 
 DATASET_REPOSITORY = "buchwandler/lexhint-datasets"
 DATASET_CATALOG_URL = (
+    "https://raw.githubusercontent.com/buchwandler/lexhint-datasets/main/catalog/datasets-v2.json"
+)
+DATASET_CATALOG_V1_URL = (
     "https://raw.githubusercontent.com/buchwandler/lexhint-datasets/main/catalog/datasets.json"
 )
-SUPPORTED_CATALOG_VERSION = 1
-SUPPORTED_CATALOG_RUNTIME_CONTRACT = 1
+SUPPORTED_CATALOG_VERSION = 2
+SUPPORTED_CATALOG_RUNTIME_CONTRACT = 2
 GITHUB_API = "https://api.github.com"
 MANIFEST_NAME = "datasets-v2.json"
 SUPPORTED_MANIFEST_VERSION = 2
+SOURCE_VARIANTS = ("native", "english")
 
 
 @dataclass(frozen=True, slots=True)
@@ -125,6 +129,9 @@ class DatasetArtifact:
     sha256: str
     download_url: str
     generated_at: str = ""
+    source_variant: str = "native"
+    wiktionary_edition: str = ""
+    metadata_language: str = ""
 
     def as_dict(self) -> dict[str, object]:
         value = asdict(self)
@@ -149,6 +156,9 @@ class InstalledDataset:
     profile: str = ""
     coverage: str = ""
     already_installed: bool = False
+    source_variant: str = "native"
+    wiktionary_edition: str = ""
+    metadata_language: str = ""
 
     def as_dict(self) -> dict[str, object]:
         value = asdict(self)
@@ -165,10 +175,12 @@ class DatasetUpdate:
     available_version: str | None
     path: Path
     update_available: bool
+    source_variant: str = "native"
 
     def as_dict(self) -> dict[str, object]:
         return {
             "language": self.language,
+            "source_variant": self.source_variant,
             "variant": self.variant,
             "schema_version": self.schema_version,
             "installed_version": self.installed_version,
@@ -198,16 +210,25 @@ def _variant(value: str) -> str:
     return normalized
 
 
+def normalize_source_variant(value: str | None) -> str:
+    normalized = (value or "native").strip().lower()
+    if normalized not in SOURCE_VARIANTS:
+        raise ValueError(f"unsupported dataset source variant {value!r}")
+    return normalized
+
+
 def _artifact_path(
     language: str,
     variant: str,
     version: str,
     schema_version: str = SCHEMA_VERSION,
+    source_variant: str = "native",
 ) -> Path:
     return (
         data_dir()
         / "datasets"
         / _part(_language(language), "language")
+        / normalize_source_variant(source_variant)
         / _variant(variant)
         / _part(f"s{schema_version}", "schema")
         / _part(version, "version")
@@ -235,21 +256,42 @@ def _request_json(url: str) -> object:
         raise DatasetCatalogError(f"could not read dataset catalog: {exc}") from exc
 
 
-_RELEASE_TAG = re.compile(r"^data-(?:(?P<language>[a-z]{2})-)?(?P<version>.+)$")
+_RELEASE_TAG = re.compile(r"^data-(?P<body>.+)$")
+
+
+def _release_parts(tag: str) -> tuple[str | None, str, str]:
+    match = _RELEASE_TAG.fullmatch(tag)
+    if match is None:
+        return None, "native", tag
+    body = match.group("body")
+    fields = body.split("-")
+    if fields and fields[0] in SUPPORTED_LANGUAGES:
+        language = fields[0]
+        if len(fields) >= 3 and fields[1] in SOURCE_VARIANTS:
+            return language, fields[1], "-".join(fields[2:])
+        return language, "native", "-".join(fields[1:])
+    return None, "native", body
 
 
 def _release_identity(tag: str) -> tuple[str | None, str]:
-    match = _RELEASE_TAG.fullmatch(tag)
-    if match is None:
-        return None, tag
-    return match.group("language"), match.group("version")
+    language, _source_variant, version = _release_parts(tag)
+    return language, version
 
 
-def _release_tag(version: str, language: str | None = None) -> str:
+def _release_tag(
+    version: str, language: str | None = None, source_variant: str | None = None
+) -> str:
     if version.startswith("data-"):
         return version
+    normalized_source = normalize_source_variant(source_variant)
     prefix = f"{language}-" if language else ""
+    if language and source_variant is not None:
+        prefix += f"{normalized_source}-"
     return f"data-{prefix}{version}"
+
+
+def _release_source_variant(tag: str) -> str:
+    return _release_parts(tag)[1]
 
 
 def _asset_schema_version(asset: str) -> str | None:
@@ -315,71 +357,82 @@ def _catalog_cache_headers() -> dict[str, str]:
     }
 
 
-def _fetch_catalog() -> Mapping[str, object]:
+def _fetch_catalog_url(url: str) -> tuple[Mapping[str, object], bytes | None, object]:
     headers = _catalog_cache_headers()
     try:
         with request(
-            _catalog_url(),
+            url,
             accept="application/json",
             token=os.environ.get("LEXHINT_GITHUB_TOKEN"),
             headers=headers,
         ) as response:
             if getattr(response, "status", None) == 304:
-                return _cached_catalog()
+                return _cached_catalog(), None, response
             payload_bytes = response.read()
-        try:
-            payload = json.loads(payload_bytes)
-        except (TypeError, ValueError, json.JSONDecodeError) as exc:
-            raise DatasetCatalogError("dataset catalog is not valid JSON") from exc
-        if not isinstance(payload, Mapping):
-            raise DatasetCatalogError("dataset catalog must contain an object")
-        _catalog_artifacts(payload)
-        _atomic_cache_write(
-            _catalog_cache_path(),
-            payload_bytes,
-        )
-        response_headers = getattr(response, "headers", None)
-        get_header = getattr(response_headers, "get", lambda _name: None)
-        metadata = {
-            request_header: value
-            for request_header, response_header in (
-                ("If-None-Match", "ETag"),
-                ("If-Modified-Since", "Last-Modified"),
-            )
-            if isinstance(value := get_header(response_header), str) and value
-        }
-        _atomic_cache_write(
-            _catalog_cache_metadata_path(),
-            (json.dumps(metadata, sort_keys=True) + "\n").encode(),
-        )
-        return payload
     except HTTPError as exc:
         if exc.code == 304:
-            return _cached_catalog()
-        try:
-            return _cached_catalog()
-        except DatasetCatalogError as cache_exc:
-            raise _DatasetCatalogTransportError(
-                f"could not fetch dataset catalog: {exc}"
-            ) from cache_exc
+            return _cached_catalog(), None, exc
+        raise _DatasetCatalogTransportError(f"could not fetch dataset catalog: {exc}") from exc
     except (URLError, OSError) as exc:
+        raise _DatasetCatalogTransportError(f"could not fetch dataset catalog: {exc}") from exc
+    try:
+        payload = json.loads(payload_bytes)
+    except (TypeError, ValueError, json.JSONDecodeError) as exc:
+        raise DatasetCatalogError("dataset catalog is not valid JSON") from exc
+    if not isinstance(payload, Mapping):
+        raise DatasetCatalogError("dataset catalog must contain an object")
+    _catalog_artifacts(payload)
+    return payload, payload_bytes, response
+
+
+def _fetch_catalog() -> Mapping[str, object]:
+    urls = [_catalog_url()]
+    if "LEXHINT_DATASET_CATALOG_URL" not in os.environ:
+        urls.append(DATASET_CATALOG_V1_URL)
+    last_error: DatasetError | None = None
+    for url in urls:
+        try:
+            payload, payload_bytes, response = _fetch_catalog_url(url)
+        except _DatasetCatalogTransportError as exc:
+            last_error = exc
+            continue
+        if payload_bytes is not None:
+            _atomic_cache_write(_catalog_cache_path(), payload_bytes)
+            response_headers = getattr(response, "headers", None)
+            get_header = getattr(response_headers, "get", lambda _name: None)
+            metadata = {
+                request_header: value
+                for request_header, response_header in (
+                    ("If-None-Match", "ETag"),
+                    ("If-Modified-Since", "Last-Modified"),
+                )
+                if isinstance(value := get_header(response_header), str) and value
+            }
+            _atomic_cache_write(
+                _catalog_cache_metadata_path(),
+                (json.dumps(metadata, sort_keys=True) + "\n").encode(),
+            )
+        return payload
+    if last_error is not None:
         try:
             return _cached_catalog()
-        except DatasetCatalogError as cache_exc:
-            raise _DatasetCatalogTransportError(
-                f"could not fetch dataset catalog: {exc}"
-            ) from cache_exc
+        except DatasetCatalogError as cache_error:
+            raise last_error from cache_error
+    raise _DatasetCatalogTransportError("could not fetch dataset catalog")
 
 
 def _catalog_url_for_release(release_tag: str, asset: str) -> str:
     return f"https://github.com/{DATASET_REPOSITORY}/releases/download/{release_tag}/{asset}"
 
 
-def _catalog_artifact(raw: object) -> DatasetArtifact:
+def _catalog_artifact(raw: object, *, catalog_version: int) -> DatasetArtifact:
     if not isinstance(raw, Mapping):
         raise DatasetCatalogError("dataset catalog contains an invalid artifact")
     artifact_id = raw.get("id")
     language_raw = raw.get("language")
+    source_variant_raw = raw.get("source_variant", "native")
+    wiktionary_edition = raw.get("wiktionary_edition", "")
+    metadata_language = raw.get("metadata_language", "")
     variant_raw = raw.get("variant")
     dataset_version = raw.get("dataset_version")
     schema_version = raw.get("schema_version")
@@ -420,7 +473,8 @@ def _catalog_artifact(raw: object) -> DatasetArtifact:
         raise DatasetCatalogError(str(exc)) from exc
     try:
         variant = _variant(variant_raw)
-    except ValueError as exc:
+        source_variant = normalize_source_variant(source_variant_raw)
+    except (TypeError, ValueError) as exc:
         raise DatasetCatalogError(str(exc)) from exc
     if any(not isinstance(item, str) for item in capabilities_raw):
         raise DatasetIncompatible(
@@ -436,11 +490,18 @@ def _catalog_artifact(raw: object) -> DatasetArtifact:
         _part(dataset_version, "version")
     except ValueError as exc:
         raise DatasetCatalogError(str(exc)) from exc
-    release_language, release_version = _release_identity(release_tag)
+    release_language, release_source_variant, release_version = _release_parts(release_tag)
+    if catalog_version == 2 and "source_variant" not in raw:
+        raise DatasetCatalogError("catalog v2 artifact is missing source_variant")
     if (
         not release_tag.startswith("data-")
         or release_version != dataset_version
         or (release_language is not None and release_language != language)
+        or release_source_variant != source_variant
+        or (
+            catalog_version == 2
+            and release_tag != _release_tag(dataset_version, language, source_variant)
+        )
     ):
         raise DatasetCatalogError(
             f"catalog artifact {artifact_id!r} has an inconsistent release tag"
@@ -478,7 +539,12 @@ def _catalog_artifact(raw: object) -> DatasetArtifact:
         or uncompressed_size <= 0
     ):
         raise DatasetCatalogError(f"catalog artifact {artifact_id!r} has invalid asset sizes")
-    expected_asset = f"lexhint-{language}-{variant}-s{schema_version}-{dataset_version}.sqlite3.gz"
+    asset_prefix = (
+        f"lexhint-{language}-{source_variant}-{variant}"
+        if catalog_version == 2
+        else f"lexhint-{language}-{variant}"
+    )
+    expected_asset = f"{asset_prefix}-s{schema_version}-{dataset_version}.sqlite3.gz"
     if asset_name != expected_asset:
         raise DatasetCatalogError(
             f"catalog artifact {artifact_id!r} has an inconsistent asset filename"
@@ -492,6 +558,9 @@ def _catalog_artifact(raw: object) -> DatasetArtifact:
     return DatasetArtifact(
         language=language,
         variant=variant,
+        source_variant=source_variant,
+        wiktionary_edition=str(wiktionary_edition),
+        metadata_language=str(metadata_language),
         dataset_version=dataset_version,
         release_tag=release_tag,
         release_published_at=release_published_at,
@@ -510,10 +579,11 @@ def _catalog_artifact(raw: object) -> DatasetArtifact:
 
 def _catalog_artifacts(payload: Mapping[str, object]) -> tuple[DatasetArtifact, ...]:
     catalog_version = payload.get("catalog_version")
-    if type(catalog_version) is not int or catalog_version != SUPPORTED_CATALOG_VERSION:
+    if type(catalog_version) is not int or catalog_version not in {1, 2}:
         raise DatasetCatalogError(f"unsupported dataset catalog version {catalog_version!r}")
     runtime_contract = payload.get("runtime_contract")
-    if type(runtime_contract) is not int or runtime_contract != SUPPORTED_CATALOG_RUNTIME_CONTRACT:
+    expected_contract = 1 if catalog_version == 1 else 2
+    if type(runtime_contract) is not int or runtime_contract != expected_contract:
         raise DatasetCatalogError(f"unsupported dataset runtime contract {runtime_contract!r}")
     if payload.get("repository") != DATASET_REPOSITORY:
         raise DatasetCatalogError("dataset catalog repository does not match Lexhint")
@@ -522,11 +592,11 @@ def _catalog_artifacts(payload: Mapping[str, object]) -> tuple[DatasetArtifact, 
         raise DatasetCatalogError("dataset catalog must contain a non-empty artifacts list")
     result: list[DatasetArtifact] = []
     ids: set[str] = set()
-    slots: set[tuple[str, str, str, str]] = set()
+    slots: set[tuple[str, str, str, str, str]] = set()
     for raw in raw_artifacts:
-        artifact = _catalog_artifact(raw)
         if not isinstance(raw, Mapping):
             raise DatasetCatalogError("dataset catalog contains an invalid artifact")
+        artifact = _catalog_artifact(raw, catalog_version=catalog_version)
         raw_id = raw.get("id")
         if not isinstance(raw_id, str):
             raise DatasetCatalogError("dataset catalog artifact has an invalid id")
@@ -535,6 +605,7 @@ def _catalog_artifacts(payload: Mapping[str, object]) -> tuple[DatasetArtifact, 
         ids.add(raw_id)
         slot = (
             artifact.language,
+            artifact.source_variant,
             artifact.variant,
             artifact.schema_version,
             artifact.dataset_version,
@@ -551,6 +622,7 @@ def _catalog_remote_artifacts(
     language: str | None = None,
     version: str | None = None,
     variant: str | None = None,
+    source_variant: str | None = None,
     all_compatible: bool = False,
     offline: bool = False,
 ) -> tuple[DatasetArtifact, ...]:
@@ -559,12 +631,16 @@ def _catalog_remote_artifacts(
     normalized_language = _language(language) if language is not None else None
     requested_version = _version_from_tag(version) if version is not None else None
     selected_variant = _variant(variant) if variant is not None else None
+    selected_source_variant = (
+        normalize_source_variant(source_variant) if source_variant is not None else None
+    )
     matching = tuple(
         artifact
         for artifact in artifacts
         if (normalized_language is None or artifact.language == normalized_language)
         and (requested_version is None or artifact.dataset_version == requested_version)
         and (selected_variant is None or artifact.variant == selected_variant)
+        and (selected_source_variant is None or artifact.source_variant == selected_source_variant)
     )
     if version is not None:
         if not matching:
@@ -604,23 +680,32 @@ def _catalog_remote_artifacts(
                 f"No compatible {requested} dataset found for Lexhint schema "
                 f"{SCHEMA_VERSION}. Available artifacts use schema {schemas}."
             )
-    selected: dict[tuple[str, str], DatasetArtifact] = {}
+    selected_by_source: dict[tuple[str, str, str], DatasetArtifact] = {}
     for artifact in compatible:
-        key = (artifact.language, artifact.variant)
-        current = selected.get(key)
-        if current is None or (
-            artifact.release_published_at,
-            artifact.dataset_version,
-            artifact.release_tag,
-            artifact.asset,
-        ) > (
-            current.release_published_at,
-            current.dataset_version,
-            current.release_tag,
-            current.asset,
-        ):
-            selected[key] = artifact
-    return tuple(sorted(selected.values(), key=lambda item: (item.language, item.variant)))
+        key = (artifact.language, artifact.source_variant, artifact.variant)
+        current = selected_by_source.get(key)
+        if current is None or _dataset_order(artifact) > _dataset_order(current):
+            selected_by_source[key] = artifact
+    if selected_source_variant is not None:
+        selected = list(selected_by_source.values())
+    else:
+        selected_by_language: dict[tuple[str, str], DatasetArtifact] = {}
+        for artifact in selected_by_source.values():
+            language_key = (artifact.language, artifact.variant)
+            current = selected_by_language.get(language_key)
+            if (
+                current is None
+                or (artifact.source_variant == "native" and current.source_variant == "english")
+                or (
+                    artifact.source_variant == current.source_variant
+                    and _dataset_order(artifact) > _dataset_order(current)
+                )
+            ):
+                selected_by_language[language_key] = artifact
+        selected = list(selected_by_language.values())
+    return tuple(
+        sorted(selected, key=lambda item: (item.language, item.source_variant, item.variant))
+    )
 
 
 def _manifest_artifacts(
@@ -631,7 +716,7 @@ def _manifest_artifacts(
             f"unsupported dataset manifest version {manifest.get('manifest_version')!r}"
         )
     tag = str(release.get("tag_name", ""))
-    release_language, release_version = _release_identity(tag)
+    release_language, release_source_variant, release_version = _release_parts(tag)
     manifest_version = str(manifest.get("dataset_version", ""))
     if not tag or release_version != manifest_version:
         raise DatasetCatalogError("dataset manifest version does not match its release tag")
@@ -659,6 +744,12 @@ def _manifest_artifacts(
         if not isinstance(raw, Mapping):
             raise DatasetCatalogError("dataset manifest contains an invalid artifact")
         language = str(raw.get("language", ""))
+        try:
+            source_variant = normalize_source_variant(raw.get("source_variant"))
+        except (TypeError, ValueError) as exc:
+            raise DatasetCatalogError(str(exc)) from exc
+        wiktionary_edition = str(raw.get("wiktionary_edition", ""))
+        metadata_language = str(raw.get("metadata_language", ""))
         variant = str(raw.get("variant", ""))
         asset = str(raw.get("asset", ""))
         capabilities = raw.get("capabilities")
@@ -670,6 +761,19 @@ def _manifest_artifacts(
             or raw.get("format") != "sqlite3-gzip"
         ):
             raise DatasetCatalogError("dataset manifest artifact is missing required fields")
+        if source_variant != release_source_variant:
+            raise DatasetCatalogError(
+                "dataset manifest source variant does not match its release tag"
+            )
+        if release_source_variant != "native":
+            expected_asset = (
+                f"lexhint-{language}-{source_variant}-{variant}-"
+                f"s{raw.get('schema_version', '')}-{manifest_version}.sqlite3.gz"
+            )
+            if asset != expected_asset:
+                raise DatasetCatalogError(
+                    f"dataset artifact {asset!r} has an inconsistent asset filename"
+                )
         release_asset = asset_map.get(asset)
         if release_asset is None:
             raise DatasetNotFound(f"release is missing listed dataset asset {asset!r}")
@@ -687,6 +791,9 @@ def _manifest_artifacts(
             DatasetArtifact(
                 language=_language(language),
                 variant=_variant(variant),
+                source_variant=source_variant,
+                wiktionary_edition=wiktionary_edition,
+                metadata_language=metadata_language,
                 dataset_version=manifest_version,
                 release_tag=tag,
                 release_published_at=str(
@@ -780,6 +887,7 @@ def _legacy_remote_artifacts(
     language: str | None = None,
     version: str | None = None,
     variant: str | None = None,
+    source_variant: str | None = None,
 ) -> tuple[DatasetArtifact, ...]:
     normalized_language = _language(language) if language is not None else None
     requested_version = _version_from_tag(version) if version is not None else None
@@ -793,18 +901,25 @@ def _legacy_remote_artifacts(
         ]
     else:
         _parsed_language, parsed_version = _release_identity(version)
-        qualified_tag = _release_tag(parsed_version, normalized_language)
+        qualified_tag = _release_tag(
+            parsed_version,
+            normalized_language,
+            normalize_source_variant(source_variant),
+        )
         try:
             releases = _releases(qualified_tag)
         except DatasetNotFound:
-            releases = _releases(_release_tag(parsed_version))
+            releases = _releases(_release_tag(parsed_version, normalized_language))
     selected_variant = _variant(variant) if variant is not None else None
+    selected_source_variant = (
+        normalize_source_variant(source_variant) if source_variant is not None else None
+    )
     if not releases:
         raise DatasetNotFound("no published compatible dataset release was found")
     errors: list[DatasetError] = []
     incompatible_schemas: set[str] = set()
     aggregate = normalized_language is None
-    aggregated: dict[tuple[str, str], DatasetArtifact] = {}
+    aggregated: dict[tuple[str, str, str], DatasetArtifact] = {}
     for release in releases:
         try:
             artifacts = _manifest_for_release(release)
@@ -818,6 +933,10 @@ def _legacy_remote_artifacts(
             for artifact in artifacts
             if (normalized_language is None or artifact.language == normalized_language)
             and (selected_variant is None or artifact.variant == selected_variant)
+            and (
+                selected_source_variant is None
+                or artifact.source_variant == selected_source_variant
+            )
         )
         compatible = tuple(artifact for artifact in language_items if _remote_compatible(artifact))
         incompatible_schemas.update(
@@ -827,7 +946,10 @@ def _legacy_remote_artifacts(
         )
         if aggregate:
             for artifact in compatible:
-                aggregated.setdefault((artifact.language, artifact.variant), artifact)
+                key = (artifact.language, artifact.source_variant, artifact.variant)
+                current = aggregated.get(key)
+                if current is None or _dataset_order(artifact) > _dataset_order(current):
+                    aggregated[key] = artifact
             continue
         if compatible:
             return compatible
@@ -844,7 +966,12 @@ def _legacy_remote_artifacts(
                 "has no requested language"
             )
     if aggregate and aggregated:
-        return tuple(sorted(aggregated.values(), key=lambda item: (item.language, item.variant)))
+        return tuple(
+            sorted(
+                aggregated.values(),
+                key=lambda item: (item.language, item.source_variant, item.variant),
+            )
+        )
     if errors:
         raise errors[-1]
     if incompatible_schemas:
@@ -862,15 +989,31 @@ def _remote_artifacts(
     language: str | None = None,
     version: str | None = None,
     variant: str | None = None,
+    source_variant: str | None = None,
 ) -> tuple[DatasetArtifact, ...]:
     try:
-        return _catalog_remote_artifacts(language=language, version=version, variant=variant)
+        return _catalog_remote_artifacts(
+            language=language,
+            version=version,
+            variant=variant,
+            source_variant=source_variant,
+        )
     except _DatasetCatalogTransportError:
-        return _legacy_remote_artifacts(language=language, version=version, variant=variant)
+        return _legacy_remote_artifacts(
+            language=language,
+            version=version,
+            variant=variant,
+            source_variant=source_variant,
+        )
     except DatasetNotFound:
         if version is None:
             raise
-        return _legacy_remote_artifacts(language=language, version=version, variant=variant)
+        return _legacy_remote_artifacts(
+            language=language,
+            version=version,
+            variant=variant,
+            source_variant=source_variant,
+        )
 
 
 def available_datasets(
@@ -878,12 +1021,14 @@ def available_datasets(
     language: str | None = None,
     version: str | None = None,
     variant: str | None = None,
+    source_variant: str | None = None,
     offline: bool = False,
 ) -> tuple[DatasetArtifact, ...]:
     return _catalog_remote_artifacts(
         language=language,
         version=version,
         variant=variant,
+        source_variant=source_variant,
         all_compatible=True,
         offline=offline,
     )
@@ -942,6 +1087,9 @@ def _installed_from_sidecar(path: Path) -> InstalledDataset:
         if path.parent.parent.name != f"s{schema_version}":
             raise ValueError("dataset schema path does not match its sidecar")
         return InstalledDataset(
+            source_variant=normalize_source_variant(raw.get("source_variant")),
+            wiktionary_edition=str(raw.get("wiktionary_edition", "")),
+            metadata_language=str(raw.get("metadata_language", "")),
             language=_language(str(raw["language"])),
             variant=_variant(str(raw["variant"])),
             dataset_version=_part(str(raw["dataset_version"]), "version"),
@@ -970,6 +1118,8 @@ def validate_installed_dataset(dataset: InstalledDataset) -> InstalledDataset:
     )
     if metadata.get("language") != dataset.language:
         raise DatasetIntegrityError("dataset language metadata does not match its sidecar")
+    if metadata.get("dictionary_source_variant") not in {None, "", dataset.source_variant}:
+        raise DatasetIntegrityError("dataset source variant does not match its sidecar")
     if metadata.get("schema_version") != dataset.schema_version:
         raise DatasetIntegrityError("dataset schema does not match its sidecar")
     if metadata.get("schema_version") != SCHEMA_VERSION:
@@ -1015,14 +1165,19 @@ def resolve_installed_dataset(
     *,
     variant: str | None = None,
     version: str | None = None,
+    source_variant: str | None = None,
 ) -> InstalledDataset:
     normalized = _language(language)
     if variant is not None:
         variant = _variant(variant)
+    if source_variant is not None:
+        source_variant = normalize_source_variant(source_variant)
     candidates: list[InstalledDataset] = []
     all_candidates = list_installed_datasets(normalized)
     for candidate in all_candidates:
         if variant is not None and candidate.variant != variant:
+            continue
+        if source_variant is not None and candidate.source_variant != source_variant:
             continue
         if version is not None and candidate.dataset_version != version:
             continue
@@ -1032,8 +1187,16 @@ def resolve_installed_dataset(
         if version:
             selector += f"/{version}"
         raise DatasetNotFound(f"no compatible installed dataset for {normalized}{selector}")
-    if variant is not None or version is not None:
+    if variant is not None or source_variant is not None or version is not None:
         return max(candidates, key=_release_key)
+    preferred_source = (
+        "native"
+        if any(candidate.source_variant == "native" for candidate in candidates)
+        else "english"
+    )
+    candidates = [
+        candidate for candidate in candidates if candidate.source_variant == preferred_source
+    ]
     maxima = [
         candidate
         for candidate in candidates
@@ -1061,19 +1224,29 @@ def check_dataset_updates(
     language: str | None = None,
     *,
     variant: str | None = None,
+    source_variant: str | None = None,
     offline: bool = False,
 ) -> tuple[DatasetUpdate, ...]:
     installed = list_installed_datasets(language)
     if variant is not None:
         selected_variant = _variant(variant)
         installed = tuple(item for item in installed if item.variant == selected_variant)
+    if source_variant is not None:
+        source_variant = normalize_source_variant(source_variant)
+        installed = tuple(item for item in installed if item.source_variant == source_variant)
     if not installed:
         return ()
-    remote = _catalog_remote_artifacts(language=language, variant=variant, offline=offline)
-    newest_remote = {(item.language, item.variant): item for item in remote}
-    groups: dict[tuple[str, str], list[InstalledDataset]] = {}
+    remote = _catalog_remote_artifacts(
+        language=language,
+        variant=variant,
+        source_variant=source_variant,
+        offline=offline,
+        all_compatible=True,
+    )
+    newest_remote = {(item.language, item.source_variant, item.variant): item for item in remote}
+    groups: dict[tuple[str, str, str], list[InstalledDataset]] = {}
     for item in installed:
-        groups.setdefault((item.language, item.variant), []).append(item)
+        groups.setdefault((item.language, item.source_variant, item.variant), []).append(item)
     result: list[DatasetUpdate] = []
     for key, values in sorted(groups.items()):
         current = max(values, key=_dataset_order)
@@ -1083,6 +1256,7 @@ def check_dataset_updates(
             DatasetUpdate(
                 language=current.language,
                 variant=current.variant,
+                source_variant=current.source_variant,
                 schema_version=current.schema_version,
                 installed_version=current.dataset_version,
                 available_version=available_version,
@@ -1098,10 +1272,13 @@ def update_datasets(
     language: str | None = None,
     *,
     variant: str | None = None,
+    source_variant: str | None = None,
     offline: bool = False,
     progress: Callable[[DatasetProgress], None] | None = None,
 ) -> tuple[InstalledDataset, ...]:
-    statuses = check_dataset_updates(language, variant=variant, offline=offline)
+    statuses = check_dataset_updates(
+        language, variant=variant, source_variant=source_variant, offline=offline
+    )
     result: list[InstalledDataset] = []
     for status in statuses:
         target_version = status.available_version or status.installed_version
@@ -1109,17 +1286,30 @@ def update_datasets(
             installed = download_dataset(
                 status.language,
                 variant=status.variant,
+                source_variant=status.source_variant,
                 version=target_version,
                 offline=offline,
                 progress=progress,
             )
         else:
             installed = resolve_installed_dataset(
-                status.language, variant=status.variant, version=target_version
+                status.language,
+                variant=status.variant,
+                source_variant=status.source_variant,
+                version=target_version,
             )
         for old in list_installed_datasets(status.language):
-            if old.variant == status.variant and old.dataset_version != target_version:
-                remove_dataset(old.language, variant=old.variant, version=old.dataset_version)
+            if (
+                old.source_variant == status.source_variant
+                and old.variant == status.variant
+                and old.dataset_version != target_version
+            ):
+                remove_dataset(
+                    old.language,
+                    variant=old.variant,
+                    source_variant=old.source_variant,
+                    version=old.dataset_version,
+                )
         result.append(installed)
     return tuple(result)
 
@@ -1128,7 +1318,11 @@ def _installed_for_artifact(
     artifact: DatasetArtifact, *, already_installed: bool
 ) -> InstalledDataset:
     path = _artifact_path(
-        artifact.language, artifact.variant, artifact.dataset_version, artifact.schema_version
+        artifact.language,
+        artifact.variant,
+        artifact.dataset_version,
+        artifact.schema_version,
+        artifact.source_variant,
     )
     return InstalledDataset(
         language=artifact.language,
@@ -1146,6 +1340,9 @@ def _installed_for_artifact(
         profile=artifact.profile,
         coverage=artifact.coverage,
         already_installed=already_installed,
+        source_variant=artifact.source_variant,
+        wiktionary_edition=artifact.wiktionary_edition,
+        metadata_language=artifact.metadata_language,
     )
 
 
@@ -1153,6 +1350,9 @@ def _write_sidecar(path: Path, artifact: DatasetArtifact, installed_at: str) -> 
     payload = {
         "install_format": 1,
         "language": artifact.language,
+        "source_variant": artifact.source_variant,
+        "wiktionary_edition": artifact.wiktionary_edition,
+        "metadata_language": artifact.metadata_language,
         "variant": artifact.variant,
         "dataset_version": artifact.dataset_version,
         "release_tag": artifact.release_tag,
@@ -1190,6 +1390,7 @@ def download_dataset(
     language: str,
     *,
     variant: str = DEFAULT_VARIANT,
+    source_variant: str | None = None,
     version: str | None = None,
     force: bool = False,
     offline: bool = False,
@@ -1199,8 +1400,21 @@ def download_dataset(
         raise DatasetDownloadError("dataset downloads are unavailable in offline mode")
     normalized = _language(language)
     variant = _variant(variant)
-    artifacts = _remote_artifacts(language=normalized, version=version, variant=variant)
+    source_variant = (
+        normalize_source_variant(source_variant) if source_variant is not None else None
+    )
+    artifacts = _remote_artifacts(
+        language=normalized,
+        version=version,
+        variant=variant,
+        source_variant=source_variant,
+    )
     matching = list(artifacts)
+    if source_variant is None:
+        preferred = (
+            "native" if any(item.source_variant == "native" for item in matching) else "english"
+        )
+        matching = [item for item in matching if item.source_variant == preferred]
     if not matching:
         raise DatasetNotFound(
             f"no published dataset for {normalized}/{variant}" + (f"/{version}" if version else "")
@@ -1213,7 +1427,11 @@ def download_dataset(
         )
     _expected_capabilities(artifact)
     final_path = _artifact_path(
-        artifact.language, artifact.variant, artifact.dataset_version, artifact.schema_version
+        artifact.language,
+        artifact.variant,
+        artifact.dataset_version,
+        artifact.schema_version,
+        artifact.source_variant,
     )
     if final_path.is_file() and _sidecar_path(final_path).is_file() and not force:
         try:
@@ -1273,6 +1491,8 @@ def download_dataset(
         capabilities = tuple(item for item in metadata.get("capabilities", "").split(",") if item)
         if metadata.get("language") != artifact.language:
             raise DatasetIntegrityError("dataset language does not match the manifest")
+        if metadata.get("dictionary_source_variant") not in {None, "", artifact.source_variant}:
+            raise DatasetIntegrityError("dataset source variant does not match the manifest")
         if metadata.get("schema_version") != artifact.schema_version:
             raise DatasetIntegrityError("dataset schema does not match the manifest")
         if metadata.get("coverage") != artifact.coverage:
@@ -1298,22 +1518,37 @@ def download_dataset(
         sidecar_temp.unlink(missing_ok=True)
 
 
-def remove_dataset(language: str, *, variant: str, version: str | None = None) -> tuple[Path, ...]:
+def remove_dataset(
+    language: str,
+    *,
+    variant: str,
+    source_variant: str | None = None,
+    version: str | None = None,
+) -> tuple[Path, ...]:
     normalized = _language(language)
     variant = _variant(variant)
-    root = data_dir() / "datasets" / normalized / variant
-    if version is not None:
-        paths = [_artifact_path(normalized, variant, version, SCHEMA_VERSION)]
-    else:
-        schema_root = root / f"s{SCHEMA_VERSION}"
-        paths = sorted(schema_root.glob("*/lexhint.sqlite3")) if schema_root.is_dir() else []
+    source_variant = normalize_source_variant(source_variant)
+    roots = [data_dir() / "datasets" / normalized / source_variant / variant]
+    if source_variant == "native":
+        roots.append(data_dir() / "datasets" / normalized / variant)
+    paths: list[Path] = []
+    for root in roots:
+        if version is not None:
+            paths.append(
+                root / f"s{SCHEMA_VERSION}" / _part(version, "version") / "lexhint.sqlite3"
+            )
+        else:
+            schema_root = root / f"s{SCHEMA_VERSION}"
+            if schema_root.is_dir():
+                paths.extend(sorted(schema_root.glob("*/lexhint.sqlite3")))
     removed: list[Path] = []
     for path in paths:
         if path.is_file():
             shutil.rmtree(path.parent)
             removed.append(path)
-    if root.is_dir() and not any(root.iterdir()):
-        root.rmdir()
+    for root in roots:
+        if root.is_dir() and not any(root.iterdir()):
+            root.rmdir()
     return tuple(removed)
 
 
@@ -1321,6 +1556,7 @@ def validate_datasets(
     language: str | None = None,
     *,
     variant: str | None = None,
+    source_variant: str | None = None,
     version: str | None = None,
 ) -> tuple[InstalledDataset, ...]:
     root = data_dir() / "datasets"
@@ -1333,6 +1569,10 @@ def validate_datasets(
             dataset = _installed_from_sidecar(path)
             if variant is not None and dataset.variant != _variant(variant):
                 continue
+            if source_variant is not None and dataset.source_variant != normalize_source_variant(
+                source_variant
+            ):
+                continue
             if version is not None and dataset.dataset_version != version:
                 continue
             result.append(validate_installed_dataset(dataset))
@@ -1341,6 +1581,8 @@ def validate_datasets(
 
 __all__ = [
     "DATASET_REPOSITORY",
+    "SOURCE_VARIANTS",
+    "normalize_source_variant",
     "DATASET_VARIANTS",
     "DATASET_VARIANT_NAMES",
     "DEFAULT_DATASET_VARIANT",

@@ -16,6 +16,7 @@ from pathlib import Path
 from typing import Any, BinaryIO, TextIO, cast
 from urllib.parse import urlparse
 
+from .datasets import normalize_source_variant
 from .download import cached_dictionary_path, package_version, user_agent
 from .extract import dictionary_entries, relation_candidates
 from .frequency import enrich_frequency, iter_frequency_rows
@@ -217,6 +218,9 @@ def build_dictionary(
     refresh_frequency: bool = False,
     offline: bool = False,
     timeout: float = 60.0,
+    source_variant: str | None = None,
+    source_edition: str | None = None,
+    source_metadata_language: str | None = None,
     progress: Callable[[DictionaryBuildStats], None] | None = None,
 ) -> tuple[Path, DictionaryBuildStats]:
     plan = prepare_build_plan(
@@ -232,6 +236,13 @@ def build_dictionary(
         timeout=timeout,
     )
     target = plan.output
+    provenance_metadata: dict[str, str] = {}
+    if source_variant is not None:
+        provenance_metadata["dictionary_source_variant"] = normalize_source_variant(source_variant)
+    if source_edition is not None:
+        provenance_metadata["dictionary_source_edition"] = source_edition
+    if source_metadata_language is not None:
+        provenance_metadata["dictionary_metadata_language"] = source_metadata_language
     target.parent.mkdir(parents=True, exist_ok=True)
     source_value = str(plan.source)
     source_sha256 = _sha256(plan.source)
@@ -270,6 +281,7 @@ def build_dictionary(
                     "dictionary_source": source_value,
                     "dictionary_source_format": "wiktextract-jsonl",
                     "dictionary_source_contract": "1",
+                    **provenance_metadata,
                     "dictionary_source_sha256": source_sha256 or "",
                     "source": source_value,
                     "source_sha256": source_sha256 or "",

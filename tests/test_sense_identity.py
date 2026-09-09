@@ -64,6 +64,10 @@ def test_real_source_ids_are_preserved_and_anchor_non_identity_changes() -> None
     assert format_sense_id("en", stable_sense_int(b"identity")).startswith("lh1-en-")
 
 
+def test_three_letter_language_sense_id() -> None:
+    assert format_sense_id("ceb", 1).startswith("lh1-ceb-")
+
+
 def test_unrelated_input_does_not_renumber_existing_sense() -> None:
     love = entry("to care")
     unrelated = DictionaryEntry("stone", "noun", (Sense(glosses=("a rock",)),))

@@ -16,6 +16,7 @@ def install_fixture(
     monkeypatch: pytest.MonkeyPatch,
     variant: str,
     version: str = "2026.08.20",
+    source_variant: str = "native",
 ) -> Path:
     monkeypatch.setenv("LEXHINT_DATA_DIR", str(tmp_path / "data"))
     capabilities = {
@@ -31,7 +32,7 @@ def install_fixture(
         capabilities=capabilities[0],
         no_frequency=True,
     )
-    target = datasets._artifact_path("en", variant, version)
+    target = datasets._artifact_path("en", variant, version, source_variant=source_variant)
     target.parent.mkdir(parents=True, exist_ok=True)
     target.write_bytes(source.read_bytes())
     artifact = datasets.DatasetArtifact(
@@ -50,6 +51,7 @@ def install_fixture(
         target.name,
         "fixture",
         "",
+        source_variant=source_variant,
     )
     datasets._write_sidecar(target.with_name("artifact.json"), artifact, version)
     return target
@@ -63,6 +65,20 @@ def test_highest_installed_capability_and_explicit_selection(
     assert datasets.resolve_installed_dataset("en").path == runtime
     assert Lexicon("en").path == runtime
     assert datasets.resolve_installed_dataset("en", variant="lexical").path == lexical
+
+
+def test_source_variants_coexist_and_resolve_native_first(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    native = install_fixture(tmp_path, monkeypatch, "runtime", source_variant="native")
+    english = install_fixture(tmp_path, monkeypatch, "runtime", source_variant="english")
+    assert native != english
+    assert "/native/" in str(native)
+    assert "/english/" in str(english)
+    assert datasets.resolve_installed_dataset("en").path == native
+    assert datasets.resolve_installed_dataset("en", source_variant="english").path == english
+    assert datasets.remove_dataset("en", variant="runtime", source_variant="english") == (english,)
+    assert native.exists()
 
 
 def test_capability_chain_resolves_each_maximal_variant(

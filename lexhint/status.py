@@ -43,6 +43,7 @@ def read_artifact_status(
     language: str | None = None,
     *,
     variant: str | None = None,
+    source_variant: str | None = None,
     dataset_version: str | None = None,
     path: str | Path | None = None,
 ) -> ArtifactStatus:
@@ -50,13 +51,16 @@ def read_artifact_status(
         language = "en"
     if language is None:
         assert path is not None
-        if variant is not None or dataset_version is not None:
-            raise ValueError("path cannot be combined with variant or dataset_version")
+        if source_variant is not None or variant is not None or dataset_version is not None:
+            raise ValueError(
+                "path cannot be combined with source_variant, variant, or dataset_version"
+            )
         lexicon = Lexicon.from_path(path)
     else:
         lexicon = Lexicon(
             language,
             variant=variant,
+            source_variant=source_variant,
             dataset_version=dataset_version,
             path=path,
         )
@@ -104,6 +108,9 @@ def read_artifact_status(
                 "schema_version",
                 "language",
                 "coverage",
+                "dictionary_source_variant",
+                "dictionary_source_edition",
+                "dictionary_metadata_language",
                 "profile",
                 "capabilities",
                 "dataset_version",

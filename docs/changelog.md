@@ -7,6 +7,8 @@
 ### Added
 
 - Added Greek, Indonesian, Kurdish, Malay, Polish, and Turkish base-language support
+- Added native and English Wiktionary source variants with catalog v2 identities and coexistence-safe dataset selection
+- Expanded target-language support, including three-letter Cebuano code `ceb`
 
 ### Documentation
 

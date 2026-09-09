@@ -108,6 +108,12 @@ def _artifact_selector(parser: argparse.ArgumentParser) -> None:
         default=None,
         help="installed dataset capability variant",
     )
+    parser.add_argument(
+        "--source-variant",
+        choices=("native", "english"),
+        default=None,
+        help="Wiktionary source variant: native edition or English edition",
+    )
     parser.add_argument("--dataset-version", help="exact installed dataset release version")
     parser.add_argument("--path", help="local SQLite artifact")
 
@@ -305,32 +311,80 @@ def _parser() -> argparse.ArgumentParser:
         default=DEFAULT_DATASET_VARIANT,
         help=f"dataset capability variant (default: {DEFAULT_DATASET_VARIANT})",
     )
+    download.add_argument(
+        "--source-variant",
+        choices=("native", "english"),
+        default=None,
+        help="Wiktionary source variant",
+    )
     download.add_argument("--version", dest="dataset_version")
     download.add_argument("--force", action="store_true")
     available = dataset_sub.add_parser("available", help="list published datasets")
     available.add_argument("--language", choices=sorted(SUPPORTED_LANGUAGES))
     available.add_argument("--version", dest="dataset_version")
     available.add_argument("--variant", choices=DATASET_VARIANT_NAMES)
+    available.add_argument(
+        "--source-variant",
+        choices=("native", "english"),
+        default=None,
+        help="Wiktionary source variant",
+    )
 
     check = dataset_sub.add_parser("check", help="check installed datasets for updates")
     check.add_argument("language", nargs="?", choices=sorted(SUPPORTED_LANGUAGES))
     check.add_argument("--variant", choices=DATASET_VARIANT_NAMES)
+    check.add_argument(
+        "--source-variant",
+        choices=("native", "english"),
+        default=None,
+        help="Wiktionary source variant",
+    )
     update = dataset_sub.add_parser("update", help="update installed datasets")
     update.add_argument("language", nargs="?", choices=sorted(SUPPORTED_LANGUAGES))
     update.add_argument("--variant", choices=DATASET_VARIANT_NAMES)
+    update.add_argument(
+        "--source-variant",
+        choices=("native", "english"),
+        default=None,
+        help="Wiktionary source variant",
+    )
     info = dataset_sub.add_parser("info", help="show an installed dataset")
     info.add_argument("language", choices=sorted(SUPPORTED_LANGUAGES))
     info.add_argument("--variant", choices=DATASET_VARIANT_NAMES)
+    info.add_argument(
+        "--source-variant",
+        choices=("native", "english"),
+        default=None,
+        help="Wiktionary source variant",
+    )
     info.add_argument("--version", dest="dataset_version")
     listing = dataset_sub.add_parser("list", help="list installed datasets")
+    listing.add_argument(
+        "--source-variant",
+        choices=("native", "english"),
+        default=None,
+        help="Wiktionary source variant",
+    )
     listing.add_argument("--language", choices=sorted(SUPPORTED_LANGUAGES))
     remove = dataset_sub.add_parser("remove", help="remove installed dataset artifacts")
     remove.add_argument("language", choices=sorted(SUPPORTED_LANGUAGES))
     remove.add_argument("--variant", required=True, choices=DATASET_VARIANT_NAMES)
+    remove.add_argument(
+        "--source-variant",
+        choices=("native", "english"),
+        default=None,
+        help="Wiktionary source variant",
+    )
     remove.add_argument("--version", dest="dataset_version")
     validate = dataset_sub.add_parser("validate", help="validate installed dataset artifacts")
     validate.add_argument("language", nargs="?", choices=sorted(SUPPORTED_LANGUAGES))
     validate.add_argument("--variant", choices=DATASET_VARIANT_NAMES)
+    validate.add_argument(
+        "--source-variant",
+        choices=("native", "english"),
+        default=None,
+        help="Wiktionary source variant",
+    )
     validate.add_argument("--version", dest="dataset_version")
 
     return parser
@@ -409,6 +463,11 @@ def _status(info: ArtifactStatus, style: TerminalStyle) -> None:
     print(f"  coverage      {values['coverage']}")
     print(f"  profile       {values['profile']}")
     print(f"  capabilities  {', '.join(values['capabilities'])}")
+    print(f"  source variant {values['provenance']['dictionary_source_variant'] or 'unknown'}")
+    print(f"  source edition {values['provenance']['dictionary_source_edition'] or 'unknown'}")
+    print(
+        f"  metadata language {values['provenance']['dictionary_metadata_language'] or 'unknown'}"
+    )
     provenance = values["provenance"]
     print(f"  source        {provenance['dictionary_source']}")
     print(f"  source format {provenance['dictionary_source_format'] or 'unknown'}")
@@ -449,6 +508,7 @@ def _run_dataset(args: argparse.Namespace, *, json_output: bool) -> int:
         result = download_dataset(
             args.language,
             variant=args.variant,
+            source_variant=args.source_variant,
             version=args.dataset_version,
             force=args.force,
             offline=args.offline,
@@ -473,6 +533,7 @@ def _run_dataset(args: argparse.Namespace, *, json_output: bool) -> int:
             language=args.language,
             version=args.dataset_version,
             variant=args.variant,
+            source_variant=args.source_variant,
             offline=args.offline,
         )
         payload = {"available": [_dataset_value(value) for value in remote_items]}
@@ -488,7 +549,12 @@ def _run_dataset(args: argparse.Namespace, *, json_output: bool) -> int:
         return 0
 
     if args.dataset_command == "check":
-        statuses = check_dataset_updates(args.language, variant=args.variant, offline=args.offline)
+        statuses = check_dataset_updates(
+            args.language,
+            variant=args.variant,
+            source_variant=args.source_variant,
+            offline=args.offline,
+        )
         payload = {"updates": [status.as_dict() for status in statuses]}
         if json_output:
             _json(payload)
@@ -506,6 +572,7 @@ def _run_dataset(args: argparse.Namespace, *, json_output: bool) -> int:
         installed_items = update_datasets(
             args.language,
             variant=args.variant,
+            source_variant=args.source_variant,
             offline=args.offline,
             progress=None if json_output else _dataset_progress,
         )
@@ -518,11 +585,16 @@ def _run_dataset(args: argparse.Namespace, *, json_output: bool) -> int:
         return 0
     if args.dataset_command == "list":
         installed_items = list_installed_datasets(args.language)
+        if args.source_variant is not None:
+            installed_items = tuple(
+                item for item in installed_items if item.source_variant == args.source_variant
+            )
         selected: dict[str, InstalledDataset] = {}
         for installed_item in installed_items:
             with suppress(DatasetError):
                 selected[installed_item.language] = resolve_installed_dataset(
-                    installed_item.language
+                    installed_item.language,
+                    source_variant=args.source_variant,
                 )
         payload_items: list[dict[str, object]] = []
         for installed_item in installed_items:
@@ -544,7 +616,10 @@ def _run_dataset(args: argparse.Namespace, *, json_output: bool) -> int:
         return 0
     if args.dataset_command == "info":
         selected_item = resolve_installed_dataset(
-            args.language, variant=args.variant, version=args.dataset_version
+            args.language,
+            variant=args.variant,
+            source_variant=args.source_variant,
+            version=args.dataset_version,
         )
         installed_values = [
             _dataset_value(value) for value in list_installed_datasets(args.language)
@@ -565,7 +640,12 @@ def _run_dataset(args: argparse.Namespace, *, json_output: bool) -> int:
                 )
         return 0
     if args.dataset_command == "remove":
-        removed = remove_dataset(args.language, variant=args.variant, version=args.dataset_version)
+        removed = remove_dataset(
+            args.language,
+            variant=args.variant,
+            source_variant=args.source_variant,
+            version=args.dataset_version,
+        )
         payload = {"removed": [str(path) for path in removed]}
         if json_output:
             _json(payload)
@@ -575,7 +655,10 @@ def _run_dataset(args: argparse.Namespace, *, json_output: bool) -> int:
         return 0
     if args.dataset_command == "validate":
         valid_items = validate_datasets(
-            args.language, variant=args.variant, version=args.dataset_version
+            args.language,
+            variant=args.variant,
+            source_variant=args.source_variant,
+            version=args.dataset_version,
         )
         payload = {"valid": [_dataset_value(value) for value in valid_items]}
         if json_output:
@@ -599,6 +682,7 @@ def _run(args: argparse.Namespace, *, style: TerminalStyle, json_output: bool) -
         lexicon = Lexicon(
             language,
             variant=args.variant,
+            source_variant=args.source_variant,
             dataset_version=args.dataset_version,
             path=args.path,
             locale=locale,
@@ -612,7 +696,11 @@ def _run(args: argparse.Namespace, *, style: TerminalStyle, json_output: bool) -
     if args.command == "complete":
         language, prefix = _language(args.values, args.language)
         lexicon = Lexicon(
-            language, variant=args.variant, dataset_version=args.dataset_version, path=args.path
+            language,
+            variant=args.variant,
+            source_variant=args.source_variant,
+            dataset_version=args.dataset_version,
+            path=args.path,
         )
         completions = lexicon.complete(prefix, limit=args.limit)
         if json_output:
@@ -630,7 +718,11 @@ def _run(args: argparse.Namespace, *, style: TerminalStyle, json_output: bool) -
     if args.command == "suggest":
         language, query = _language(args.values, args.language)
         lexicon = Lexicon(
-            language, variant=args.variant, dataset_version=args.dataset_version, path=args.path
+            language,
+            variant=args.variant,
+            source_variant=args.source_variant,
+            dataset_version=args.dataset_version,
+            path=args.path,
         )
         suggestions = lexicon.suggest(query, limit=args.limit, max_distance=args.max_distance)
         if json_output:
@@ -642,7 +734,11 @@ def _run(args: argparse.Namespace, *, style: TerminalStyle, json_output: bool) -
     if args.command == "headwords":
         language = normalize_language(args.language or _default_language())
         lexicon = Lexicon(
-            language, variant=args.variant, dataset_version=args.dataset_version, path=args.path
+            language,
+            variant=args.variant,
+            source_variant=args.source_variant,
+            dataset_version=args.dataset_version,
+            path=args.path,
         )
         matches = lexicon.match_headwords(args.pattern, syntax=args.syntax, limit=args.limit)
         if json_output:
@@ -661,7 +757,11 @@ def _run(args: argparse.Namespace, *, style: TerminalStyle, json_output: bool) -
     if args.command == "segment":
         language, text = _language(args.values, args.language)
         lexicon = Lexicon(
-            language, variant=args.variant, dataset_version=args.dataset_version, path=args.path
+            language,
+            variant=args.variant,
+            source_variant=args.source_variant,
+            dataset_version=args.dataset_version,
+            path=args.path,
         )
         values = lexicon.segment(text)
         if json_output:
@@ -679,7 +779,11 @@ def _run(args: argparse.Namespace, *, style: TerminalStyle, json_output: bool) -
         language = normalize_language(args.language or _default_language())
         text = " ".join(args.text)
         lexicon = Lexicon(
-            language, variant=args.variant, dataset_version=args.dataset_version, path=args.path
+            language,
+            variant=args.variant,
+            source_variant=args.source_variant,
+            dataset_version=args.dataset_version,
+            path=args.path,
         )
         domains = lexicon.context_domains(
             text,
@@ -709,7 +813,11 @@ def _run(args: argparse.Namespace, *, style: TerminalStyle, json_output: bool) -
         language = normalize_language(args.language or _default_language())
         fields = tuple(field.strip() for field in args.fields.split(",") if field.strip())
         lexicon = Lexicon(
-            language, variant=args.variant, dataset_version=args.dataset_version, path=args.path
+            language,
+            variant=args.variant,
+            source_variant=args.source_variant,
+            dataset_version=args.dataset_version,
+            path=args.path,
         )
         query = " ".join(args.query)
         hits = lexicon.search_definitions(query, fields=fields, match=args.match, limit=args.limit)
@@ -735,7 +843,11 @@ def _run(args: argparse.Namespace, *, style: TerminalStyle, json_output: bool) -
             if relation
         )
         lexicon = Lexicon(
-            language, variant=args.variant, dataset_version=args.dataset_version, path=args.path
+            language,
+            variant=args.variant,
+            source_variant=args.source_variant,
+            dataset_version=args.dataset_version,
+            path=args.path,
         )
         if args.dictionary_command == "relations":
             relation_values = (
@@ -781,6 +893,7 @@ def _run(args: argparse.Namespace, *, style: TerminalStyle, json_output: bool) -
         lexicon = Lexicon(
             language,
             variant=args.variant,
+            source_variant=args.source_variant,
             dataset_version=args.dataset_version,
             path=args.path,
             locale=locale,
@@ -899,6 +1012,7 @@ def _run(args: argparse.Namespace, *, style: TerminalStyle, json_output: bool) -
         lexicon = Lexicon(
             language,
             variant=args.variant,
+            source_variant=args.source_variant,
             dataset_version=args.dataset_version,
             path=args.path,
             locale=locale,
@@ -944,6 +1058,7 @@ def _run(args: argparse.Namespace, *, style: TerminalStyle, json_output: bool) -
         artifact_info = read_artifact_status(
             language,
             variant=args.variant,
+            source_variant=args.source_variant,
             dataset_version=args.dataset_version,
             path=args.path,
         )
