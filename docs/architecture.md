@@ -1,6 +1,6 @@
 ---
 title: "Architecture Documentation"
-version: 27
+version: 28
 generator: "archledger 0.4.0"
 arc42_template_version: "9.0-EN"
 ---
@@ -198,7 +198,7 @@ Lexhint is deployed as a local Python package and a local SQLite evidence artifa
 
 ### Capability-specific schema
 
-Schema metadata is explicit and self-describing. `language`, `locale`, `variant`, `schema_version`, and `dataset_version` remain separate dimensions. Locale is optional and does not create `en-GB` or `en-US` artifacts. Strict equality, not a compatibility range, controls SQLite access.
+Artifact metadata is explicit and self-describing. It identifies the physical language, schema, capabilities, profile, and source provenance, while the managed dataset identity is `(language, source_variant, capability_variant, schema_version, dataset_version)`. Locale is optional runtime presentation and filtering state. It never changes artifact identity or creates `en-GB` or `en-US` artifacts. Strict schema equality, not a compatibility range, controls SQLite access.
 
 Schema 10 metadata is explicit and self-describing. `lexemes` is always present for lexical capability and stores lowercase, titlecase, and uppercase attestation flags exposed by `WordEvidence`. `lexeme_domains` exists only for `semantic`; rich `entries`, `senses`, `sense_topics`, and `headword_relations` exist only for `dictionary`; `lexeme_ngrams` exists for `search`; and `sense_search_terms` exists for `dictionary` plus `search`. Search and relation metadata record index and row counts, and projections remove claims for excluded structures. Schema 9 artifacts are rejected and must be rebuilt; schema 9 and schema 10 dataset families remain side by side on disk.
 
@@ -228,7 +228,7 @@ Raw bulk Wiktextract input does not contain Kaikki postprocessed website `sense.
 
 ## Explicit immutable managed dataset artifacts
 
-Lexhint treats published datasets as explicit, immutable local artifacts rather than package-installed Python models. The dataset manager stores artifacts by normalized base language, capability variant, exact schema family, and exact release version under the persistent data directory. Downloads stream gzip data, verify manifest hashes, sizes, schema, language, coverage, and capabilities, then atomically install the database and sidecar metadata. Runtime Lexicon construction resolves only installed files and never contacts the network automatically. The highest-capability compatible installed variant is selected by default, while callers may pin a variant and release version.
+Lexhint treats published datasets as explicit, immutable local artifacts rather than package-installed Python models. The dataset manager stores artifacts by normalized base language, source variant, capability variant, exact schema family, and exact release version under the persistent data directory. Their physical identity is `(language, source_variant, capability_variant, schema_version, dataset_version)`. Downloads stream gzip data, verify manifest hashes, sizes, schema, language, coverage, and capabilities, then atomically install the database and sidecar metadata. Runtime Lexicon construction resolves only installed files and never contacts the network automatically. The highest-capability compatible installed variant is selected by default, while callers may pin a variant and release version.
 
 Managed variants are capability presets: `runtime` is the recommended `lexical,semantic` artifact, `dictionary` is the `lexical,semantic,dictionary` projection for dictionary inspection without search indexes, and `rich` adds `search` for fuzzy suggestions and indexed definition/reverse search. The strict capability chain keeps automatic selection unambiguous.
 

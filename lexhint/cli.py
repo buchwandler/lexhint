@@ -15,9 +15,11 @@ from .builder import build_dictionary, project_artifact
 from .datasets import (
     DATASET_VARIANT_NAMES,
     DEFAULT_DATASET_VARIANT,
+    SOURCE_VARIANTS,
     DatasetArtifact,
     DatasetError,
     DatasetProgress,
+    DatasetUpdate,
     InstalledDataset,
     available_datasets,
     check_dataset_updates,
@@ -90,6 +92,20 @@ def _default_language() -> str:
     return normalize_language(os.environ.get("LEXHINT_LANGUAGE", _DEFAULT_LANGUAGE))
 
 
+def _add_language_option(parser: argparse.ArgumentParser) -> None:
+    parser.add_argument(
+        "-l",
+        "--language",
+        choices=sorted(SUPPORTED_LANGUAGES),
+        metavar="LANGUAGE",
+        help="base language code (default: LEXHINT_LANGUAGE or en)",
+    )
+
+
+def _add_values_argument(parser: argparse.ArgumentParser, *, metavar: str, help: str) -> None:
+    parser.add_argument("values", nargs="+", metavar=metavar, help=help)
+
+
 def _language(values: Sequence[str], explicit: str | None) -> tuple[str, str]:
     if explicit:
         if len(values) != 1:
@@ -144,6 +160,16 @@ def _target_span(text: str, target: str) -> tuple[int, int]:
     return start, start + len(target)
 
 
+def _add_source_variant_option(parser: argparse.ArgumentParser) -> None:
+    parser.add_argument(
+        "--source-variant",
+        choices=SOURCE_VARIANTS,
+        default=None,
+        metavar="SOURCE",
+        help="Wiktionary source variant: native edition or English edition",
+    )
+
+
 def _artifact_selector(parser: argparse.ArgumentParser) -> None:
     parser.add_argument(
         "--variant",
@@ -151,12 +177,7 @@ def _artifact_selector(parser: argparse.ArgumentParser) -> None:
         default=None,
         help="installed dataset capability variant",
     )
-    parser.add_argument(
-        "--source-variant",
-        choices=("native", "english"),
-        default=None,
-        help="Wiktionary source variant: native edition or English edition",
-    )
+    _add_source_variant_option(parser)
     parser.add_argument("--dataset-version", help="exact installed dataset release version")
     parser.add_argument("--path", help="local SQLite artifact")
 
@@ -170,7 +191,14 @@ def _parser() -> argparse.ArgumentParser:
     parser.add_argument("--version", action="version", version=f"lexhint {__version__}")
     parser.add_argument("--json", action="store_true", help="emit machine-readable JSON")
     parser.add_argument("--no-color", action="store_true", help="disable ANSI colors")
-    parser.add_argument("--offline", action="store_true", help="forbid build/source network access")
+    parser.add_argument(
+        "--offline",
+        action="store_true",
+        help=(
+            "forbid network access; builds use local sources/cache only, "
+            "catalog reads require cache, and dataset downloads are unavailable"
+        ),
+    )
     sub = parser.add_subparsers(dest="command", required=True, parser_class=_ArgumentParser)
 
     for name, help_text in (
@@ -179,57 +207,126 @@ def _parser() -> argparse.ArgumentParser:
         ("complete", "complete known lexical keys by prefix"),
     ):
         command = sub.add_parser(name, help=help_text)
-        command.add_argument("values", nargs="+")
-        command.add_argument("-l", "--language", choices=sorted(SUPPORTED_LANGUAGES))
+        _add_values_argument(command, metavar="WORD/TEXT", help="word or text to process")
+        _add_language_option(command)
         _artifact_selector(command)
         if name == "word":
             command.add_argument("--locale", help=_LOCALE_HELP)
         if name == "complete":
-            command.add_argument("--limit", type=int, default=20)
+            command.add_argument(
+                "--limit",
+                type=int,
+                default=20,
+                metavar="N",
+                help="maximum number of completions to return (default: 20)",
+            )
 
     suggest = sub.add_parser("suggest", help="suggest likely spellings for a query")
-    suggest.add_argument("values", nargs="+")
-    suggest.add_argument("-l", "--language", choices=sorted(SUPPORTED_LANGUAGES))
+    _add_values_argument(suggest, metavar="QUERY", help="word or text to suggest spellings for")
+    _add_language_option(suggest)
     _artifact_selector(suggest)
-    suggest.add_argument("--limit", type=int, default=20)
-    suggest.add_argument("--max-distance", type=int)
-
+    suggest.add_argument(
+        "--limit",
+        type=int,
+        default=20,
+        metavar="N",
+        help="maximum number of suggestions to return (default: 20)",
+    )
+    suggest.add_argument(
+        "--max-distance",
+        type=int,
+        metavar="N",
+        help="maximum edit distance from the query",
+    )
     headwords = sub.add_parser("headwords", help="match lexical headwords by glob or regex")
-    headwords.add_argument("pattern")
-    headwords.add_argument("-l", "--language", choices=sorted(SUPPORTED_LANGUAGES))
+    headwords.add_argument(
+        "pattern",
+        metavar="PATTERN",
+        help="glob or regular-expression pattern to match",
+    )
+    _add_language_option(headwords)
     _artifact_selector(headwords)
-    headwords.add_argument("--syntax", choices=("glob", "regex"), default="glob")
-    headwords.add_argument("--limit", type=int, default=100)
-
+    headwords.add_argument(
+        "--syntax",
+        choices=("glob", "regex"),
+        default="glob",
+        help="pattern syntax (default: glob)",
+    )
+    headwords.add_argument(
+        "--limit",
+        type=int,
+        default=100,
+        metavar="N",
+        help="maximum number of matching headwords (default: 100)",
+    )
     context = sub.add_parser("context", help="show semantic-domain evidence around a target")
-    context.add_argument("text", nargs="+")
-    context.add_argument("--target", required=True, help="START:END span or literal target")
-    context.add_argument("-l", "--language", choices=sorted(SUPPORTED_LANGUAGES))
+    context.add_argument(
+        "text",
+        nargs="+",
+        metavar="TEXT",
+        help="text containing the target",
+    )
+    context.add_argument(
+        "--target",
+        required=True,
+        metavar="TARGET",
+        help="START:END span or literal target",
+    )
+    _add_language_option(context)
     _artifact_selector(context)
-    context.add_argument("--window", type=int, default=6)
-    context.add_argument("--decay", type=float, default=0.7)
-    context.add_argument("--limit", type=int)
-
+    context.add_argument(
+        "--window",
+        type=int,
+        default=6,
+        metavar="N",
+        help="maximum lexical cue distance around the target (default: 6)",
+    )
+    context.add_argument(
+        "--decay",
+        type=float,
+        default=0.7,
+        metavar="FLOAT",
+        help="per-distance evidence decay factor (default: 0.7)",
+    )
+    context.add_argument(
+        "--limit",
+        type=int,
+        metavar="N",
+        help="maximum number of semantic domains to return",
+    )
     dictionary = sub.add_parser("dictionary", help="build or inspect SQLite language artifacts")
     dictionary_sub = dictionary.add_subparsers(
         dest="dictionary_command", required=True, parser_class=_ArgumentParser
     )
     build = dictionary_sub.add_parser("build", help="build a self-describing local SQLite artifact")
-    build.add_argument("language", nargs="?", choices=sorted(SUPPORTED_LANGUAGES), default=None)
+    build.add_argument(
+        "language",
+        nargs="?",
+        choices=sorted(SUPPORTED_LANGUAGES),
+        default=None,
+        metavar="LANGUAGE",
+        help="base language code for the artifact",
+    )
     build.add_argument("source_positional", nargs="?", help=argparse.SUPPRESS)
     build.add_argument("--source", dest="source_option", help="dictionary JSONL(.gz) path or URL")
-    build.add_argument("--output")
+    build.add_argument(
+        "--output",
+        metavar="PATH",
+        help="output SQLite artifact path",
+    )
     build.add_argument(
         "--capabilities", help="comma-separated capabilities: lexical,semantic,dictionary,search"
     )
-    build.add_argument("--profile", choices=sorted(PROFILES))
+    build.add_argument(
+        "--profile",
+        choices=sorted(PROFILES),
+        metavar="PROFILE",
+        help="named capability profile (default: inferred from capabilities)",
+    )
     build.add_argument(
         "--no-frequency", action="store_true", help="disable default FrequencyWords enrichment"
     )
-    build.add_argument(
-        "--source-variant", choices=("native", "english"), default=None,
-        help="Wiktionary source variant",
-    )
+    _add_source_variant_option(build)
     build.add_argument("--source-edition", help="Wiktionary source edition")
     build.add_argument("--source-metadata-language", help="Wiktionary metadata language")
     build.add_argument("--frequency-source", help="custom local or HTTP frequency source")
@@ -242,27 +339,63 @@ def _parser() -> argparse.ArgumentParser:
     project = dictionary_sub.add_parser(
         "project", help="create a capability subset from an existing SQLite artifact"
     )
-    project.add_argument("source", type=Path)
-    project.add_argument("--output", required=True)
+    project.add_argument(
+        "source",
+        type=Path,
+        metavar="PATH",
+        help="source SQLite artifact",
+    )
+    project.add_argument(
+        "--output",
+        required=True,
+        metavar="PATH",
+        help="output SQLite artifact path",
+    )
     project.add_argument(
         "--capabilities", help="comma-separated capabilities: lexical,semantic,dictionary,search"
     )
-    project.add_argument("--profile", choices=sorted(PROFILES))
+    project.add_argument(
+        "--profile",
+        choices=sorted(PROFILES),
+        metavar="PROFILE",
+        help="named capability profile for the projected artifact",
+    )
 
     search = dictionary_sub.add_parser("search", help="search indexed dictionary definitions")
-    search.add_argument("query", nargs="+")
-    search.add_argument("-l", "--language", choices=sorted(SUPPORTED_LANGUAGES))
+    search.add_argument(
+        "query",
+        nargs="+",
+        metavar="QUERY",
+        help="definition text or lexical query",
+    )
+    _add_language_option(search)
     _artifact_selector(search)
-    search.add_argument("--fields", default="glosses")
-    search.add_argument("--match", choices=("all", "any"), default="all")
-    search.add_argument("--limit", type=int, default=50)
+    search.add_argument(
+        "--fields",
+        default="glosses",
+        metavar="FIELDS",
+        help="comma-separated fields to search (default: glosses)",
+    )
+    search.add_argument(
+        "--match",
+        choices=("all", "any"),
+        default="all",
+        help="require all or any query terms (default: all)",
+    )
+    search.add_argument(
+        "--limit",
+        type=int,
+        default=50,
+        metavar="N",
+        help="maximum number of matching entries (default: 50)",
+    )
 
     pronunciation = dictionary_sub.add_parser(
         "pronunciation",
         help="show pronunciations, optionally filtered by region or locale",
     )
-    pronunciation.add_argument("values", nargs="+")
-    pronunciation.add_argument("-l", "--language", choices=sorted(SUPPORTED_LANGUAGES))
+    _add_values_argument(pronunciation, metavar="WORD", help="word to show pronunciations for")
+    _add_language_option(pronunciation)
     _artifact_selector(pronunciation)
     selector = pronunciation.add_mutually_exclusive_group()
     selector.add_argument(
@@ -292,21 +425,47 @@ def _parser() -> argparse.ArgumentParser:
     )
 
     relations = dictionary_sub.add_parser("relations", help="show explicit headword relationships")
-    relations.add_argument("values", nargs="+")
-    relations.add_argument("-l", "--language", choices=sorted(SUPPORTED_LANGUAGES))
+    _add_values_argument(relations, metavar="WORD", help="headword whose relations to show")
+    _add_language_option(relations)
     _artifact_selector(relations)
-    relations.add_argument("--relation", dest="relation_types", action="append")
     relations.add_argument(
-        "--incoming", action="store_true", help="show relations targeting the word"
+        "--relation",
+        dest="relation_types",
+        action="append",
+        metavar="RELATION",
+        help="repeatable or comma-separated relation names",
     )
-    relations.add_argument("--limit", type=int, default=50)
+    relations.add_argument(
+        "--incoming",
+        action="store_true",
+        help="show relations targeting the word",
+    )
+    relations.add_argument(
+        "--limit",
+        type=int,
+        default=50,
+        metavar="N",
+        help="maximum number of relations to return (default: 50)",
+    )
 
     resolve = dictionary_sub.add_parser("resolve", help="resolve explicit headword relationships")
-    resolve.add_argument("values", nargs="+")
-    resolve.add_argument("-l", "--language", choices=sorted(SUPPORTED_LANGUAGES))
+    _add_values_argument(resolve, metavar="WORD", help="headword whose relations to resolve")
+    _add_language_option(resolve)
     _artifact_selector(resolve)
-    resolve.add_argument("--relation", dest="relation_types", action="append")
-    resolve.add_argument("--limit", type=int, default=20)
+    resolve.add_argument(
+        "--relation",
+        dest="relation_types",
+        action="append",
+        metavar="RELATION",
+        help="repeatable or comma-separated relation names",
+    )
+    resolve.add_argument(
+        "--limit",
+        type=int,
+        default=20,
+        metavar="N",
+        help="maximum number of resolved relations (default: 20)",
+    )
 
     inspect = dictionary_sub.add_parser(
         "word",
@@ -316,8 +475,8 @@ def _parser() -> argparse.ArgumentParser:
             "examples, synonyms, antonyms. Groups: all, entry, sense, relations."
         ),
     )
-    inspect.add_argument("values", nargs="+")
-    inspect.add_argument("-l", "--language", choices=sorted(SUPPORTED_LANGUAGES))
+    _add_values_argument(inspect, metavar="WORD", help="headword to inspect")
+    _add_language_option(inspect)
     _artifact_selector(inspect)
     inspect.add_argument(
         "--locale",
@@ -355,7 +514,14 @@ def _parser() -> argparse.ArgumentParser:
     )
     inspect.add_argument("--width", type=int, help="human-output width, from 40 through 240")
     status = dictionary_sub.add_parser("status", help="show SQLite artifact status and counts")
-    status.add_argument("language", nargs="?", choices=sorted(SUPPORTED_LANGUAGES), default=None)
+    status.add_argument(
+        "language",
+        nargs="?",
+        choices=sorted(SUPPORTED_LANGUAGES),
+        default=None,
+        metavar="LANGUAGE",
+        help="base language code to inspect",
+    )
     _artifact_selector(status)
 
     dataset = sub.add_parser("dataset", help="download and manage published datasets")
@@ -363,88 +529,156 @@ def _parser() -> argparse.ArgumentParser:
         dest="dataset_command", required=True, parser_class=_ArgumentParser
     )
     download = dataset_sub.add_parser("download", help="download a published dataset")
-    download.add_argument("language", choices=sorted(SUPPORTED_LANGUAGES))
+    download.add_argument(
+        "language",
+        choices=sorted(SUPPORTED_LANGUAGES),
+        metavar="LANGUAGE",
+        help="base language code to download",
+    )
     download.add_argument(
         "--variant",
         choices=DATASET_VARIANT_NAMES,
         default=DEFAULT_DATASET_VARIANT,
         help=f"dataset capability variant (default: {DEFAULT_DATASET_VARIANT})",
     )
+    _add_source_variant_option(download)
     download.add_argument(
-        "--source-variant",
-        choices=("native", "english"),
-        default=None,
-        help="Wiktionary source variant",
+        "--version",
+        "--dataset-version",
+        dest="dataset_version",
+        metavar="VERSION",
+        help="exact published dataset release version",
     )
-    download.add_argument("--version", dest="dataset_version")
-    download.add_argument("--force", action="store_true")
+    download.add_argument(
+        "--force",
+        action="store_true",
+        help="redownload and replace an existing valid installation",
+    )
     available = dataset_sub.add_parser("available", help="list published datasets")
-    available.add_argument("--language", choices=sorted(SUPPORTED_LANGUAGES))
-    available.add_argument("--version", dest="dataset_version")
-    available.add_argument("--variant", choices=DATASET_VARIANT_NAMES)
     available.add_argument(
-        "--source-variant",
-        choices=("native", "english"),
-        default=None,
-        help="Wiktionary source variant",
+        "--language",
+        choices=sorted(SUPPORTED_LANGUAGES),
+        metavar="LANGUAGE",
+        help="filter by base language code",
     )
+    available.add_argument(
+        "--version",
+        "--dataset-version",
+        dest="dataset_version",
+        metavar="VERSION",
+        help="filter by exact published dataset release version",
+    )
+    available.add_argument(
+        "--variant",
+        choices=DATASET_VARIANT_NAMES,
+        metavar="VARIANT",
+        help="filter by dataset capability variant",
+    )
+    _add_source_variant_option(available)
 
     check = dataset_sub.add_parser("check", help="check installed datasets for updates")
-    check.add_argument("language", nargs="?", choices=sorted(SUPPORTED_LANGUAGES))
-    check.add_argument("--variant", choices=DATASET_VARIANT_NAMES)
     check.add_argument(
-        "--source-variant",
-        choices=("native", "english"),
-        default=None,
-        help="Wiktionary source variant",
+        "language",
+        nargs="?",
+        choices=sorted(SUPPORTED_LANGUAGES),
+        metavar="LANGUAGE",
+        help="base language code to check",
     )
+    check.add_argument(
+        "--variant",
+        choices=DATASET_VARIANT_NAMES,
+        metavar="VARIANT",
+        help="filter by dataset capability variant",
+    )
+    _add_source_variant_option(check)
     update = dataset_sub.add_parser("update", help="update installed datasets")
-    update.add_argument("language", nargs="?", choices=sorted(SUPPORTED_LANGUAGES))
-    update.add_argument("--variant", choices=DATASET_VARIANT_NAMES)
     update.add_argument(
-        "--source-variant",
-        choices=("native", "english"),
-        default=None,
-        help="Wiktionary source variant",
+        "language",
+        nargs="?",
+        choices=sorted(SUPPORTED_LANGUAGES),
+        metavar="LANGUAGE",
+        help="base language code to update",
     )
+    update.add_argument(
+        "--variant",
+        choices=DATASET_VARIANT_NAMES,
+        metavar="VARIANT",
+        help="filter by dataset capability variant",
+    )
+    _add_source_variant_option(update)
     info = dataset_sub.add_parser("info", help="show an installed dataset")
-    info.add_argument("language", choices=sorted(SUPPORTED_LANGUAGES))
-    info.add_argument("--variant", choices=DATASET_VARIANT_NAMES)
     info.add_argument(
-        "--source-variant",
-        choices=("native", "english"),
-        default=None,
-        help="Wiktionary source variant",
+        "language",
+        choices=sorted(SUPPORTED_LANGUAGES),
+        metavar="LANGUAGE",
+        help="base language code to inspect",
     )
-    info.add_argument("--version", dest="dataset_version")
+    info.add_argument(
+        "--variant",
+        choices=DATASET_VARIANT_NAMES,
+        metavar="VARIANT",
+        help="select a dataset capability variant",
+    )
+    _add_source_variant_option(info)
+    info.add_argument(
+        "--version",
+        "--dataset-version",
+        dest="dataset_version",
+        metavar="VERSION",
+        help="select an exact installed dataset release version",
+    )
     listing = dataset_sub.add_parser("list", help="list installed datasets")
+    _add_source_variant_option(listing)
     listing.add_argument(
-        "--source-variant",
-        choices=("native", "english"),
-        default=None,
-        help="Wiktionary source variant",
+        "--language",
+        choices=sorted(SUPPORTED_LANGUAGES),
+        metavar="LANGUAGE",
+        help="filter by base language code",
     )
-    listing.add_argument("--language", choices=sorted(SUPPORTED_LANGUAGES))
     remove = dataset_sub.add_parser("remove", help="remove installed dataset artifacts")
-    remove.add_argument("language", choices=sorted(SUPPORTED_LANGUAGES))
-    remove.add_argument("--variant", required=True, choices=DATASET_VARIANT_NAMES)
     remove.add_argument(
-        "--source-variant",
-        choices=("native", "english"),
-        default=None,
-        help="Wiktionary source variant",
+        "language",
+        choices=sorted(SUPPORTED_LANGUAGES),
+        metavar="LANGUAGE",
+        help="base language code whose dataset to remove",
     )
-    remove.add_argument("--version", dest="dataset_version")
+    remove.add_argument(
+        "--variant",
+        required=True,
+        choices=DATASET_VARIANT_NAMES,
+        metavar="VARIANT",
+        help="dataset capability variant to remove",
+    )
+    _add_source_variant_option(remove)
+    remove.add_argument(
+        "--version",
+        "--dataset-version",
+        dest="dataset_version",
+        metavar="VERSION",
+        help="remove only the exact installed dataset release version",
+    )
     validate = dataset_sub.add_parser("validate", help="validate installed dataset artifacts")
-    validate.add_argument("language", nargs="?", choices=sorted(SUPPORTED_LANGUAGES))
-    validate.add_argument("--variant", choices=DATASET_VARIANT_NAMES)
     validate.add_argument(
-        "--source-variant",
-        choices=("native", "english"),
-        default=None,
-        help="Wiktionary source variant",
+        "language",
+        nargs="?",
+        choices=sorted(SUPPORTED_LANGUAGES),
+        metavar="LANGUAGE",
+        help="base language code to validate",
     )
-    validate.add_argument("--version", dest="dataset_version")
+    validate.add_argument(
+        "--variant",
+        choices=DATASET_VARIANT_NAMES,
+        metavar="VARIANT",
+        help="filter by dataset capability variant",
+    )
+    _add_source_variant_option(validate)
+    validate.add_argument(
+        "--version",
+        "--dataset-version",
+        dest="dataset_version",
+        metavar="VERSION",
+        help="validate only the exact installed dataset release version",
+    )
 
     return parser
 
@@ -570,6 +804,10 @@ def _status(info: ArtifactStatus, style: TerminalStyle) -> None:
     print(f"  path          {values['path']}")
 
 
+def _dataset_identity(value: DatasetArtifact | InstalledDataset | DatasetUpdate) -> str:
+    return f"{value.language}/{value.source_variant}/{value.variant}"
+
+
 def _dataset_value(value: DatasetArtifact | InstalledDataset) -> dict[str, object]:
     return value.as_dict()
 
@@ -595,14 +833,11 @@ def _run_dataset(args: argparse.Namespace, *, json_output: bool) -> int:
             _json(payload)
         elif result.already_installed:
             print(
-                f"Already installed {result.language}/{result.variant} "
+                f"Already installed {_dataset_identity(result)} "
                 f"{result.dataset_version}: {result.path}"
             )
         else:
-            print(
-                f"Installed {result.language}/{result.variant} "
-                f"{result.dataset_version}: {result.path}"
-            )
+            print(f"Installed {_dataset_identity(result)} {result.dataset_version}: {result.path}")
         return 0
     if args.dataset_command == "available":
         remote_items = available_datasets(
@@ -618,12 +853,11 @@ def _run_dataset(args: argparse.Namespace, *, json_output: bool) -> int:
         else:
             for remote_item in remote_items:
                 print(
-                    f"{remote_item.language} {remote_item.variant} "
-                    f"s{remote_item.schema_version} {remote_item.dataset_version} "
-                    f"{', '.join(remote_item.capabilities)} {remote_item.compressed_size:,} bytes"
+                    f"{_dataset_identity(remote_item)} s{remote_item.schema_version} "
+                    f"{remote_item.dataset_version} {', '.join(remote_item.capabilities)} "
+                    f"{remote_item.compressed_size:,} bytes"
                 )
         return 0
-
     if args.dataset_command == "check":
         statuses = check_dataset_updates(
             args.language,
@@ -639,11 +873,9 @@ def _run_dataset(args: argparse.Namespace, *, json_output: bool) -> int:
                 available = status.available_version or "unavailable"
                 state = "update available" if status.update_available else "current"
                 print(
-                    f"{status.language} {status.variant} "
-                    f"{status.installed_version} -> {available} {state}"
+                    f"{_dataset_identity(status)} {status.installed_version} -> {available} {state}"
                 )
         return 0
-
     if args.dataset_command == "update":
         installed_items = update_datasets(
             args.language,
@@ -657,7 +889,7 @@ def _run_dataset(args: argparse.Namespace, *, json_output: bool) -> int:
             _json(payload)
         else:
             for item in installed_items:
-                print(f"Updated {item.language}/{item.variant} {item.dataset_version}: {item.path}")
+                print(f"Updated {_dataset_identity(item)} {item.dataset_version}: {item.path}")
         return 0
     if args.dataset_command == "list":
         installed_items = list_installed_datasets(args.language)
@@ -684,8 +916,7 @@ def _run_dataset(args: argparse.Namespace, *, json_output: bool) -> int:
             for installed_item, value in zip(installed_items, payload_items, strict=True):
                 marker = " *" if value["selected"] else ""
                 print(
-                    f"{installed_item.language} {installed_item.variant} "
-                    f"s{installed_item.schema_version} {installed_item.dataset_version} "
+                    f"{_dataset_identity(installed_item)} s{installed_item.schema_version} "
                     f"{installed_item.dataset_version} {', '.join(installed_item.capabilities)} "
                     f"{installed_item.size_bytes:,} bytes{marker}"
                 )
@@ -711,8 +942,8 @@ def _run_dataset(args: argparse.Namespace, *, json_output: bool) -> int:
             print("installed variants:")
             for value in installed_values:
                 print(
-                    f"  {value['variant']} s{value['schema_version']} "
-                    f"{value['dataset_version']} {value['path']}"
+                    f"  {value['language']}/{value['source_variant']}/{value['variant']} "
+                    f"s{value['schema_version']} {value['dataset_version']} {value['path']}"
                 )
         return 0
     if args.dataset_command == "remove":
@@ -742,7 +973,7 @@ def _run_dataset(args: argparse.Namespace, *, json_output: bool) -> int:
         else:
             for valid_item in valid_items:
                 print(
-                    f"Valid {valid_item.language}/{valid_item.variant}/"
+                    f"Valid {_dataset_identity(valid_item)} "
                     f"{valid_item.dataset_version}: {valid_item.path}"
                 )
         return 0

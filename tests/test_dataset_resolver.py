@@ -157,3 +157,15 @@ def test_explicit_missing_dataset_reports_selector(
     monkeypatch.setenv("LEXHINT_DATA_DIR", str(tmp_path / "data"))
     with pytest.raises(datasets.DatasetNotFound, match="runtime/2026.08.20"):
         datasets.resolve_installed_dataset("en", variant="runtime", version="2026.08.20")
+
+
+def test_inventory_and_validation_order_include_source_variant(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    english_runtime = install_fixture(tmp_path, monkeypatch, "runtime", source_variant="english")
+    native_rich = install_fixture(tmp_path, monkeypatch, "rich", source_variant="native")
+    native_runtime = install_fixture(tmp_path, monkeypatch, "runtime", source_variant="native")
+
+    expected = [native_rich, native_runtime, english_runtime]
+    assert [item.path for item in datasets.list_installed_datasets("en")] == expected
+    assert [item.path for item in datasets.validate_datasets("en")] == expected

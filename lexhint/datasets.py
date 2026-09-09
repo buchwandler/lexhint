@@ -1136,6 +1136,18 @@ def validate_installed_dataset(dataset: InstalledDataset) -> InstalledDataset:
     return dataset
 
 
+def _installed_sort_key(item: InstalledDataset) -> tuple[str, int, str, str, str, str]:
+    source_rank = {source: index for index, source in enumerate(SOURCE_VARIANTS)}
+    return (
+        item.language,
+        source_rank[item.source_variant],
+        item.variant,
+        item.schema_version,
+        item.dataset_version,
+        str(item.path),
+    )
+
+
 def list_installed_datasets(language: str | None = None) -> tuple[InstalledDataset, ...]:
     root = data_dir() / "datasets"
     if not root.is_dir():
@@ -1151,9 +1163,7 @@ def list_installed_datasets(language: str | None = None) -> tuple[InstalledDatas
                 result.append(validate_installed_dataset(_installed_from_sidecar(path)))
             except DatasetError:
                 continue
-    return tuple(
-        sorted(result, key=lambda item: (item.language, item.variant, item.dataset_version))
-    )
+    return tuple(sorted(result, key=_installed_sort_key))
 
 
 def _release_key(dataset: InstalledDataset) -> tuple[str, str, str]:
@@ -1576,7 +1586,7 @@ def validate_datasets(
             if version is not None and dataset.dataset_version != version:
                 continue
             result.append(validate_installed_dataset(dataset))
-    return tuple(result)
+    return tuple(sorted(result, key=_installed_sort_key))
 
 
 __all__ = [

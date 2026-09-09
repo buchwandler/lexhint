@@ -7,13 +7,13 @@ section: cross_cutting_concepts
 title: Cross-cutting Concepts
 order: 80
 status: accepted
-version: 18
+version: 19
 body_format: markdown
 ---
 
 ### Capability-specific schema
 
-Schema metadata is explicit and self-describing. `language`, `locale`, `variant`, `schema_version`, and `dataset_version` remain separate dimensions. Locale is optional and does not create `en-GB` or `en-US` artifacts. Strict equality, not a compatibility range, controls SQLite access.
+Artifact metadata is explicit and self-describing. It identifies the physical language, schema, capabilities, profile, and source provenance, while the managed dataset identity is `(language, source_variant, capability_variant, schema_version, dataset_version)`. Locale is optional runtime presentation and filtering state. It never changes artifact identity or creates `en-GB` or `en-US` artifacts. Strict schema equality, not a compatibility range, controls SQLite access.
 
 Schema 10 metadata is explicit and self-describing. `lexemes` is always present for lexical capability and stores lowercase, titlecase, and uppercase attestation flags exposed by `WordEvidence`. `lexeme_domains` exists only for `semantic`; rich `entries`, `senses`, `sense_topics`, and `headword_relations` exist only for `dictionary`; `lexeme_ngrams` exists for `search`; and `sense_search_terms` exists for `dictionary` plus `search`. Search and relation metadata record index and row counts, and projections remove claims for excluded structures. Schema 9 artifacts are rejected and must be rebuilt; schema 9 and schema 10 dataset families remain side by side on disk.
 

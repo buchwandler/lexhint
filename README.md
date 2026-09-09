@@ -177,7 +177,24 @@ lexhint dictionary word compiler -l en --variant rich
 lexhint dictionary status en --variant runtime
 ```
 
+Advanced query controls are available for bounded semantic and fuzzy searches:
+
+```bash
+lexhint context "The compiler is 8.3.2." --target 16:21 --window 8 --decay 0.8 --limit 5
+lexhint suggest compilar -l en --variant rich --max-distance 2
+```
+
+`context --window` limits lexical cue distance, `--decay` sets per-distance evidence decay, and `--limit` caps semantic domains. `suggest --max-distance` bounds edit distance; its `--limit` caps returned candidates. Dictionary search accepts comma-separated `--fields` and `--match all` or `any`. Relation names are accepted through repeatable, comma-separated `--relation` options.
+
 All artifact-consuming query commands accept `--source-variant`, `--variant`, and `--dataset-version`; `--path` remains an explicit custom-file override and cannot be combined with selectors. Native is preferred when source is omitted. Use `--json` for one JSON document on stdout. Dataset `list`, `info`, and `validate` are local; `available` and `download` read the static catalog. Exact schema equality is required, and historical releases remain usable through catalog entries or the compatibility Releases API fallback.
+
+Dataset lifecycle commands accept `--version` and the additive `--dataset-version` alias where an exact version is supported. Human output uses the canonical identity `<language>/<source_variant>/<variant>` so coexisting source editions remain distinguishable:
+
+```bash
+lexhint dataset info en --variant runtime
+lexhint dataset validate en
+lexhint dataset remove en --variant runtime --source-variant english
+```
 
 Dictionary word output has three human-readable detail levels. The default `standard` view shows all senses with compact metadata. Use `compact` for a deliberately short shell view, or `full` for every field retained by the local Lexhint dictionary model:
 
@@ -221,6 +238,14 @@ lexhint dictionary pronunciation leite --locale pt-PT
 
 `--region` performs exact normalized matching against a retained source pronunciation tag. It is useful for source-specific accents such as `Caipira`, `Paulistana`, `Canada`, or `General-American`, but it is not the normal language/region selector.
 
+Filter pronunciation by part of speech with repeatable, comma-separated `--pos` values. Locale selection and source selection are independent: locale chooses regional evidence inside the selected artifact, while `--source-variant` chooses the Wiktionary edition:
+
+```bash
+lexhint dictionary pronunciation live --locale en-US --pos verb
+lexhint dictionary pronunciation leite --locale pt-BR --source-variant english
+```
+
+A locale never switches the Wiktionary source variant.
 `--locale` is the normal pronunciation preference. It selects matching retained evidence and otherwise falls back to untagged pronunciations for that word and part-of-speech group. If multiple distinct untagged pronunciations are the only fallback, the CLI reports that the requested regional evidence was not available. A locale does not synthesize missing pronunciations or silently switch Wiktionary editions.
 
 Use `--include-neutral` to include untagged pronunciations alongside matching region or locale pronunciations. Without a filter, all retained pronunciations are already returned, so `--include-neutral` has no additional effect. Use global `--json` for machine-readable results.
@@ -263,6 +288,17 @@ lexhint dictionary relations love --incoming --variant dictionary
 
 Schema 10 artifacts are rebuilt from raw source rather than migrated. The `dictionary` variant contains full dictionary content without search indexes. The `rich` variant adds the larger fuzzy and definition-search indexes.
 Use `--json` for stable, complete machine-readable output. POS selection applies to JSON entries, while `--detail`, `--show`, `--hide`, and `--width` are human-only options. `dictionary status` reports current SQL row counts, capabilities, provenance, size, and build metadata without rebuilding. Use `--path` as an advanced override when inspecting a specific artifact. Rich dictionary lookup reports a controlled capability error for compact runtime artifacts.
+
+## Environment variables
+
+The public environment contract includes:
+
+- `LEXHINT_LANGUAGE` sets the default base language when `-l/--language` is omitted.
+- `LEXHINT_DATA_DIR` overrides managed dataset storage.
+- `LEXHINT_CACHE_DIR` overrides the catalog and source cache.
+- `NO_COLOR` disables ANSI color output.
+
+Advanced users may set `LEXHINT_GITHUB_TOKEN` to reduce GitHub API rate-limit failures. `LEXHINT_DATASET_CATALOG_URL` is an internal/testing override and is not a stable deployment contract. `XDG_DATA_HOME` and `XDG_CACHE_HOME` provide platform-level directory defaults when Lexhint-specific variables are unset.
 
 ## Data and scope
 
