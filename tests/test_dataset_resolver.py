@@ -73,8 +73,8 @@ def test_source_variants_coexist_and_resolve_native_first(
     native = install_fixture(tmp_path, monkeypatch, "runtime", source_variant="native")
     english = install_fixture(tmp_path, monkeypatch, "runtime", source_variant="english")
     assert native != english
-    assert "/native/" in str(native)
-    assert "/english/" in str(english)
+    assert "native" in native.parts
+    assert "english" in english.parts
     assert datasets.resolve_installed_dataset("en").path == native
     assert datasets.resolve_installed_dataset("en", source_variant="english").path == english
     assert datasets.remove_dataset("en", variant="runtime", source_variant="english") == (english,)
