@@ -161,12 +161,27 @@ def _target_span(text: str, target: str) -> tuple[int, int]:
 
 
 def _add_source_variant_option(parser: argparse.ArgumentParser) -> None:
-    parser.add_argument(
+    group = parser.add_mutually_exclusive_group()
+    group.add_argument(
         "--source-variant",
         choices=SOURCE_VARIANTS,
         default=None,
         metavar="SOURCE",
         help="Wiktionary source variant: native edition or English edition",
+    )
+    group.add_argument(
+        "-e",
+        dest="source_variant",
+        action="store_const",
+        const="english",
+        help="use the English Wiktionary source variant",
+    )
+    group.add_argument(
+        "-n",
+        dest="source_variant",
+        action="store_const",
+        const="native",
+        help="use the native Wiktionary source variant",
     )
 
 

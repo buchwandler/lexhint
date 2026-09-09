@@ -4,19 +4,19 @@ object_type: release
 versioning:
   schema_version: 1
   revision: 6
-version: v0.4.7
-status: released
+version: v0.4.8
+status: planned
 history_state: curated
-title: Release v0.4.7
-released_at: "2026-09-09"
-previous_version: v0.4.6
+title: Release v0.4.8
+released_at: null
+previous_version: v0.4.7
 cancel_reason: null
 superseded_by: null
-changelog_file: docs/changelog.md
+changelog_file: null
 boundary_ref: null
 source_refs: []
 source_count: null
-entry_count: 4
+entry_count: 5
 artifact_count: 0
 git_base_ref: null
 git_base_sha: null

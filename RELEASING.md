@@ -126,6 +126,18 @@ The fixture smoke test verifies the current local, read-only artifact model. Run
 lexhint dictionary build en
 ```
 
+## Source-selection smoke checks
+
+When source-variant fixtures are available, verify both short aliases and automatic selection before publishing:
+
+```bash
+lexhint dataset download de -e
+lexhint dataset info de -e
+lexhint dataset list --language de
+```
+
+The CI fixture tests should also cover native-only fallback, English-only fallback, English-first selection when both are installed, selector combinations with `--variant` and `--dataset-version`, and explicit `-n` / `-e` removal behavior.
+
 ## Publish checklist
 
 Before tagging or publishing:

@@ -8,7 +8,7 @@ import re
 import shutil
 import sqlite3
 import tempfile
-from collections.abc import Callable, Mapping
+from collections.abc import Callable, Iterable, Mapping
 from contextlib import closing
 from dataclasses import asdict, dataclass
 from datetime import datetime, timezone
@@ -35,6 +35,7 @@ GITHUB_API = "https://api.github.com"
 MANIFEST_NAME = "datasets-v2.json"
 SUPPORTED_MANIFEST_VERSION = 2
 SOURCE_VARIANTS = ("native", "english")
+SOURCE_VARIANT_PREFERENCE = ("english", "native")
 
 
 @dataclass(frozen=True, slots=True)
@@ -188,6 +189,32 @@ class DatasetUpdate:
             "path": str(self.path),
             "update_available": self.update_available,
         }
+
+
+def _preferred_source_variant(
+    candidates: Iterable[DatasetArtifact | InstalledDataset],
+) -> str:
+    for source_variant in SOURCE_VARIANT_PREFERENCE:
+        if any(candidate.source_variant == source_variant for candidate in candidates):
+            return source_variant
+    raise DatasetNotFound("no source variants available")
+
+
+def _dataset_selector(
+    language: str,
+    *,
+    source_variant: str | None = None,
+    variant: str | None = None,
+    version: str | None = None,
+) -> str:
+    parts = [language]
+    if source_variant is not None:
+        parts.append(source_variant)
+    if variant is not None:
+        parts.append(variant)
+    if version is not None:
+        parts.append(version)
+    return "/".join(parts)
 
 
 def _language(language: str) -> str:
@@ -695,7 +722,7 @@ def _catalog_remote_artifacts(
             current = selected_by_language.get(language_key)
             if (
                 current is None
-                or (artifact.source_variant == "native" and current.source_variant == "english")
+                or (artifact.source_variant == "english" and current.source_variant == "native")
                 or (
                     artifact.source_variant == current.source_variant
                     and _dataset_order(artifact) > _dataset_order(current)
@@ -1193,17 +1220,14 @@ def resolve_installed_dataset(
             continue
         candidates.append(candidate)
     if not candidates:
-        selector = f"/{variant}" if variant else ""
-        if version:
-            selector += f"/{version}"
-        raise DatasetNotFound(f"no compatible installed dataset for {normalized}{selector}")
-    if variant is not None or source_variant is not None or version is not None:
-        return max(candidates, key=_release_key)
-    preferred_source = (
-        "native"
-        if any(candidate.source_variant == "native" for candidate in candidates)
-        else "english"
-    )
+        selector = _dataset_selector(
+            normalized,
+            source_variant=source_variant,
+            variant=variant,
+            version=version,
+        )
+        raise DatasetNotFound(f"no compatible installed dataset for {selector}")
+    preferred_source = _preferred_source_variant(candidates)
     candidates = [
         candidate for candidate in candidates if candidate.source_variant == preferred_source
     ]
@@ -1421,14 +1445,16 @@ def download_dataset(
     )
     matching = list(artifacts)
     if source_variant is None:
-        preferred = (
-            "native" if any(item.source_variant == "native" for item in matching) else "english"
-        )
+        preferred = _preferred_source_variant(matching)
         matching = [item for item in matching if item.source_variant == preferred]
     if not matching:
-        raise DatasetNotFound(
-            f"no published dataset for {normalized}/{variant}" + (f"/{version}" if version else "")
+        selector = _dataset_selector(
+            normalized,
+            source_variant=source_variant,
+            variant=variant,
+            version=version,
         )
+        raise DatasetNotFound(f"no published dataset for {selector}")
     artifact = matching[0]
     if artifact.schema_version != SCHEMA_VERSION:
         raise DatasetIncompatible(
@@ -1537,7 +1563,22 @@ def remove_dataset(
 ) -> tuple[Path, ...]:
     normalized = _language(language)
     variant = _variant(variant)
-    source_variant = normalize_source_variant(source_variant)
+    if source_variant is None:
+        matching = tuple(
+            item
+            for item in list_installed_datasets(normalized)
+            if item.variant == variant and (version is None or item.dataset_version == version)
+        )
+        sources = {item.source_variant for item in matching}
+        if len(sources) > 1:
+            raise DatasetAmbiguous(
+                "both native and English source variants are installed for "
+                f"{_dataset_selector(normalized, variant=variant, version=version)}; "
+                "choose -e or -n"
+            )
+        source_variant = next(iter(sources), "native")
+    else:
+        source_variant = normalize_source_variant(source_variant)
     roots = [data_dir() / "datasets" / normalized / source_variant / variant]
     if source_variant == "native":
         roots.append(data_dir() / "datasets" / normalized / variant)

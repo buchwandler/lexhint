@@ -38,16 +38,20 @@ The download default is the `runtime` variant (`lexical,semantic`). Optional var
 - `dictionary` for entries, senses, topics, and rich dictionary rendering without search indexes;
 - `rich` for everything in `dictionary`, plus fuzzy suggestions and indexed definition/reverse search.
 
-Dataset source and capability are independent selectors. `language` is always the lexical target language. `source_variant=native` reads the matching Wiktionary edition, while `source_variant=english` reads the English Wiktionary edition and keeps English source metadata. Native is the default when available; English is the fallback for a target language with no native publication.
+Dataset source and capability are independent selectors. `language` is always the lexical target language. `source_variant=native` reads the matching Wiktionary edition, while `source_variant=english` reads the English Wiktionary edition and keeps English source metadata. English is the default when available; native is the fallback when no English publication exists. The short aliases `-n` and `-e` select those same canonical values.
 
 ```bash
-lexhint dataset download de --source-variant native
-lexhint dataset download de --source-variant english
-lexhint dictionary search -l de --source-variant english Haus
-lexhint dataset list --language de --source-variant english
+lexhint dataset download de -n
+lexhint dataset download de -e
+lexhint dictionary search -l de -e Haus
+lexhint dataset list --language de -e
 ```
 
 Both source variants can be installed simultaneously. Their canonical paths include language, source variant, capability variant, schema, and version. Historical source-unqualified catalog entries, release assets, and sidecars continue to mean `native`.
+
+When a command needs one installed artifact and no source variant is given, Lexhint selects English if a matching English-source artifact is installed; otherwise it selects native. If only one source is installed, that source is selected automatically. `--variant` and `--dataset-version` narrow the candidate set but do not change this source-preference rule. Inventory commands such as `dataset list`, `available`, `check`, `update`, and `validate` continue to expose all matching source variants unless filtered. `dataset remove` selects the only matching source, but requires `-e` or `-n` when both sources match.
+
+The short selectors are aliases for the long forms: `-e` is `--source-variant english`, and `-n` is `--source-variant native`.
 Install several variants side by side:
 
 ```bash
@@ -98,7 +102,8 @@ Locale is optional runtime presentation state, not a dataset identity. `language
 
 ```python
 neutral = Lexicon("en")
-british = Lexicon("en", locale="en-US")
+american = Lexicon("en", locale="en-US")
+british = Lexicon("en", locale="en-GB")
 brazilian = Lexicon("pt", locale="pt-BR")
 portuguese = Lexicon("pt", locale="pt-PT")
 ```
@@ -186,14 +191,14 @@ lexhint suggest compilar -l en --variant rich --max-distance 2
 
 `context --window` limits lexical cue distance, `--decay` sets per-distance evidence decay, and `--limit` caps semantic domains. `suggest --max-distance` bounds edit distance; its `--limit` caps returned candidates. Dictionary search accepts comma-separated `--fields` and `--match all` or `any`. Relation names are accepted through repeatable, comma-separated `--relation` options.
 
-All artifact-consuming query commands accept `--source-variant`, `--variant`, and `--dataset-version`; `--path` remains an explicit custom-file override and cannot be combined with selectors. Native is preferred when source is omitted. Use `--json` for one JSON document on stdout. Dataset `list`, `info`, and `validate` are local; `available` and `download` read the static catalog. Exact schema equality is required, and historical releases remain usable through catalog entries or the compatibility Releases API fallback.
+All artifact-consuming query commands accept `--source-variant` (or the `-e` / `-n` aliases), `--variant`, and `--dataset-version`; `--path` remains an explicit custom-file override and cannot be combined with selectors. English is preferred when source is omitted and native is used only when no English source exists. Use `--json` for one JSON document on stdout. Dataset `list`, `info`, and `validate` are local; `available` and `download` read the static catalog. Exact schema equality is required, and historical releases remain usable through catalog entries or the compatibility Releases API fallback.
 
 Dataset lifecycle commands accept `--version` and the additive `--dataset-version` alias where an exact version is supported. Human output uses the canonical identity `<language>/<source_variant>/<variant>` so coexisting source editions remain distinguishable:
 
 ```bash
 lexhint dataset info en --variant runtime
 lexhint dataset validate en
-lexhint dataset remove en --variant runtime --source-variant english
+lexhint dataset remove en --variant runtime -e
 ```
 
 Dictionary word output has three human-readable detail levels. The default `standard` view shows all senses with compact metadata. Use `compact` for a deliberately short shell view, or `full` for every field retained by the local Lexhint dictionary model:

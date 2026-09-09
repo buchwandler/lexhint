@@ -81,8 +81,25 @@ def test_source_variant_is_available_to_dataset_and_query_parsers() -> None:
     query = parser.parse_args(
         ["dictionary", "search", "-l", "ceb", "--source-variant", "english", "Haus"]
     )
+    short_english = parser.parse_args(["dataset", "download", "ceb", "-e"])
+    short_native = parser.parse_args(["dictionary", "word", "Haus", "-l", "ceb", "-n"])
     assert download.source_variant == "english"
     assert query.source_variant == "english"
+    assert short_english.source_variant == "english"
+    assert short_native.source_variant == "native"
+
+
+@pytest.mark.parametrize(
+    "args",
+    (
+        ["dataset", "download", "ceb", "-e", "-n"],
+        ["dataset", "download", "ceb", "-e", "--source-variant", "native"],
+        ["dictionary", "word", "Haus", "-l", "ceb", "-n", "--source-variant", "english"],
+    ),
+)
+def test_source_variant_aliases_conflict(args: list[str]) -> None:
+    with pytest.raises(SystemExit):
+        _parser().parse_args(args)
 
 
 def test_dataset_available_cli_lists_all_schema10_languages(
@@ -139,6 +156,10 @@ def test_dataset_human_output_distinguishes_source_variants(
     info = capsys.readouterr().out
     assert "en/native/runtime" in info
     assert "en/english/runtime" in info
+
+    assert main(["--json", "dataset", "info", "en", "--variant", "runtime"]) == 0
+    selected_info = json.loads(capsys.readouterr().out)
+    assert selected_info["source_variant"] == "english"
 
     assert main(["--json", "dataset", "list", "--source-variant", "english"]) == 0
     payload = json.loads(capsys.readouterr().out)

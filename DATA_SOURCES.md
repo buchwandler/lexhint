@@ -4,9 +4,10 @@ Lexhint code is Apache-2.0 licensed. External dictionary and corpus data are not
 
 ## Artifact dimensions
 
-Published artifact identity is selected by four values:
+Published managed artifact identity is selected by five values:
 
 - `language`: supported physical/base dictionary language such as `en`;
+- `source_variant`: Wiktionary source edition, `native` or `english`;
 - `variant`: capability profile, one of `lexical`, `runtime`, `dictionary`, or `rich`;
 - `schema_version`: exact SQLite compatibility key, currently `10`;
 - `dataset_version`: published data snapshot.

@@ -17,6 +17,7 @@ def install_fixture(
     variant: str,
     version: str = "2026.08.20",
     source_variant: str = "native",
+    release_published_at: str = "2026-08-21T00:00:00Z",
 ) -> Path:
     monkeypatch.setenv("LEXHINT_DATA_DIR", str(tmp_path / "data"))
     capabilities = {
@@ -40,7 +41,7 @@ def install_fixture(
         variant,
         version,
         f"data-{version}",
-        "2026-08-21T00:00:00Z",
+        release_published_at,
         2,
         "10",
         capabilities[1],
@@ -67,7 +68,7 @@ def test_highest_installed_capability_and_explicit_selection(
     assert datasets.resolve_installed_dataset("en", variant="lexical").path == lexical
 
 
-def test_source_variants_coexist_and_resolve_native_first(
+def test_source_variants_coexist_and_resolve_english_first(
     tmp_path: Path, monkeypatch: pytest.MonkeyPatch
 ) -> None:
     native = install_fixture(tmp_path, monkeypatch, "runtime", source_variant="native")
@@ -75,10 +76,81 @@ def test_source_variants_coexist_and_resolve_native_first(
     assert native != english
     assert "native" in native.parts
     assert "english" in english.parts
-    assert datasets.resolve_installed_dataset("en").path == native
-    assert datasets.resolve_installed_dataset("en", source_variant="english").path == english
+    assert datasets.resolve_installed_dataset("en").path == english
+    assert Lexicon("en").path == english
+    assert Lexicon("en", source_variant="native").path == native
     assert datasets.remove_dataset("en", variant="runtime", source_variant="english") == (english,)
+
+
+def test_selectors_preserve_english_preference_and_capability_ranking(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    native = install_fixture(
+        tmp_path,
+        monkeypatch,
+        "runtime",
+        source_variant="native",
+        release_published_at="2026-09-02T00:00:00Z",
+    )
+    english = install_fixture(
+        tmp_path,
+        monkeypatch,
+        "runtime",
+        source_variant="english",
+        release_published_at="2026-09-01T00:00:00Z",
+    )
+    assert datasets.resolve_installed_dataset("en", variant="runtime").path == english
     assert native.exists()
+
+    version = "2026.09.01"
+    install_fixture(tmp_path, monkeypatch, "runtime", version, source_variant="native")
+    english_version = install_fixture(
+        tmp_path, monkeypatch, "runtime", version, source_variant="english"
+    )
+    assert datasets.resolve_installed_dataset("en", version=version).path == english_version
+
+    rich = install_fixture(tmp_path, monkeypatch, "rich", "2026.09.02", source_variant="english")
+    install_fixture(tmp_path, monkeypatch, "lexical", "2026.09.03", source_variant="english")
+    assert datasets.resolve_installed_dataset("en", source_variant="english").path == rich
+
+    capability_version = "2026.09.04"
+    for variant in ("lexical", "runtime", "dictionary", "rich"):
+        install_fixture(
+            tmp_path,
+            monkeypatch,
+            variant,
+            capability_version,
+            source_variant="english",
+        )
+    assert datasets.resolve_installed_dataset("en", version=capability_version).variant == "rich"
+
+
+def test_single_source_is_selected_automatically(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    native_root = tmp_path / "native-only"
+    native = install_fixture(native_root, monkeypatch, "runtime", source_variant="native")
+    assert datasets.resolve_installed_dataset("en").path == native
+
+    english_root = tmp_path / "english-only"
+    english = install_fixture(english_root, monkeypatch, "runtime", source_variant="english")
+    assert datasets.resolve_installed_dataset("en").path == english
+
+
+def test_remove_selects_only_source_and_rejects_ambiguity(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    native = install_fixture(tmp_path, monkeypatch, "runtime", source_variant="native")
+    assert datasets.remove_dataset("en", variant="runtime") == (native,)
+
+    english = install_fixture(tmp_path, monkeypatch, "runtime", source_variant="english")
+    assert datasets.remove_dataset("en", variant="runtime") == (english,)
+
+    native = install_fixture(tmp_path, monkeypatch, "runtime", source_variant="native")
+    english = install_fixture(tmp_path, monkeypatch, "runtime", source_variant="english")
+    assert native.exists() and english.exists()
+    with pytest.raises(datasets.DatasetAmbiguous, match="choose -e or -n"):
+        datasets.remove_dataset("en", variant="runtime")
 
 
 def test_capability_chain_resolves_each_maximal_variant(

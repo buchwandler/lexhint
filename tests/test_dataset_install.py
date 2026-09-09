@@ -3,6 +3,7 @@ from __future__ import annotations
 import gzip
 import hashlib
 import io
+from dataclasses import replace
 from pathlib import Path
 
 import pytest
@@ -47,11 +48,17 @@ def test_streaming_install_verifies_and_is_idempotent(
         hashlib.sha256(compressed).hexdigest(),
         "https://example.test/asset",
     )
-    monkeypatch.setattr(datasets, "_remote_artifacts", lambda **kwargs: (artifact,))
+    native_artifact = replace(artifact, source_variant="native")
+    english_artifact = replace(artifact, source_variant="english")
+    monkeypatch.setattr(
+        datasets, "_remote_artifacts", lambda **kwargs: (native_artifact, english_artifact)
+    )
     monkeypatch.setattr(datasets, "request", lambda *args, **kwargs: Response(compressed))
 
     installed = datasets.download_dataset("en", variant="lexical")
     assert installed.path.read_bytes() == database
+    assert installed.source_variant == "english"
+    assert "/english/" in str(installed.path)
     assert installed.path.with_name("artifact.json").is_file()
     assert not list(installed.path.parent.glob("*.gz"))
     assert datasets.download_dataset("en", variant="lexical").already_installed
