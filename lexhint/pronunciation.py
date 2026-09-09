@@ -14,6 +14,12 @@ def normalize_ipa_body(value: str) -> str:
     return normalized
 
 
+def is_plausible_ipa(value: str) -> bool:
+    """Return whether a source transcription is suitable for IPA output."""
+    body = normalize_ipa_body(value)
+    return bool(body) and '"' not in body
+
+
 def format_ipa(value: str) -> str:
     """Render one IPA transcription in Lexhint's focused human-output style."""
     body = normalize_ipa_body(value)

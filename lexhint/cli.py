@@ -8,7 +8,7 @@ from collections.abc import Sequence
 from contextlib import suppress
 from dataclasses import asdict
 from pathlib import Path
-from typing import NoReturn, cast
+from typing import Any, NoReturn, cast
 
 from . import __version__
 from .builder import build_dictionary, project_artifact
@@ -29,7 +29,14 @@ from .datasets import (
     validate_datasets,
 )
 from .download import KAIKKI_RAW_URL
-from .languages import SUPPORTED_LANGUAGES, normalize_language, normalize_locale
+from .languages import (
+    SUPPORTED_LANGUAGES,
+    locale_language,
+    locale_tag,
+    normalize_language,
+    normalize_locale,
+    supported_locale_tags,
+)
 from .lexicon import (
     Lexicon,
     LexiconCapabilityError,
@@ -62,8 +69,18 @@ from .terminal import TerminalStyle
 _DEFAULT_LANGUAGE = "en"
 _DICTIONARY_DETAILS = ("compact", "standard", "full")
 
+_LOCALE_HELP = (
+    "pronunciation locale profile, e.g. "
+    + ", ".join(supported_locale_tags())
+    + "; a full locale can supply the language when -l is omitted"
+)
+
 
 class _ArgumentParser(argparse.ArgumentParser):
+    def __init__(self, *args: Any, **kwargs: Any) -> None:
+        kwargs.setdefault("allow_abbrev", False)
+        super().__init__(*args, **kwargs)
+
     def error(self, message: str) -> NoReturn:
         self.print_usage(sys.stderr)
         self.exit(2, f"\nerror: {message}\nTry '{self.prog} --help' for help.\n")
@@ -83,6 +100,32 @@ def _language(values: Sequence[str], explicit: str | None) -> tuple[str, str]:
     if len(values) == 2:
         return normalize_language(values[0]), values[1]
     raise ValueError("expected WORD/TEXT or LANGUAGE WORD/TEXT")
+
+
+def _language_with_locale(
+    values: Sequence[str], explicit: str | None, locale: str | None
+) -> tuple[str, str]:
+    inferred = locale_language(locale) if locale is not None else None
+    if explicit is None and len(values) == 1 and inferred is not None:
+        return inferred, values[0]
+    if (
+        locale is not None
+        and inferred is None
+        and explicit is None
+        and len(values) == 1
+        and "-" not in locale.strip().replace("_", "-")
+    ):
+        raise ValueError(
+            f"locale {locale!r} does not identify a language; "
+            f"hint: use --locale <language>-{locale.upper()} or add --language"
+        )
+    language, word = _language(values, explicit)
+    if inferred is not None and (explicit is not None or len(values) == 2) and inferred != language:
+        raise ValueError(
+            f"locale {locale!r} selects language {inferred!r} but "
+            f"--language is {language!r}; use --locale {inferred}-<REGION> or remove --language"
+        )
+    return language, word
 
 
 def _target_span(text: str, target: str) -> tuple[int, int]:
@@ -120,13 +163,15 @@ def _artifact_selector(parser: argparse.ArgumentParser) -> None:
 
 def _parser() -> argparse.ArgumentParser:
     parser = _ArgumentParser(
-        prog="lexhint", description="Local lexical evidence from SQLite language artifacts."
+        prog="lexhint",
+        description="Local lexical evidence from SQLite language artifacts.",
+        allow_abbrev=False,
     )
     parser.add_argument("--version", action="version", version=f"lexhint {__version__}")
     parser.add_argument("--json", action="store_true", help="emit machine-readable JSON")
     parser.add_argument("--no-color", action="store_true", help="disable ANSI colors")
     parser.add_argument("--offline", action="store_true", help="forbid build/source network access")
-    sub = parser.add_subparsers(dest="command", required=True)
+    sub = parser.add_subparsers(dest="command", required=True, parser_class=_ArgumentParser)
 
     for name, help_text in (
         ("word", "show lexical membership and commonness"),
@@ -138,9 +183,7 @@ def _parser() -> argparse.ArgumentParser:
         command.add_argument("-l", "--language", choices=sorted(SUPPORTED_LANGUAGES))
         _artifact_selector(command)
         if name == "word":
-            command.add_argument(
-                "--locale", help="optional regional presentation preference, such as GB or en-US"
-            )
+            command.add_argument("--locale", help=_LOCALE_HELP)
         if name == "complete":
             command.add_argument("--limit", type=int, default=20)
 
@@ -168,7 +211,9 @@ def _parser() -> argparse.ArgumentParser:
     context.add_argument("--limit", type=int)
 
     dictionary = sub.add_parser("dictionary", help="build or inspect SQLite language artifacts")
-    dictionary_sub = dictionary.add_subparsers(dest="dictionary_command", required=True)
+    dictionary_sub = dictionary.add_subparsers(
+        dest="dictionary_command", required=True, parser_class=_ArgumentParser
+    )
     build = dictionary_sub.add_parser("build", help="build a self-describing local SQLite artifact")
     build.add_argument("language", nargs="?", choices=sorted(SUPPORTED_LANGUAGES), default=None)
     build.add_argument("source_positional", nargs="?", help=argparse.SUPPRESS)
@@ -216,11 +261,14 @@ def _parser() -> argparse.ArgumentParser:
     selector = pronunciation.add_mutually_exclusive_group()
     selector.add_argument(
         "--region",
-        help="source pronunciation region/accent, such as Canada or Central-American",
+        help=(
+            "exact retained source pronunciation tag; use --locale for normal "
+            "language/region preference"
+        ),
     )
     selector.add_argument(
         "--locale",
-        help="locale pronunciation profile, such as en_US or en_GB",
+        help=_LOCALE_HELP,
     )
     pronunciation.add_argument(
         "--pos",
@@ -231,7 +279,10 @@ def _parser() -> argparse.ArgumentParser:
     pronunciation.add_argument(
         "--include-neutral",
         action="store_true",
-        help="also include pronunciations without regional tags",
+        help=(
+            "with --region/--locale, also include untagged pronunciations; "
+            "unfiltered output already includes them"
+        ),
     )
 
     relations = dictionary_sub.add_parser("relations", help="show explicit headword relationships")
@@ -264,7 +315,7 @@ def _parser() -> argparse.ArgumentParser:
     _artifact_selector(inspect)
     inspect.add_argument(
         "--locale",
-        help="optional regional presentation preference, such as GB or en-US",
+        help=_LOCALE_HELP,
     )
     inspect.add_argument(
         "--detail",
@@ -302,7 +353,9 @@ def _parser() -> argparse.ArgumentParser:
     _artifact_selector(status)
 
     dataset = sub.add_parser("dataset", help="download and manage published datasets")
-    dataset_sub = dataset.add_subparsers(dest="dataset_command", required=True)
+    dataset_sub = dataset.add_subparsers(
+        dest="dataset_command", required=True, parser_class=_ArgumentParser
+    )
     download = dataset_sub.add_parser("download", help="download a published dataset")
     download.add_argument("language", choices=sorted(SUPPORTED_LANGUAGES))
     download.add_argument(
@@ -452,6 +505,23 @@ def _pronunciations(
             tags = pronunciation.tags
             suffix = f" [{', '.join(tags)}]" if tags else ""
             print(f"    {ipa}{suffix}")
+
+
+def _neutral_fallback_note(
+    values: Sequence[PronunciationGroup], language: str, locale: str | None
+) -> str | None:
+    if locale is None:
+        return None
+    tag = locale_tag(language, locale) or locale
+    for group in values:
+        if len({pronunciation.ipa for pronunciation in group.pronunciations}) > 1 and all(
+            not pronunciation.tags for pronunciation in group.pronunciations
+        ):
+            return (
+                f"no {tag}-tagged pronunciation is available in this artifact; "
+                "showing untagged source pronunciations"
+            )
+    return None
 
 
 def _status(info: ArtifactStatus, style: TerminalStyle) -> None:
@@ -677,7 +747,7 @@ def _run(args: argparse.Namespace, *, style: TerminalStyle, json_output: bool) -
     if args.command == "dataset":
         return _run_dataset(args, json_output=json_output)
     if args.command == "word":
-        language, word = _language(args.values, args.language)
+        language, word = _language_with_locale(args.values, args.language, args.locale)
         locale = normalize_locale(language, args.locale)
         lexicon = Lexicon(
             language,
@@ -689,7 +759,14 @@ def _run(args: argparse.Namespace, *, style: TerminalStyle, json_output: bool) -
         )
         info = lexicon.word(word)
         if json_output:
-            _json({"language": language, "locale": locale, **asdict(info)})
+            _json(
+                {
+                    "language": language,
+                    "locale": locale,
+                    "locale_tag": locale_tag(language, locale),
+                    **asdict(info),
+                }
+            )
         else:
             _word(info, style)
         return 0
@@ -885,9 +962,7 @@ def _run(args: argparse.Namespace, *, style: TerminalStyle, json_output: bool) -
                     print(target_value)
         return 0
     if args.dictionary_command == "pronunciation":
-        language, word = _language(args.values, args.language)
-        if args.include_neutral and args.region is None and args.locale is None:
-            raise ValueError("--include-neutral requires --region or --locale")
+        language, word = _language_with_locale(args.values, args.language, args.locale)
         locale = normalize_locale(language, args.locale)
         include_pos, _ = resolve_pos_filters(args.pos)
         lexicon = Lexicon(
@@ -905,20 +980,25 @@ def _run(args: argparse.Namespace, *, style: TerminalStyle, json_output: bool) -
             include_pos=include_pos,
         )
         entries = lexicon.entries(word, all_case_variants=True) if not groups else ()
+        fallback_note = _neutral_fallback_note(groups, language, lexicon.locale)
         if json_output:
             _json(
                 {
                     "language": language,
                     "locale": lexicon.locale,
                     "region": args.region,
+                    "locale_tag": locale_tag(language, lexicon.locale),
                     "word": word,
                     "include_neutral": args.include_neutral,
+                    "note": fallback_note,
                     "entries": [asdict(value) for value in groups],
                 }
             )
         else:
             if groups:
                 _pronunciations(word, groups, style)
+                if fallback_note:
+                    print(f"  note: {fallback_note}")
             else:
                 print(style.bold(word))
                 if not entries:
@@ -930,6 +1010,14 @@ def _run(args: argparse.Namespace, *, style: TerminalStyle, json_output: bool) -
                 else:
                     message = "no pronunciations retained"
                 print(f"  {style.yellow(message)}")
+                if lexicon.locale is not None:
+                    provenance = lexicon.metadata
+                    source = provenance.get("dictionary_source_variant") or "selected"
+                    tag = locale_tag(language, lexicon.locale) or lexicon.locale
+                    print(
+                        f"  note: no {tag}-tagged pronunciation is available in the selected "
+                        f"{source} artifact; locale selection does not switch source variants"
+                    )
         return 0
     if args.dictionary_command == "project":
         path = project_artifact(
@@ -1007,7 +1095,7 @@ def _run(args: argparse.Namespace, *, style: TerminalStyle, json_output: bool) -
                 "--detail/--show/--hide/--width are human-output options "
                 "and cannot be used with --json"
             )
-        language, word = _language(args.values, args.language)
+        language, word = _language_with_locale(args.values, args.language, args.locale)
         locale = normalize_locale(language, args.locale)
         lexicon = Lexicon(
             language,
@@ -1027,6 +1115,7 @@ def _run(args: argparse.Namespace, *, style: TerminalStyle, json_output: bool) -
                 {
                     "language": language,
                     "locale": locale,
+                    "locale_tag": locale_tag(language, locale),
                     "word": word,
                     "entries": [_dictionary_entry_json(value) for value in entries],
                 }

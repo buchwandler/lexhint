@@ -94,15 +94,16 @@ print(info.known, info.frequency_rank, info.has_lowercase, info.has_titlecase, i
 print(lexicon.segment("compilerword"))
 ```
 
-Locale is optional runtime presentation state, not a dataset identity. The base language remains `en`, and all of these requests can use the same physical artifact:
+Locale is optional runtime presentation state, not a dataset identity. `language` is the physical lexical language, while `locale` is a regional pronunciation and presentation preference. A full locale tag can supply its base language in CLI commands:
 
 ```python
 neutral = Lexicon("en")
-british = Lexicon("en", locale="GB")
-american = Lexicon("en", locale="en-US")
+british = Lexicon("en", locale="en-US")
+brazilian = Lexicon("pt", locale="pt-BR")
+portuguese = Lexicon("pt", locale="pt-PT")
 ```
 
-`locale` accepts the canonical `GB` and `US` values plus their supported aliases. Without a locale, English remains region-neutral. Locale-aware ordering and labels use only regional tags retained from source data. Frequency remains base-language English data, not British or American frequency.
+`locale` accepts canonical BCP-47-style tags such as `en-US`, `en-GB`, `pt-BR`, and `pt-PT`, plus supported short and underscore aliases. Locale-aware ordering and labels use only regional tags retained from the selected source artifact. Frequency remains base-language data, not regional frequency.
 
 Runtime access is local-only, deterministic, read-only, and never fetches missing entries or mutates the database. `complete()` performs deterministic normalized lexical-key prefix completion and is not a spelling corrector. It requires only the `lexical` capability, returns an exact key first, and ranks remaining full-prefix matches by corpus rank when available or lexical order otherwise. `suggest()` is the separate bounded fuzzy-spelling API and requires `search`; `match_headwords()` provides glob/regex matching; `search_definitions()` provides indexed dictionary-text search and requires `dictionary` plus `search`. Search results are bounded by the artifact's available coverage. `segment()` and semantic context operations require full authoritative coverage.
 
@@ -210,22 +211,26 @@ Filter by an exact retained source region or accent tag:
 lexhint dictionary pronunciation love --region Canada
 ```
 
-Select pronunciations through a locale profile:
+Select pronunciations through a user-facing locale profile:
 
 ```bash
-lexhint dictionary pronunciation love --locale en_US
-lexhint dictionary pronunciation love --locale en_GB
-lexhint dictionary pronunciation love --locale en_CA
+lexhint dictionary pronunciation love --locale en-US
+lexhint dictionary pronunciation leite --locale pt-BR
+lexhint dictionary pronunciation leite --locale pt-PT
 ```
 
-`--region` performs exact normalized source-tag matching and remains strict. `--locale` is a pronunciation preference: it returns locale-matching pronunciations when available and otherwise falls back to an untagged pronunciation for that word and part-of-speech group. Use `--include-neutral` to include untagged pronunciations alongside matching region or locale pronunciations. Use global `--json` for machine-readable results.
+`--region` performs exact normalized matching against a retained source pronunciation tag. It is useful for source-specific accents such as `Caipira`, `Paulistana`, `Canada`, or `General-American`, but it is not the normal language/region selector.
+
+`--locale` is the normal pronunciation preference. It selects matching retained evidence and otherwise falls back to untagged pronunciations for that word and part-of-speech group. If multiple distinct untagged pronunciations are the only fallback, the CLI reports that the requested regional evidence was not available. A locale does not synthesize missing pronunciations or silently switch Wiktionary editions.
+
+Use `--include-neutral` to include untagged pronunciations alongside matching region or locale pronunciations. Without a filter, all retained pronunciations are already returned, so `--include-neutral` has no additional effect. Use global `--json` for machine-readable results.
 
 The same query is available through the Python API:
 
 ```python
 from lexhint import Lexicon
 
-american = Lexicon("en", locale="en_US").pronunciations("love")
+american = Lexicon("en", locale="en-US").pronunciations("love")
 canadian = Lexicon("en").pronunciations("love", region="Canada")
 ```
 

@@ -182,6 +182,7 @@ class ExtractionDiagnostics:
     entries_with_etymology: int = 0
     entries_with_forms: int = 0
     entries_with_ipa: int = 0
+    pronunciation_invalid_ipa: int = 0
     entries_with_relations: int = 0
     accepted_entries: int = 0
     accepted_senses: int = 0
@@ -214,6 +215,7 @@ class ExtractionDiagnostics:
             "entries_with_etymology": self.entries_with_etymology,
             "entries_with_forms": self.entries_with_forms,
             "entries_with_ipa": self.entries_with_ipa,
+            "pronunciation_invalid_ipa": self.pronunciation_invalid_ipa,
             "entries_with_relations": self.entries_with_relations,
             "accepted_entries": self.accepted_entries,
             "accepted_senses": self.accepted_senses,

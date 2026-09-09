@@ -1,6 +1,6 @@
 ---
 title: "Architecture Documentation"
-version: 26
+version: 27
 generator: "archledger 0.4.0"
 arc42_template_version: "9.0-EN"
 ---
@@ -22,6 +22,10 @@ It does not decide how text is spoken. Spokenform and other consumers own tokeni
 - `segment()` uses authoritative full coverage, case flags, dynamic programming, and optional corpus rank. It applies surface-case acceptance, so a case-folded word may be known to `word()` while its observed lowercase segment remains unknown.
 - `entries()` requires the `dictionary` capability.
 - `context_domains()` and `supports_domain()` require `semantic` and full coverage. Their target is a character span: overlapping lexical tokens are excluded, while a target containing no lexical token acts as a virtual boundary and keeps adjacent words eligible at distance 1.
+
+## Locale contract
+
+`language` is the physical lexical language. An optional `locale` is runtime regional pronunciation and presentation state over the selected artifact. Full registered locale tags such as `en-US`, `en-GB`, `pt-BR`, and `pt-PT` can supply the base language in CLI commands, while short and underscore aliases remain accepted for compatibility. Locale selection does not change the artifact identity or automatically switch source variants.
 
 Semantic context is soft evidence. Positive evidence is not semantic certainty, and missing evidence is not semantic negation. Capability, coverage, schema, language, and missing-artifact failures have controlled public exceptions.
 
@@ -54,8 +58,6 @@ The architecture is constrained by a local, self-describing SQLite artifact and 
 
 Managed dataset variants are capability presets rather than exact mirrors of named build profiles: `runtime` provides `lexical,semantic` and remains the recommended default; `lexical` is the smallest projection; `dictionary` provides `lexical,semantic,dictionary` and includes explicit headword relations without search indexes; and `rich` provides `lexical,semantic,dictionary,search`. They form a strict capability chain so automatic installed-dataset resolution has one maximal result. The client tests this publisher contract so capability declarations cannot drift from schema construction.
 
-Managed dataset identity has two independent dimensions: `language` is the lexical target, while `source_variant` is `native` or `english`. Native uses the matching Wiktionary edition and is the deterministic default; English uses `enwiktionary` and is an explicit alternative or fallback when no native artifact exists. Catalog v2 and local paths include source variant, while v1 catalogs, source-unqualified releases, and legacy sidecars normalize to native. Provenance records the exact Wiktionary edition and metadata language without changing the SQLite schema 10 structure.
-
 Schema 10 finalization validates foreign keys and `PRAGMA quick_check`, runs `ANALYZE`, compacts the immutable artifact, and omits unused reverse indexes unless a protected workload justifies them. `sense_topics` uses Option B: a `(topic, sense_id)` `WITHOUT ROWID` table.
 
 ## Schema 10 freeze and bump policy
@@ -87,6 +89,8 @@ The consumer decides what an unknown run, version, or candidate should mean. Lex
 - FrequencyWords enriches existing lexemes with corpus fields.
 - A local SQLite artifact is the runtime boundary.
 - No service endpoint or daemon is required.
+
+
 
 ## Business Context
 
@@ -130,7 +134,6 @@ The package is organized around a local artifact runtime and focused build modul
 - `tools/inspect_wiktextract.py` and `tools/profile_wiktextract_relations.py` are developer-only local source analysis tools.
 
 The public package exports `Lexicon`, `HeadwordRelation`, `DictionarySearchHit`, and `SemanticDomain` as the principal consumer interface. It also exports `SCHEMA_VERSION`, `DATASET_VARIANTS`, `DATASET_VARIANT_NAMES`, `DEFAULT_DATASET_VARIANT`, and `supported_base_languages()` for the separate dataset publisher contract. Build and source helpers remain available from their owning modules.
-The public publisher contract also exposes `SOURCE_VARIANTS` and `normalize_source_variant()`.
 
 ## Consumer interface
 
@@ -148,6 +151,8 @@ hits = lexicon.search_definitions("computer program", fields=("glosses",), match
 
 The consumer decides what an unknown run, version, or candidate should mean. Lexhint ends at evidence. Relation following is always explicit and does not alter `entries()` exact lookup.
 
+
+
 <!-- archledger: no accepted records for this section yet -->
 
 # Runtime View
@@ -156,7 +161,7 @@ The consumer decides what an unknown run, version, or candidate should mean. Lex
 
 1. The consumer constructs `Lexicon` from one local SQLite artifact, resolved from the vendored, configured cache, or schema-aware managed dataset path when no override is supplied.
 2. Construction validates exact schema version, base language, coverage, and explicit capabilities before queries.
-3. An optional locale such as `GB` or `US` is runtime presentation state. It does not change artifact resolution or physical English dataset identity. Regional source tags are defined once in `languages.py` and used by runtime ordering.
+3. An optional locale such as `en-US`, `en-GB`, `pt-BR`, or `pt-PT` is runtime presentation state. It does not change artifact resolution, physical language, or source variant. Regional source tags are defined once in `languages.py` and used by runtime ordering and filtering.
 4. `word()` and `contains()` query lexical keys. `complete()` performs bounded normalized prefix completion through exact lookup and indexed lexical range queries; it is not fuzzy correction. `suggest()` uses bounded n-gram candidates, `match_headwords()` uses safe glob/regex scans, and `search_definitions()` joins the indexed sense-term table without exposing SQLite details. `segment()` evaluates known spans using authoritative full coverage, case flags, dynamic programming, and optional corpus rank, while retaining strict surface-case acceptance.
 5. Runtime reads do not acquire missing data or write to the artifact.
 
@@ -173,7 +178,11 @@ The consumer decides what an unknown run, version, or candidate should mean. Lex
 3. Nearby words are queried in batches. Domain weights receive configurable distance decay, with adjacent eligible tokens at distance 1.
 4. Results preserve cue text, character spans, token distance, and contribution weight. The candidate cannot validate itself. Domain results are hints rather than sense-disambiguated semantic certainty, and missing evidence is not negative evidence.
 
+Locale matching is based only on source pronunciation and presentation tags retained in the selected artifact. `--locale` expresses a registered language/region preference and may fall back to untagged evidence; `--region` selects one exact normalized source tag. If a locale has only multiple untagged fallback pronunciations, the CLI reports that regional evidence was unavailable. A locale request never fabricates evidence or silently selects another Wiktionary source variant.
+
 The public dictionary API distinguishes sense-scoped relations from unsense-disambiguated headword relations and exposes `sense_by_id()` and `incoming_relations()`.
+
+
 
 <!-- archledger: no accepted records for this section yet -->
 
@@ -188,6 +197,8 @@ Lexhint is deployed as a local Python package and a local SQLite evidence artifa
 - Generated artifacts contain source and hash provenance for dictionary and corpus inputs.
 - Build downloads and replacements use temporary files and atomic rename.
 - Generated external datasets are distributed separately from code according to `DATA_SOURCES.md`.
+
+
 
 <!-- archledger: no accepted records for this section yet -->
 
@@ -209,10 +220,6 @@ The build consumes a narrow Lexhint-owned TypedDict contract for the fields it i
 
 Metadata records `dictionary_source`, `dictionary_source_sha256`, `dictionary_source_format`, `dictionary_source_contract`, `frequency_source`, and `frequency_source_sha256`, alongside profile, capabilities, creation time, and builder version. Remote dictionary input is hashed while streamed. Automatic FrequencyWords sources are cached by pinned revision and language, validated against an atomic SHA-256 sidecar, and downloaded through temporary files followed by atomic rename.
 
-The static dataset catalog is a small validated cache under the platform cache directory or `LEXHINT_CACHE_DIR`. Networked dataset operations send conditional refresh metadata and atomically replace catalog bytes only after schema and artifact validation. Transport failures reuse a valid cache, while malformed reachable catalogs remain errors. Offline `dataset available` and `dataset check` use cached catalog data; dataset installation and update remain networked operations.
-
-`dataset available` exposes all catalog artifacts compatible with the running SQLite schema, including historical versions. `dataset check` compares the newest compatible artifact with every selected installed language and variant. `dataset update` processes all installed slots by default, installs and validates replacements atomically, and removes superseded versions only after successful installation. Lexicon construction and ordinary query operations remain local-only.
-
 ### Relation decision evidence
 
 The schema 10 benchmark compares a pre-schema-10 relation layout with compact compound-key tables and immutable index finalization. On the smoke profile, the candidate measured 204,800 raw bytes and 36,558 gzip bytes versus 425,984 raw bytes and 96,183 gzip bytes for the baseline. Suggestion and definition-search timings were slower in this two-iteration run, so the measurements are comparative evidence rather than English-dataset estimates.
@@ -226,6 +233,8 @@ Capability, coverage, schema, language, and missing-artifact failures have contr
 Tests cover read-only behavior, no-network guards, segmentation, case attestation, virtual-boundary semantic target anchoring, schema and capability validation, frequency policy, semantic target exclusion, CLI contracts, source extraction, relation extraction/API/CLI/projection, and the managed four-variant resolver chain. External dictionary and corpus data remain subject to the obligations documented in `DATA_SOURCES.md`.
 
 Raw bulk Wiktextract input does not contain Kaikki postprocessed website `sense.id` values. Lexhint therefore ignores that field, retains sparse `senseid` and Wikidata provenance when available, and generates a versioned deterministic `lh1-<language>-<encoded>` sense ID. High-cardinality translations and derived graphs remain optional data rather than core tables.
+
+
 
 ## Explicit immutable managed dataset artifacts
 
@@ -266,6 +275,8 @@ The current architecture records these decisions.
 | Resilience        | Read-only runtime access, source hashes, temporary downloads, and atomic replacement                             | A failed build does not replace an existing artifact with partial output.                          |
 | Maintainability   | Focused runtime and build modules, capability-specific schema, and boundary tests                                | Schema, extraction, semantic projection, storage, and CLI behavior can be checked independently.   |
 | Compliance        | External resources remain separate from code and provenance is embedded in artifacts                             | A distributor can review data obligations before distributing generated artifacts.                 |
+
+
 
 ## Quality Requirements Overview
 

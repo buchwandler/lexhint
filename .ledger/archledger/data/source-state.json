@@ -1,8 +1,8 @@
 {
   "directories": {
     ".": {
-      "file_count": 82,
-      "sha256": "89ed61c68ef3b248b579a1167fd91ac7f8b6f3b653b2d025c0dc85dea4013056"
+      "file_count": 114,
+      "sha256": "b50ae0761700ed8627681071def912d382162e4df77e23ff1fd01214dc81ac5f"
     },
     ".github": {
       "file_count": 4,
@@ -12,29 +12,57 @@
       "file_count": 4,
       "sha256": "2de4c5f5ad828db49413a054e154c42b323565b992f9f6631cd327cbb8fe6926"
     },
+    ".repairledger": {
+      "file_count": 19,
+      "sha256": "e32f044c632a96c3bb3857be2e4d3a637dfc50f4bb78f236ac76a87a6a7d64af"
+    },
+    ".repairledger/repairs": {
+      "file_count": 18,
+      "sha256": "15f9125bfe4e71142697fd32718b3bbcaec97b339c1b8dd015ddb5563d149fcd"
+    },
+    ".repairledger/repairs/repair-0001": {
+      "file_count": 18,
+      "sha256": "358aeadac3704c2b698f7e965206badb3778f05ea19b8a980358fd1dfeb99550"
+    },
+    ".repairledger/repairs/repair-0001/components": {
+      "file_count": 8,
+      "sha256": "9ecb27ccc1ff8594f2ce96fe56a2b9a40809eaef59ac08477fb867b2c6f646d0"
+    },
+    ".repairledger/repairs/repair-0001/versions": {
+      "file_count": 9,
+      "sha256": "9a5f08a93541259c2f727c13a50a3246367dc642fdf21f14c4de5edde2657f6c"
+    },
+    ".repairledger/repairs/repair-0001/versions/v0001": {
+      "file_count": 9,
+      "sha256": "6a5b5c2dd726642baa577a2c2ae4f31d60d6abad75cde7e9fb439d713da55357"
+    },
+    ".repairledger/repairs/repair-0001/versions/v0001/components": {
+      "file_count": 8,
+      "sha256": "9ecb27ccc1ff8594f2ce96fe56a2b9a40809eaef59ac08477fb867b2c6f646d0"
+    },
     "benchmarks": {
-      "file_count": 20,
-      "sha256": "9d225c387e91a386582822dc1ca9b42b2cf5e7f7a3d252074b1d52f0abcce700"
+      "file_count": 24,
+      "sha256": "c457da1d1f0488918629e62804d91d4b306f2f952fa56d44b9660931ab720b03"
     },
     "benchmarks/profiles": {
       "file_count": 5,
       "sha256": "3709d48baaeb564c4c3ed349046583577ccd710165526fb11cfa326fb0beba7b"
     },
     "benchmarks/schemas": {
-      "file_count": 4,
-      "sha256": "00faef654713cdcab7aa8c11eaf18d986892298e2cb4ad19cd5eae95392975a8"
+      "file_count": 8,
+      "sha256": "18a62cb62ceccc7de03bd3471f0cbdc9edf340379c7bd001f67dfd4bfb6c8836"
     },
     "lexhint": {
-      "file_count": 21,
-      "sha256": "1279aa8f498fa2fb94092a28d5e91892452d0ea22430ee9352f4cf95fa02ac2f"
+      "file_count": 23,
+      "sha256": "624bcbe01bfeea6119d41fdc9c65ed389664ff05b85d2db5592597e8d8124f89"
     },
     "tests": {
-      "file_count": 26,
-      "sha256": "e8b370ebf2946ca790d5946aec04a1c34de8f51cf63c0543cf459e10aaae0006"
+      "file_count": 32,
+      "sha256": "f0d9ec162c6e5134b2d5bdd6695d6e587b6af4a0cbe282bda22acbeeced74935"
     },
     "tools": {
       "file_count": 3,
-      "sha256": "2b4fad7f05f11e989357de0371e933f56d802eff0ac75bef6fd9b5c98b6fe0ca"
+      "sha256": "d624f374997de23166565997cc0b756610fc707d77f63036dfd064a6ff7aa0f7"
     }
   },
   "files": {
@@ -56,20 +84,77 @@
     ".pre-commit-config.yaml": {
       "sha256": "024cd86abd09a54e772b9118c2bf5384fbdaee07835532b2dd90011dcbeabbab"
     },
+    ".repairledger/repairs/repair-0001/components/00-summary.md": {
+      "sha256": "50f769a8fe6da6a4f5f9e04a708c0fdbbd861193366fe293382425b0f7407487"
+    },
+    ".repairledger/repairs/repair-0001/components/10-context.md": {
+      "sha256": "0f07c5d50b2cf1255074cdc4f043a2baf631ae207da12e84c4d122e6ee2146e3"
+    },
+    ".repairledger/repairs/repair-0001/components/20-tool-call.md": {
+      "sha256": "b02d8c3c609416c709585673578b90d42874fe5602328ea96f2fa794fdf424a2"
+    },
+    ".repairledger/repairs/repair-0001/components/30-expected-behavior.md": {
+      "sha256": "8f48132c012db9d0f9a6e02f97c1814ff02e970bced9ad25eb35bd90962aaa05"
+    },
+    ".repairledger/repairs/repair-0001/components/40-actual-behavior.md": {
+      "sha256": "89fa2f840a6e5f591cc77abfa96accd4ba4539d0f23bbc8b56531925da49c72f"
+    },
+    ".repairledger/repairs/repair-0001/components/50-reproduction.md": {
+      "sha256": "8fe548b8127a802fcd5e4a1c6412dff4bb7c3e2cda324cb55f6de772ebebb0f2"
+    },
+    ".repairledger/repairs/repair-0001/components/60-impact.md": {
+      "sha256": "3ee017b69ca15e77fd8654c892977fc6bc6f6aaf618dce51b68089da17a3d653"
+    },
+    ".repairledger/repairs/repair-0001/components/90-suggested-fix.md": {
+      "sha256": "1c2efee4719172846372c943b90d0e45554c1e9dccaa2f2dfd00d345ab2a3bfd"
+    },
+    ".repairledger/repairs/repair-0001/repair.yaml": {
+      "sha256": "cfb36ee5409e9a0040d44e03f6171ff42969a3d2135547b5e630e99a8cbc4240"
+    },
+    ".repairledger/repairs/repair-0001/versions/v0001/components/00-summary.md": {
+      "sha256": "50f769a8fe6da6a4f5f9e04a708c0fdbbd861193366fe293382425b0f7407487"
+    },
+    ".repairledger/repairs/repair-0001/versions/v0001/components/10-context.md": {
+      "sha256": "0f07c5d50b2cf1255074cdc4f043a2baf631ae207da12e84c4d122e6ee2146e3"
+    },
+    ".repairledger/repairs/repair-0001/versions/v0001/components/20-tool-call.md": {
+      "sha256": "b02d8c3c609416c709585673578b90d42874fe5602328ea96f2fa794fdf424a2"
+    },
+    ".repairledger/repairs/repair-0001/versions/v0001/components/30-expected-behavior.md": {
+      "sha256": "8f48132c012db9d0f9a6e02f97c1814ff02e970bced9ad25eb35bd90962aaa05"
+    },
+    ".repairledger/repairs/repair-0001/versions/v0001/components/40-actual-behavior.md": {
+      "sha256": "89fa2f840a6e5f591cc77abfa96accd4ba4539d0f23bbc8b56531925da49c72f"
+    },
+    ".repairledger/repairs/repair-0001/versions/v0001/components/50-reproduction.md": {
+      "sha256": "8fe548b8127a802fcd5e4a1c6412dff4bb7c3e2cda324cb55f6de772ebebb0f2"
+    },
+    ".repairledger/repairs/repair-0001/versions/v0001/components/60-impact.md": {
+      "sha256": "3ee017b69ca15e77fd8654c892977fc6bc6f6aaf618dce51b68089da17a3d653"
+    },
+    ".repairledger/repairs/repair-0001/versions/v0001/components/90-suggested-fix.md": {
+      "sha256": "1c2efee4719172846372c943b90d0e45554c1e9dccaa2f2dfd00d345ab2a3bfd"
+    },
+    ".repairledger/repairs/repair-0001/versions/v0001/repair.yaml": {
+      "sha256": "cfb36ee5409e9a0040d44e03f6171ff42969a3d2135547b5e630e99a8cbc4240"
+    },
+    ".repairledger/storage.yaml": {
+      "sha256": "10899bc77eb8450e8c414cba55abe6e2baf45608571993ee829f22285cd8ea6a"
+    },
     "01_todo.md": {
-      "sha256": "94cd8aa7be75999b876b0f75d692cee30184fcd99173ef78fbda3b1357b59315"
+      "sha256": "7b184c8cbf7cbb8a9840aeb195ec5767e7d3d41801d32235cb6e01713b934a31"
     },
     "DATA_SOURCES.md": {
-      "sha256": "d8dcbaa41962cbf708cc523d84bc92ad8ceebeaf184bb223f5b78f2a33e04926"
+      "sha256": "ea377884faf859f4d91855424d32617a9effd4ee82c55d87c4e23bb2d112efbf"
     },
     "README.md": {
-      "sha256": "373dfe627a8b478844bc1302bcf84570376f7b237e7e326907de6b09114cb608"
+      "sha256": "7f5796e9655f864d94b548a3595ec2cc5046d9264de668c1c69b6842932eec77"
     },
     "RELEASING.md": {
-      "sha256": "22f0488f008e7c914dc9c8927e139eb56f259645b248d8839d7f640897af320e"
+      "sha256": "3d284bdfe0305432570164c05705d3397e9cafcc9ad9af03fa6b8edadb7f46f0"
     },
     "benchmarks/README.md": {
-      "sha256": "4096e0491a57e9672bcb06f53865355e329eb6fe1629b7764dd7ee226f4bfb36"
+      "sha256": "44371caf5ba2290909a2e07ee96fdc66a413836c98bd019d5aa66ab1c3467201"
     },
     "benchmarks/__init__.py": {
       "sha256": "4c82d6befec04343608996fe693a86012a75d2c0f65bd62f695ae40db84cbf6a"
@@ -78,13 +163,13 @@
       "sha256": "b5834ee7d441409fe709032e624c665cbd5cefb54269722d470efcbe40b5be9b"
     },
     "benchmarks/generate.py": {
-      "sha256": "8296e2697171b1737dbd8ad1e4a39540daf21562a1a6ce5b2b2069fec767c4d8"
+      "sha256": "ad74f6449a6e54a36a3bff27f7dfbed0f6899c2689b1c7029c539dda09a859d6"
     },
     "benchmarks/metrics.py": {
-      "sha256": "e041aa4a20ee22797e72ed0a2c71afb1ebc5a6a6ed2facce9fe45e77e196a406"
+      "sha256": "6036c08b87dd8b587002e680ba543e75f1ea02df8fc872952c3ca170675ee793"
     },
     "benchmarks/model.py": {
-      "sha256": "b8cfe6cf34583462130ac5f639c1308d0812f881b036f7708203e67f1f00b2a5"
+      "sha256": "2dc357011167362ab1c10b67cb97fd32ff722001c0e6fa3c9756a86f7813348a"
     },
     "benchmarks/profiles/__init__.py": {
       "sha256": "376aebc6e1932410c8600aa8287b72323bfec990f2d9c27b0b8e732d6580a432"
@@ -114,7 +199,7 @@
       "sha256": "8633a04fec55d3efa515f5675e8f384b734d2fed145ffa3eee5a653ad2d552c6"
     },
     "benchmarks/schemas/__init__.py": {
-      "sha256": "fec8becbb5ecf49ac26f0e321ea2ee8f91d2b505130c6109f2b9e648fbeed1ce"
+      "sha256": "732f8ffe90225f87b870550c6c32962d2da32b915f6dee209fd9ada565260546"
     },
     "benchmarks/schemas/compact_experiment.py": {
       "sha256": "fec1adaab2aac30e32a8686656933cc6f1df880b2b5c28505135d5574c9da0ee"
@@ -125,29 +210,41 @@
     "benchmarks/schemas/current_v8_relations.py": {
       "sha256": "92d317f3afaa97b71939c4dc0f6427ce7d0d683b4acf558f0f7b46ccea91fbd7"
     },
+    "benchmarks/schemas/current_v9.py": {
+      "sha256": "bce4af4796f974ac7f1ce0ba1933205085058556b0c64ac4c0f2c77429396bdd"
+    },
+    "benchmarks/schemas/current_v9_readonly_finalized.py": {
+      "sha256": "a5d266ed9b52ce8276e2452dcff0d11d729f6350236eb49ab0061deb082c030d"
+    },
+    "benchmarks/schemas/current_v9_without_rowid.py": {
+      "sha256": "e86deda43ea3a42d8f0e49d18ceb098ad0bce1899efb0a4cabc03b1635bf6ba3"
+    },
+    "benchmarks/schemas/schema10_candidate.py": {
+      "sha256": "6f982fe64af3c986fb02665d4ca087eab169751a9dd2f73dfe65947719fedf4d"
+    },
     "benchmarks/workloads.py": {
       "sha256": "8d3fc4e2a7cfcc8f2f3fb252681dc938a60ecdc15b091c48b45f73fbcc8f6265"
     },
     "lexhint/__init__.py": {
-      "sha256": "39cd5c8f9783ecac268e6aea1bcde378f3b1245d89762c6dafc0f3df057ba1f6"
+      "sha256": "0fab85af7e17671aeb182fadd97134746c3c1527d31365e5ff7c2fafb5cf687b"
     },
     "lexhint/__main__.py": {
       "sha256": "935a1c1166b0c1ea35a82256345000bf2c73ded718d77773bc27a71ecce28f7d"
     },
     "lexhint/builder.py": {
-      "sha256": "bb758b728850832bcd8239f69fc272c5fbf1f73eb81bc50681875257a3e7bb6b"
+      "sha256": "99601da519ee70d38ab286d63aa102199a735a410b4e685576ec2db2e7f69d5c"
     },
     "lexhint/cli.py": {
-      "sha256": "9d46cbaa45614ad583cc54f32712d9699fa6ea1bb7245872bb162c9c088a8afe"
+      "sha256": "2f447bb5019761265cf2803ccf41353172f33a5c68cde5f0d791b2d15be008b0"
     },
     "lexhint/datasets.py": {
-      "sha256": "a89719cd168768ec7ca10c59b8bd34f9ec80d0b31723fd9a6c17cb835fceffe7"
+      "sha256": "2b4fb60f7de1fedc08d331cfa08375715d6c0c3a25bda4cb39596f1aa31ad573"
     },
     "lexhint/download.py": {
-      "sha256": "258a84d283800faf89f928dae9b34dac82155346db9b80d216aab993ff792285"
+      "sha256": "61d0b0932dde127ff8ed6cb3de3ff15b174ffe13782adb80ca9a2a17a41b5e68"
     },
     "lexhint/extract.py": {
-      "sha256": "e9eb1551a93a3ed8fb0b81d9e414e744a3aa26c190febb4eeaf63f992c2df027"
+      "sha256": "655faae9062f56a748362c5579d0fb3f4382cd30d1dc9770bd97ee3c29ce5d72"
     },
     "lexhint/frequency.py": {
       "sha256": "eb6c6c10449bc1652bc30819e2b684c33820060688d2edb686ed124ca1ba95fd"
@@ -156,19 +253,25 @@
       "sha256": "fc1a3d02c9dc29345077cbde05f11d52707bda99508a3dfc4e49f562653d8515"
     },
     "lexhint/languages.py": {
-      "sha256": "7eb205a21d76fc224725fb0183cc55cf9152ae7dec9bab751d7c907704b11fed"
+      "sha256": "5d595d9b159f2050ca540eed18375b788f53ae9799aeb9e328c227f3c3cab8c9"
     },
     "lexhint/lexicon.py": {
-      "sha256": "6658d9fc6290ce0a30d6b6ea93d1e7f72bf379c62201d64e8004a9b57a2e2561"
+      "sha256": "ff4905733b6f0f6a2dfd2da35297d38683d5c8497099d0a5e36019676bbcc0cd"
     },
     "lexhint/models.py": {
-      "sha256": "0ed80494e845867981dff036e58f62547385066c23cf419bb3ac52441df9c002"
+      "sha256": "74d840fb8cfd2fbfa09324c7723739096310604b5553879c4106c8339d21c541"
+    },
+    "lexhint/pronunciation.py": {
+      "sha256": "a0fbb58b3451efbd119e6c32fd8acd98e8bcfded3cc08fbe5b9633561570133e"
     },
     "lexhint/render.py": {
-      "sha256": "c66945362b2a778a40070bfe8948d149707f57c6704000db6f83202649f25890"
+      "sha256": "8581dd839decb91c85483d01b8ac9789e791892ca286cdf45d7851941f42fc4b"
     },
     "lexhint/schema.py": {
-      "sha256": "a03318c83cff5e4af7e58410b1736d6e04381707295e377444403288d5757c90"
+      "sha256": "01d543821bec7248da201d1c2f766199af0090266157cbb9fcf841862734a165"
+    },
+    "lexhint/schema_contract.py": {
+      "sha256": "1876379ca92e2e6e465671132dd03131d1be3d78c68b23f1dfe7388cc92fd213"
     },
     "lexhint/search.py": {
       "sha256": "f8e6dc6f68d57db9a29dc58597dfe9293c246ed78480a796674a093a10aabcd6"
@@ -177,34 +280,40 @@
       "sha256": "9924068890fc5d6887da4ef41af73285808d06251f05551d95204e9b37f3a7cd"
     },
     "lexhint/sources.py": {
-      "sha256": "54e98f52e38cf406ebbf51cf71db246afdddd87b96a98718c015bf956c84a97a"
+      "sha256": "6d0e3cc7746f99d9e8f930515d3bb54ea0f094cc92d254a261581d7d142c688e"
     },
     "lexhint/status.py": {
-      "sha256": "47d1cea5f50f7ffb573abba3977ad486493db43d94981e8f4a1a48c351a4132a"
+      "sha256": "1cf5fc2a6f0d20efe6067ea9c4ec4ed016f77445719d20a6d38e2610d51f7813"
     },
     "lexhint/store.py": {
-      "sha256": "8d1f6a3ed82fb2ae22eda3ddb6b1e07a7b63fa731fc3fc1f4a229f80ea91fb10"
+      "sha256": "b48836255602903d8c320315428bcf5672715d946128895d862a6790a6645bfc"
     },
     "lexhint/terminal.py": {
       "sha256": "54b5da1e6dafc1987d7098dd1e240d9bbf187aef7263441e3e0b8d1921e286ff"
     },
     "lexhint/wiktextract_types.py": {
-      "sha256": "6e25d97d7a741a6dcf9a4a6cb241723e44dbdfac3b0877f0713e2ec6fc096f55"
+      "sha256": "f284ff81faff648f6a43a01bfe7e74b23b025c5655b2e9772f169399ce8f4389"
     },
     "plan.md": {
-      "sha256": "7d04c258088aff397aa98735eaa667803db37b35fcd87a7a534bf30e0964434f"
+      "sha256": "00600de306119ea1a2e34d01ecb075dd7eb55d26d0579ee6d8b7bc2115a17704"
     },
     "pyproject.toml": {
-      "sha256": "44da340a8dda0ca493fd31f2e4c6a74a4873c74cdcd12e26f409f620a660ec2e"
+      "sha256": "ff6533da3c1e5007278b5d8f19e2b9ffec5969855e6993cf2a5a07e1a1c69ea4"
+    },
+    "repairledger.toml": {
+      "sha256": "c242a00d305cde1fbcbd3a0f36138d95379f43a2bb657fa26d8bbb5cdc9a36ed"
     },
     "tests/test_benchmark_harness.py": {
-      "sha256": "f3b1d63aba9c8190f4e666f757e8c4e559ac29f62ca28a24eef6e63297c236b5"
+      "sha256": "d133e19a2b250028dad37fd3d60913bdbe8fab9ee9f0d8bb1fd7c05dfe537fe5"
     },
     "tests/test_cli_dataset.py": {
-      "sha256": "bfc791460241633056a02ed673052bce7b0030074068c8918a01a586084572ba"
+      "sha256": "3e4d8064dcf3a31cd1997977389f2ffba154d46731e21f1ed863307c2ef97e69"
     },
     "tests/test_cli_dictionary_output.py": {
-      "sha256": "ff94c1f9415546483fa2a5dae52a5621e0c2fed0c255187ea7ba62502673a64e"
+      "sha256": "02c55fdf7614d76c52075b6e231ba59cd552f6b8dd483c932253c999a495ee62"
+    },
+    "tests/test_cli_pronunciation.py": {
+      "sha256": "2bfdf6dd93045f4df499be7d9c714caedbaa361601f4c8454efeeec0957aaf3e"
     },
     "tests/test_cli_release_contract.py": {
       "sha256": "4458701c25b11464402b618bd7362fe3270f0441ac0379d072bffdda36135302"
@@ -219,16 +328,19 @@
       "sha256": "cf9f16707587d1d4d9a8e7ee07e04cef82cdf8237ab325797895957402b3f23b"
     },
     "tests/test_dataset_catalog.py": {
-      "sha256": "bc192a38393cb71c2d0516ad501110cd7045e32a745df21335884f1c816aca5a"
+      "sha256": "70310f721bb974c6fe40634e39719d957071ddcaddca5b94b6745c63d8bcf000"
     },
     "tests/test_dataset_install.py": {
-      "sha256": "52aed15349f5af7a99a9e2fb48ed610c095f371a52ae2ad9a29dcd36619c14c2"
+      "sha256": "999426026192ab95caf5a2038b0b9643851e1e2a13bdad82b3ce3984884bf4d1"
     },
     "tests/test_dataset_resolver.py": {
-      "sha256": "690550dd911d7b022526c72c0a10379faf0025acf0d66a31e3078eede2fe76b0"
+      "sha256": "31c36f650fc65014f07661edb9bc0ab21345dc48af0abd7e6d7f542c674efbc2"
+    },
+    "tests/test_dataset_static_catalog.py": {
+      "sha256": "a8f9234986cedd161f3ae87d333e0ca89223fdb632b155207904492f828c147f"
     },
     "tests/test_dictionary_render.py": {
-      "sha256": "42da20799a80db2cc50f6fe2f31a8fda2e594cce850b0a8c1a02b36fbf470990"
+      "sha256": "048d02e956829a5880ab86172dfc555b1910675f0132c0f39caf8bb53a95ac24"
     },
     "tests/test_dictionary_search.py": {
       "sha256": "81d77c1ad72894173a29c62223cf3525666c76c768e795bc001e187034766197"
@@ -237,10 +349,10 @@
       "sha256": "820826da45687250e1ceca7e43bb814c0f541ff9e1cd24a6d70b0e11748355d3"
     },
     "tests/test_extract.py": {
-      "sha256": "898dbac76d8bf5e860cfea077a9f01a3b23ba14a1cc151918eca5a40f1e138f6"
+      "sha256": "a3267f7b3b6ba113f683e9b7b0a8ef2c5ee5985df7b209a7c976212ca69e5922"
     },
     "tests/test_final_form.py": {
-      "sha256": "9e7e66e6299f29bb40fcfe98255546cc0f1406d828612ffafb02ccbbfecdb7bd"
+      "sha256": "0448e92ca6d0684b03faffbd9889aebca515291f30cafc33d6534f05480aea40"
     },
     "tests/test_frequency.py": {
       "sha256": "1529ff7687e0aa52c87d83044e0f821543040d41bec0088cecfa015c94d34703"
@@ -252,25 +364,37 @@
       "sha256": "03f090683ccb11bc1c8aada320c0bde0442f058705338dd833bbb22123d01e89"
     },
     "tests/test_locales.py": {
-      "sha256": "5d58d1041b5278af59c081d6fa6824952354a338bd6d79efae3071d838e6012a"
+      "sha256": "35b18bbcfea6e196a70dfcde09010d788449b6b676b64a34fe6332f44265c4d7"
     },
     "tests/test_projection.py": {
       "sha256": "170494cfb3701d0bff8677c1e068d23bb969bf8dcdf1d081e8a50df48dd61ed0"
     },
+    "tests/test_pronunciation_iteration.py": {
+      "sha256": "57ec162a577e78d93a471af74f42df37039ce412bcb5f98242700c8088230b74"
+    },
+    "tests/test_pronunciations.py": {
+      "sha256": "2de79eafcc19e9691fd9f00a267e375f24f95d0535e8782aa561a50eb3e42478"
+    },
     "tests/test_relations.py": {
-      "sha256": "abde171e19f3dcb5f9f07a20c44d7fb96f3524a59f2b51133a5fa3fee7586aa6"
+      "sha256": "09033935f8caf4611371128df7560a09d102ed28dbc89af73e4aa1b4d666a85f"
     },
     "tests/test_relations_benchmark.py": {
       "sha256": "74427bcc5290b7fce4e75a91480002c2ab0a8d0ff6c1ed07efc7136d2d7a0686"
     },
     "tests/test_schema_contract.py": {
-      "sha256": "0cf43f5ae6f455db89df5d29fa6d2cb8e4fdd5a3622a88121cb24959b23ef251"
+      "sha256": "920b8b63c01f5178ef5f2765df382a52c483133e65c32baca5e64b2bc4888729"
     },
     "tests/test_search_helpers.py": {
       "sha256": "b93907c604eedf5ac2729a29f974506943e8f25abfa10894c5d8c731ea65e675"
     },
+    "tests/test_sense_identity.py": {
+      "sha256": "e9f10d6ae92edc8a68a9c8edb6f1b3762e739c03e49bd3aaa18c2d3af3ef68f8"
+    },
     "tests/test_sources.py": {
-      "sha256": "242328bf3f540657668afe9fb76db15bcce1accef95b50695dfc4d554217e7cd"
+      "sha256": "9172c46f392321665dab78ea41e7e25bb1400ec09c5c742a07854c3471b73047"
+    },
+    "tests/test_storage_finalization.py": {
+      "sha256": "3a946eeb3fd68645759b74b509d34865ae9ef3a8146bb85c0a709a487f512011"
     },
     "tests/test_suggestions.py": {
       "sha256": "b57bd66992e9927e5b8f258e606d232770ace2470da59e59643c7e33c9f83530"
@@ -279,7 +403,7 @@
       "sha256": "82f7c5e8e6649c13e937e90f1696560bc1bf0ee9d7c7f533b7825f3e9ef091a9"
     },
     "tools/profile_wiktextract_relations.py": {
-      "sha256": "d9c66bbec01187a080d755e7eb04556b8989858d4ee9cbc7f60990ef28d4960b"
+      "sha256": "b1d10937fcbb87a80f2a293eab3453bfa4c3fd2441cbadc0506eeff7e37188f2"
     },
     "tools/vendor_dictionary.py": {
       "sha256": "8cf7ff067eb2137e1de40f4f14569c76066d62cd699edbe55d393d2dfcdbe3e0"
@@ -287,7 +411,7 @@
   },
   "project_name": "lexhint",
   "project_uuid": "5d725985-8f02-4666-8425-feec381a655e",
-  "reason": "Record schema 9 relations and source contract architecture.",
+  "reason": "after-archledger-update",
   "scanner": {
     "exclude": [
       ".git/**",
@@ -318,5 +442,5 @@
     "used": "git"
   },
   "schema": "archledger.source-state.v3",
-  "version": 8
+  "version": 9
 }

@@ -78,6 +78,35 @@ def pronunciation_artifact(tmp_path: Path) -> Path:
 
 
 @pytest.fixture
+def portuguese_artifact(tmp_path: Path) -> Path:
+    source = tmp_path / "portuguese.jsonl"
+    source.write_text(
+        json.dumps(
+            {
+                "word": "leite",
+                "lang_code": "pt",
+                "pos": "noun",
+                "sounds": [
+                    {"ipa": "/ˈlej.te/", "tags": ["Caipira"]},
+                    {"ipa": "/ˈlɐj.tɨ/", "tags": ["Portugal"]},
+                ],
+                "senses": [{"glosses": ["milk"]}],
+            }
+        )
+        + "\n",
+        encoding="utf-8",
+    )
+    artifact, _ = build_dictionary(
+        "pt",
+        source,
+        output=tmp_path / "pt.sqlite3",
+        capabilities="lexical,dictionary",
+        no_frequency=True,
+    )
+    return artifact
+
+
+@pytest.fixture
 def locale_fallback_artifact(tmp_path: Path) -> Path:
     source = tmp_path / "locale-fallback.jsonl"
     records = [
@@ -345,8 +374,9 @@ def test_cli_pos_and_neutral_validation(
     assert main(cli_args(pronunciation_artifact, "--region", "Canada", "--pos", "noun")) == 0
     assert "  verb" not in capsys.readouterr().out
 
-    assert main(cli_args(pronunciation_artifact, "--include-neutral")) == 1
-    assert "requires --region or --locale" in capsys.readouterr().err
+    assert main(cli_args(pronunciation_artifact, "--include-neutral")) == 0
+    output = capsys.readouterr().out
+    assert "[neutral]" in output
 
 
 def test_cli_rejects_region_and_locale_together(pronunciation_artifact: Path) -> None:
@@ -365,3 +395,147 @@ def test_cli_empty_filtered_result_is_success(
     assert main(["--json", *cli_args(pronunciation_artifact, "--region", "Central-American")]) == 0
     payload = json.loads(capsys.readouterr().out)
     assert payload["entries"] == []
+
+
+def test_cli_full_locale_infers_portuguese_and_adds_canonical_tag(
+    portuguese_artifact: Path, capsys: pytest.CaptureFixture[str]
+) -> None:
+    assert (
+        main(
+            [
+                "--json",
+                "dictionary",
+                "pronunciation",
+                "leite",
+                "--path",
+                str(portuguese_artifact),
+                "--locale",
+                "pt_pt",
+            ]
+        )
+        == 0
+    )
+
+    payload = json.loads(capsys.readouterr().out)
+    assert payload["language"] == "pt"
+    assert payload["locale"] == "PT"
+    assert payload["locale_tag"] == "pt-PT"
+    assert payload["entries"][0]["pronunciations"] == [{"ipa": "[ˈlɐj.tɨ]", "tags": ["Portugal"]}]
+
+
+def test_cli_rejects_locale_language_mismatch(
+    portuguese_artifact: Path, capsys: pytest.CaptureFixture[str]
+) -> None:
+    result = main(
+        [
+            "dictionary",
+            "pronunciation",
+            "leite",
+            "-l",
+            "en",
+            "--path",
+            str(portuguese_artifact),
+            "--locale",
+            "pt-BR",
+        ]
+    )
+    assert result == 1
+    assert "locale 'pt-BR' selects language 'pt' but --language is 'en'" in capsys.readouterr().err
+
+
+def test_cli_rejects_short_locale_without_language(
+    pronunciation_artifact: Path, capsys: pytest.CaptureFixture[str]
+) -> None:
+    assert main(cli_args(pronunciation_artifact, "--locale", "BR")) == 1
+    captured = capsys.readouterr()
+    assert "locale 'BR' does not identify a language" in captured.err
+    assert "--language" in captured.err
+
+
+def test_cli_accepts_short_locale_with_explicit_or_positional_language(
+    portuguese_artifact: Path, capsys: pytest.CaptureFixture[str]
+) -> None:
+    for values in (("leite", "-l", "pt"), ("pt", "leite")):
+        assert main(
+            [
+                "dictionary",
+                "pronunciation",
+                *values,
+                "--path",
+                str(portuguese_artifact),
+                "--locale",
+                "BR",
+            ]
+        ) == 0
+        assert "[ˈlej.te] [Caipira]" in capsys.readouterr().out
+
+
+def test_cli_dictionary_word_infers_language_from_locale(
+    portuguese_artifact: Path, capsys: pytest.CaptureFixture[str]
+) -> None:
+    assert (
+        main(
+            [
+                "--json",
+                "dictionary",
+                "word",
+                "leite",
+                "--path",
+                str(portuguese_artifact),
+                "--locale",
+                "pt-BR",
+            ]
+        )
+        == 0
+    )
+    payload = json.loads(capsys.readouterr().out)
+    assert payload["language"] == "pt"
+    assert payload["locale_tag"] == "pt-BR"
+
+
+def test_cli_rejects_undocumented_long_option_abbreviation(
+    pronunciation_artifact: Path,
+) -> None:
+    with pytest.raises(SystemExit, match="2"):
+        main(cli_args(pronunciation_artifact, "--local", "en-US"))
+
+
+def test_cli_identifies_ambiguous_neutral_fallback(
+    tmp_path: Path, capsys: pytest.CaptureFixture[str]
+) -> None:
+    source = tmp_path / "ambiguous.jsonl"
+    source.write_text(
+        json.dumps(
+            {
+                "word": "leite",
+                "lang_code": "pt",
+                "pos": "noun",
+                "sounds": [{"ipa": "/one/"}, {"ipa": "/two/"}],
+                "senses": [{"glosses": ["milk"]}],
+            }
+        )
+        + "\n",
+        encoding="utf-8",
+    )
+    artifact, _ = build_dictionary(
+        "pt",
+        source,
+        output=tmp_path / "ambiguous.sqlite3",
+        capabilities="lexical,dictionary",
+        no_frequency=True,
+    )
+    assert (
+        main(
+            [
+                "dictionary",
+                "pronunciation",
+                "leite",
+                "--path",
+                str(artifact),
+                "--locale",
+                "pt-BR",
+            ]
+        )
+        == 0
+    )
+    assert "no pt-BR-tagged pronunciation is available" in capsys.readouterr().out

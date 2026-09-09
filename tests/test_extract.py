@@ -1,5 +1,12 @@
 from lexhint.extract import dictionary_entries
-from lexhint.models import DictionaryEntry, Example, Form, Pronunciation, Sense
+from lexhint.models import (
+    DictionaryEntry,
+    Example,
+    ExtractionDiagnostics,
+    Form,
+    Pronunciation,
+    Sense,
+)
 
 
 def test_extracts_ipa_pronunciations_and_ignores_audio_only_rows() -> None:
@@ -67,3 +74,39 @@ def test_extracts_missing_optional_fields_and_filters_language() -> None:
         )[0].forms
         == ()
     )
+
+
+def test_preserves_raw_pronunciation_tags_and_filters_x_sampa() -> None:
+    diagnostics = ExtractionDiagnostics()
+    raw = {
+        "word": "leite",
+        "lang_code": "pt",
+        "pos": "noun",
+        "sounds": [
+            {"ipa": "/ˈlej.te/", "raw_tags": ["Caipira"]},
+            {"ipa": '/"lej.tSe/', "raw_tags": ["Caipira"]},
+            {"ipa": "/ˈlej.tʃi/", "raw_tags": ["Paulistana"]},
+            {"ipa": '/"lej.tSi/', "raw_tags": ["Paulistana"]},
+        ],
+        "senses": [{"glosses": ["milk"]}],
+    }
+
+    entry = next(dictionary_entries(raw, language="pt", diagnostics=diagnostics))
+    assert entry.pronunciations == (
+        Pronunciation("/ˈlej.te/", ("Caipira",)),
+        Pronunciation("/ˈlej.tʃi/", ("Paulistana",)),
+    )
+    assert diagnostics.pronunciation_invalid_ipa == 2
+
+
+def test_normalized_pronunciation_tags_take_precedence_over_raw_tags() -> None:
+    raw = {
+        "word": "leite",
+        "lang_code": "pt",
+        "pos": "noun",
+        "sounds": [{"ipa": "/ˈlej.te/", "tags": ["Brazil"], "raw_tags": ["Caipira"]}],
+        "senses": [{"glosses": ["milk"]}],
+    }
+
+    entry = next(dictionary_entries(raw, language="pt"))
+    assert entry.pronunciations == (Pronunciation("/ˈlej.te/", ("Brazil",)),)

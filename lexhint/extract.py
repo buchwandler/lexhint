@@ -14,6 +14,7 @@ from .models import (
     RelatedTerm,
     Sense,
 )
+from .pronunciation import is_plausible_ipa
 from .store import normalize_display_word
 from .wiktextract_types import RETAINED_ENTRY_FIELDS, RETAINED_SENSE_FIELDS
 
@@ -116,7 +117,9 @@ def _forms(value: object) -> tuple[Form, ...]:
     return tuple(result)
 
 
-def _pronunciations(value: object) -> tuple[Pronunciation, ...]:
+def _pronunciations(
+    value: object, diagnostics: ExtractionDiagnostics | None = None
+) -> tuple[Pronunciation, ...]:
     if not isinstance(value, list):
         return ()
     result: list[Pronunciation] = []
@@ -126,7 +129,14 @@ def _pronunciations(value: object) -> tuple[Pronunciation, ...]:
         ipa = _text(item.get("ipa"))
         if ipa is None:
             continue
-        pronunciation = Pronunciation(ipa=ipa, tags=_strings(item.get("tags")))
+        if not is_plausible_ipa(ipa):
+            if diagnostics is not None:
+                diagnostics.pronunciation_invalid_ipa += 1
+            continue
+        tags = _strings(item.get("tags"))
+        if not tags:
+            tags = _strings(item.get("raw_tags"))
+        pronunciation = Pronunciation(ipa=ipa, tags=tags)
         if pronunciation not in result:
             result.append(pronunciation)
     return tuple(result)
@@ -278,7 +288,7 @@ def dictionary_entries(
         return
 
     forms = _forms(entry.get("forms"))
-    pronunciations = _pronunciations(entry.get("sounds"))
+    pronunciations = _pronunciations(entry.get("sounds"), diagnostics)
     etymology = _text(entry.get("etymology_text")) or _text(entry.get("etymology"))
     etymology_number = _scalar_text(entry.get("etymology_number"))
     relations = relation_candidates(entry, language=base_language)

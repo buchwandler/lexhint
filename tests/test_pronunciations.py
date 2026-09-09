@@ -416,3 +416,81 @@ def test_empty_result_and_unknown_word(pronunciation_artifact: Path) -> None:
     lexicon = Lexicon.from_path(pronunciation_artifact)
     assert lexicon.pronunciations("love", region="Central-America") == ()
     assert lexicon.pronunciations("missing") == ()
+
+
+def test_portuguese_locale_selection_separates_regional_evidence(tmp_path: Path) -> None:
+    source = tmp_path / "portuguese.jsonl"
+    sounds = [
+        {"ipa": "/br/", "tags": ["Brazil"]},
+        {"ipa": "/pt/", "tags": ["Portugal"]},
+        {"ipa": "/north/", "tags": ["Northern", "Portugal"]},
+        {"ipa": "/central/", "tags": ["Central", "Portugal"]},
+        {"ipa": "/south/", "tags": ["Portugal", "Southern"]},
+        {"ipa": "/northeast/", "tags": ["Northeast-Brazil"]},
+        {"ipa": "/neutral/", "tags": []},
+    ]
+    source.write_text(
+        json.dumps(
+            {
+                "word": "leite",
+                "lang_code": "pt",
+                "pos": "noun",
+                "sounds": sounds,
+                "senses": [{"glosses": ["milk"]}],
+            }
+        )
+        + "\n",
+        encoding="utf-8",
+    )
+    artifact, _ = build_dictionary(
+        "pt",
+        source,
+        output=tmp_path / "pt.sqlite3",
+        capabilities="lexical,dictionary",
+        no_frequency=True,
+    )
+
+    brazil = Lexicon.from_path(artifact, locale="pt-BR").pronunciations("leite")
+    portugal = Lexicon.from_path(artifact, locale="pt-PT").pronunciations("leite")
+    assert [item.ipa for item in brazil[0].pronunciations] == ["[br]", "[northeast]"]
+    assert [item.ipa for item in portugal[0].pronunciations] == [
+        "[pt]",
+        "[north]",
+        "[central]",
+        "[south]",
+    ]
+    assert all("Portugal" not in item.tags for item in brazil[0].pronunciations)
+    assert all("Brazil" not in item.tags for item in portugal[0].pronunciations)
+    assert [
+        item.ipa
+        for item in Lexicon.from_path(artifact, locale="pt-BR")
+        .pronunciations("leite", include_neutral=True)[0]
+        .pronunciations
+    ] == ["[br]", "[northeast]", "[neutral]"]
+
+
+def test_portuguese_locale_falls_back_to_ambiguous_neutral_rows(tmp_path: Path) -> None:
+    source = tmp_path / "portuguese-neutral.jsonl"
+    source.write_text(
+        json.dumps(
+            {
+                "word": "leite",
+                "lang_code": "pt",
+                "pos": "noun",
+                "sounds": [{"ipa": "/one/"}, {"ipa": "/two/"}],
+                "senses": [{"glosses": ["milk"]}],
+            }
+        )
+        + "\n",
+        encoding="utf-8",
+    )
+    artifact, _ = build_dictionary(
+        "pt",
+        source,
+        output=tmp_path / "pt-neutral.sqlite3",
+        capabilities="lexical,dictionary",
+        no_frequency=True,
+    )
+    values = Lexicon.from_path(artifact, locale="pt-BR").pronunciations("leite")
+    assert [item.ipa for item in values[0].pronunciations] == ["[one]", "[two]"]
+    assert all(not item.tags for item in values[0].pronunciations)

@@ -10,12 +10,16 @@ import pytest
 from lexhint import Lexicon
 from lexhint.builder import build_dictionary
 from lexhint.languages import (
+    locale_language,
+    locale_tag,
     normalize_language,
     normalize_locale,
     normalize_source_region_tag,
     source_tags_match_locale,
     source_tags_match_region,
     supported_base_languages,
+    supported_locale_specs,
+    supported_locale_tags,
 )
 from lexhint.models import DictionaryEntry, Form, Pronunciation, Sense
 from lexhint.render import (
@@ -86,6 +90,41 @@ def test_locale_normalization_and_base_language_contract() -> None:
         normalize_locale("en", "AU")
     with pytest.raises(ValueError, match="not supported for language 'de'"):
         normalize_locale("de", "GB")
+
+
+def test_portuguese_locale_profiles_and_full_tags() -> None:
+    brazil_aliases = ("BR", "pt-BR", "pt_BR", "pt_br", "PT-br")
+    assert [normalize_locale("pt", value) for value in brazil_aliases] == [
+        "BR",
+        "BR",
+        "BR",
+        "BR",
+        "BR",
+    ]
+    assert [normalize_locale("pt", value) for value in ("PT", "pt-PT", "pt_PT", "pt_pt")] == [
+        "PT",
+        "PT",
+        "PT",
+        "PT",
+    ]
+    assert locale_language("pt-BR") == "pt"
+    assert locale_language("pt_BR") == "pt"
+    assert locale_language("BR") is None
+    assert locale_language("pt-AO") == "pt"
+    assert locale_tag("pt", "BR") == "pt-BR"
+    assert supported_locale_tags("pt") == ("pt-BR", "pt-PT")
+    assert tuple(spec.tag for spec in supported_locale_specs("pt")) == ("pt-BR", "pt-PT")
+
+
+def test_portuguese_locale_source_tag_matching() -> None:
+    assert source_tags_match_locale(("Brazil",), "pt", "pt-BR")
+    assert source_tags_match_locale(("Northeast-Brazil",), "pt", "pt-BR")
+    assert source_tags_match_locale(("Caipira",), "pt", "pt-BR")
+    assert source_tags_match_locale(("Paulistana",), "pt", "pt-BR")
+    assert source_tags_match_locale(("Portugal",), "pt", "pt-PT")
+    assert source_tags_match_locale(("Northern", "Portugal"), "pt", "pt-PT")
+    assert not source_tags_match_locale(("Brazil",), "pt", "pt-PT")
+    assert not source_tags_match_locale(("Portugal",), "pt", "pt-BR")
 
 
 @pytest.mark.parametrize(

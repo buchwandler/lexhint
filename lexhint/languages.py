@@ -63,6 +63,11 @@ REGIONAL_SOURCE_TAGS = frozenset(
         "canadian",
         "canadian-english",
         "canadian english",
+        "brazil",
+        "northeast-brazil",
+        "portugal",
+        "caipira",
+        "paulistana",
     }
 )
 
@@ -77,6 +82,14 @@ class LocaleSpec:
     language: str
     aliases: tuple[str, ...]
     preferred_source_tags: tuple[str, ...]
+
+    @property
+    def region(self) -> str:
+        return self.code
+
+    @property
+    def tag(self) -> str:
+        return f"{self.language}-{self.code}"
 
 
 LOCALES: dict[str, LocaleSpec] = {
@@ -104,19 +117,25 @@ LOCALES: dict[str, LocaleSpec] = {
         "US",
         "en",
         ("en-US", "en_US", "us"),
-        (
-            "US",
-            "American",
-            "American-English",
-            "American English",
-            "General-American",
-        ),
+        ("US", "American", "American-English", "American English", "General-American"),
     ),
     "CA": LocaleSpec(
         "CA",
         "en",
         ("en-CA", "en_CA", "ca", "canada"),
         ("Canada", "Canadian", "Canadian-English", "Canadian English"),
+    ),
+    "BR": LocaleSpec(
+        "BR",
+        "pt",
+        ("pt-BR", "pt_BR", "br", "brazil", "brasil"),
+        ("Brazil", "Northeast-Brazil", "Caipira", "Paulistana"),
+    ),
+    "PT": LocaleSpec(
+        "PT",
+        "pt",
+        ("pt-PT", "pt_PT", "pt", "portugal"),
+        ("Portugal",),
     ),
 }
 
@@ -128,6 +147,21 @@ def normalize_language(value: str) -> str:
     return normalized
 
 
+def _normalize_locale_candidate(value: str) -> str:
+    return value.strip().replace("_", "-")
+
+
+def _locale_spec_for_value(value: str) -> LocaleSpec | None:
+    candidate = _normalize_locale_candidate(value)
+    folded = candidate.casefold()
+    for spec in LOCALES.values():
+        if folded in {spec.tag.casefold(), spec.code.casefold()} or folded in {
+            alias.replace("_", "-").casefold() for alias in spec.aliases
+        }:
+            return spec
+    return None
+
+
 def normalize_locale(language: str, value: str | None) -> str | None:
     base_language = normalize_language(language)
     if value is None:
@@ -135,21 +169,50 @@ def normalize_locale(language: str, value: str | None) -> str | None:
     candidate = value.strip()
     if not candidate:
         raise ValueError("locale must not be empty")
-    for spec in LOCALES.values():
-        if candidate.upper() == spec.code or candidate.lower() in {
-            alias.lower() for alias in spec.aliases
-        }:
-            if spec.language != base_language:
-                raise ValueError(
-                    f"locale {value!r} is not supported for language {base_language!r}"
-                )
-            return spec.code
-    raise ValueError(f"unsupported locale {value!r} for language {base_language!r}")
+    spec = _locale_spec_for_value(candidate)
+    if spec is None:
+        supported = ", ".join(supported_locale_tags(base_language))
+        suffix = f"; supported locales for {base_language}: {supported}" if supported else ""
+        raise ValueError(f"unsupported locale {value!r} for language {base_language!r}{suffix}")
+    if spec.language != base_language:
+        raise ValueError(
+            f"locale {value!r} is not supported for language {base_language!r}; "
+            f"it selects language {spec.language!r}"
+        )
+    return spec.code
+
+
+def locale_language(value: str) -> str | None:
+    candidate = _normalize_locale_candidate(value)
+    parts = candidate.split("-")
+    if len(parts) != 2:
+        return None
+    try:
+        language = normalize_language(parts[0])
+    except ValueError:
+        return None
+    return language
 
 
 def locale_spec(language: str, locale: str | None) -> LocaleSpec | None:
     normalized = normalize_locale(language, locale)
     return LOCALES.get(normalized) if normalized is not None else None
+
+
+def locale_tag(language: str, locale: str | None) -> str | None:
+    spec = locale_spec(language, locale)
+    return spec.tag if spec is not None else None
+
+
+def supported_locale_specs(language: str | None = None) -> tuple[LocaleSpec, ...]:
+    if language is None:
+        return tuple(LOCALES.values())
+    normalized = normalize_language(language)
+    return tuple(spec for spec in LOCALES.values() if spec.language == normalized)
+
+
+def supported_locale_tags(language: str | None = None) -> tuple[str, ...]:
+    return tuple(spec.tag for spec in supported_locale_specs(language))
 
 
 def normalize_source_region_tag(value: str) -> str:
@@ -198,7 +261,11 @@ __all__ = [
     "source_tags_match_region",
     "is_regional_source_tag",
     "supported_base_languages",
+    "supported_locale_specs",
+    "supported_locale_tags",
+    "locale_language",
     "locale_spec",
+    "locale_tag",
     "normalize_language",
     "normalize_locale",
 ]

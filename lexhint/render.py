@@ -6,7 +6,6 @@ import textwrap
 from collections.abc import Sequence
 from dataclasses import dataclass
 
-from .languages import locale_spec
 from .models import DictionaryEntry, Form, Pronunciation, RelatedTerm, Sense
 from .pronunciation import format_ipa, normalize_ipa_body
 from .terminal import TerminalStyle
@@ -215,8 +214,6 @@ def _unique_pronunciations(values: Sequence[DictionaryEntry]) -> tuple[Pronuncia
 def _regional_label(tags: Sequence[str], locale: str | None) -> str | None:
     if locale is None:
         return None
-    spec = locale_spec("en", locale)
-    assert spec is not None
     normalized = {tag.casefold() for tag in tags}
     if locale == "GB" and normalized & {"us", "american", "american-english", "american english"}:
         return "American English"

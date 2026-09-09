@@ -95,6 +95,16 @@ def test_full_dictionary_output_exposes_retained_fields(
     assert "Love.ogg" not in output
 
 
+def test_dictionary_json_exposes_canonical_locale_tag(
+    rich_artifact: Path, capsys: pytest.CaptureFixture[str]
+) -> None:
+    assert main(["--json", *dictionary_args(rich_artifact, "--locale", "en_US")]) == 0
+    payload = json.loads(capsys.readouterr().out)
+    assert payload["language"] == "en"
+    assert payload["locale"] == "US"
+    assert payload["locale_tag"] == "en-US"
+
+
 def test_dictionary_json_remains_complete(
     rich_artifact: Path, capsys: pytest.CaptureFixture[str]
 ) -> None:

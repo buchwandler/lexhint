@@ -78,10 +78,10 @@ class LexiconCoverageError(RuntimeError):
     """The artifact does not have authoritative full lexical coverage."""
 
 
-def _locale_rank(tags: tuple[str, ...], locale: str | None) -> int:
+def _locale_rank(tags: tuple[str, ...], language: str, locale: str | None) -> int:
     if locale is None:
         return 0
-    if source_tags_match_locale(tags, "en", locale):
+    if source_tags_match_locale(tags, language, locale):
         return 0
     if any(is_regional_source_tag(tag) for tag in tags):
         return 2
@@ -758,14 +758,21 @@ class Lexicon:
         senses = tuple(
             sorted(
                 entry.senses,
-                key=lambda sense: _locale_rank(sense.tags, self.locale),
+                key=lambda sense: _locale_rank(sense.tags, self.language, self.locale),
             )
         )
-        forms = tuple(sorted(entry.forms, key=lambda form: _locale_rank(form.tags, self.locale)))
+        forms = tuple(
+            sorted(
+                entry.forms,
+                key=lambda form: _locale_rank(form.tags, self.language, self.locale),
+            )
+        )
         pronunciations = tuple(
             sorted(
                 entry.pronunciations,
-                key=lambda pronunciation: _locale_rank(pronunciation.tags, self.locale),
+                key=lambda pronunciation: _locale_rank(
+                    pronunciation.tags, self.language, self.locale
+                ),
             )
         )
         return replace(entry, senses=senses, forms=forms, pronunciations=pronunciations)
@@ -778,7 +785,9 @@ class Lexicon:
         return tuple(
             sorted(
                 pronunciations,
-                key=lambda pronunciation: _locale_rank(pronunciation.tags, self.locale),
+                key=lambda pronunciation: _locale_rank(
+                    pronunciation.tags, self.language, self.locale
+                ),
             )
         )
 
@@ -967,7 +976,10 @@ class Lexicon:
                 sorted(
                     entries,
                     key=lambda entry: min(
-                        (_locale_rank(sense.tags, self.locale) for sense in entry.senses),
+                        (
+                            _locale_rank(sense.tags, self.language, self.locale)
+                            for sense in entry.senses
+                        ),
                         default=1,
                     ),
                 )
