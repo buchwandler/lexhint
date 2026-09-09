@@ -456,17 +456,20 @@ def test_cli_accepts_short_locale_with_explicit_or_positional_language(
     portuguese_artifact: Path, capsys: pytest.CaptureFixture[str]
 ) -> None:
     for values in (("leite", "-l", "pt"), ("pt", "leite")):
-        assert main(
-            [
-                "dictionary",
-                "pronunciation",
-                *values,
-                "--path",
-                str(portuguese_artifact),
-                "--locale",
-                "BR",
-            ]
-        ) == 0
+        assert (
+            main(
+                [
+                    "dictionary",
+                    "pronunciation",
+                    *values,
+                    "--path",
+                    str(portuguese_artifact),
+                    "--locale",
+                    "BR",
+                ]
+            )
+            == 0
+        )
         assert "[ˈlej.te] [Caipira]" in capsys.readouterr().out
 
 

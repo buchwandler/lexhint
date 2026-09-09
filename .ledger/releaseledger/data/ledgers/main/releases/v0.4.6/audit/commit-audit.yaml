@@ -1,0 +1,127 @@
+schema_version: 1
+object_type: commit_audit_sheet
+versioning:
+  schema_version: 1
+  revision: 3
+release_version: v0.4.6
+git_base_ref: v0.4.5
+git_base_sha: 12a3452c4b6b161ce779856695202c3fba7bb2e2
+git_head_ref: HEAD
+git_head_sha: 97ffce538d58ead980be16c6df0b4031cc8fe06f
+git_range: 12a3452c4b6b161ce779856695202c3fba7bb2e2..97ffce538d58ead980be16c6df0b4031cc8fe06f
+commit_count: 2
+rows:
+  - sha: 1cbc458a99dba0e1d0d47ed46f637a5e5ac66ceb
+    source_ref: git:1cbc458a99dba0e1d0d47ed46f637a5e5ac66ceb
+    short_sha: 1cbc458
+    changed_paths:
+      - README.md
+      - RELEASING.md
+      - docs/architecture.md
+      - docs/changelog.md
+      - lexhint/__init__.py
+      - lexhint/builder.py
+      - lexhint/cli.py
+      - lexhint/datasets.py
+      - lexhint/languages.py
+      - lexhint/lexicon.py
+      - lexhint/status.py
+      - tests/test_cli_dataset.py
+      - tests/test_dataset_resolver.py
+      - tests/test_dataset_static_catalog.py
+      - tests/test_locales.py
+      - tests/test_schema_contract.py
+      - tests/test_sense_identity.py
+    stats:
+      files_changed: 0
+      insertions: 707
+      deletions: 122
+    inspected: true
+    inspected_paths:
+      - README.md
+      - RELEASING.md
+      - docs/architecture.md
+      - lexhint/__init__.py
+      - lexhint/builder.py
+      - lexhint/cli.py
+      - lexhint/datasets.py
+      - lexhint/languages.py
+      - lexhint/lexicon.py
+      - lexhint/status.py
+      - tests/test_cli_dataset.py
+      - tests/test_dataset_resolver.py
+      - tests/test_dataset_static_catalog.py
+      - tests/test_locales.py
+      - tests/test_schema_contract.py
+      - tests/test_sense_identity.py
+    observed_behavior:
+      Dataset artifacts now preserve native and English source variants
+      as distinct identities, expose source-variant selection through dataset and dictionary
+      APIs and CLI, and prefer native data by default while allowing both variants to
+      coexist
+    public_impact: public
+    decision: accepted
+    stale: false
+    evidence_subject: "feat: allow native and english variants"
+    target_entry_key: dataset-source-variants
+    target_entry_id: entry-0001
+    notes:
+      Reviewed implementation, documentation, and focused tests for source-variant
+      catalog, installation, resolution, and CLI behavior
+  - sha: 97ffce538d58ead980be16c6df0b4031cc8fe06f
+    source_ref: git:97ffce538d58ead980be16c6df0b4031cc8fe06f
+    short_sha: 97ffce5
+    changed_paths:
+      - .ledger/archledger/data/document-state.json
+      - .ledger/archledger/data/profiles/arc42/sections/content-0001.md
+      - .ledger/archledger/data/profiles/arc42/sections/content-0006.md
+      - .ledger/archledger/data/source-state.json
+      - README.md
+      - docs/architecture.md
+      - lexhint/__init__.py
+      - lexhint/cli.py
+      - lexhint/extract.py
+      - lexhint/languages.py
+      - lexhint/lexicon.py
+      - lexhint/models.py
+      - lexhint/pronunciation.py
+      - lexhint/render.py
+      - tests/test_cli_dictionary_output.py
+      - tests/test_cli_pronunciation.py
+      - tests/test_extract.py
+      - tests/test_locales.py
+      - tests/test_pronunciations.py
+    stats:
+      files_changed: 0
+      insertions: 813
+      deletions: 134
+    inspected: true
+    inspected_paths:
+      - README.md
+      - docs/architecture.md
+      - lexhint/__init__.py
+      - lexhint/cli.py
+      - lexhint/extract.py
+      - lexhint/languages.py
+      - lexhint/lexicon.py
+      - lexhint/models.py
+      - lexhint/pronunciation.py
+      - lexhint/render.py
+      - tests/test_cli_dictionary_output.py
+      - tests/test_cli_pronunciation.py
+      - tests/test_extract.py
+      - tests/test_locales.py
+      - tests/test_pronunciations.py
+    observed_behavior:
+      Locale-aware language and pronunciation handling now supports
+      full locale tags and Portuguese regional profiles, expands supported languages,
+      preserves pronunciation tags, and filters implausible IPA with diagnostics
+    public_impact: public
+    decision: accepted
+    stale: false
+    evidence_subject: "feat: better locale support"
+    target_entry_key: locale-pronunciation-support
+    target_entry_id: entry-0002
+    notes:
+      Reviewed implementation, documentation, and focused tests for locale normalization,
+      regional selection, neutral fallback, and pronunciation extraction

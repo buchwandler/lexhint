@@ -90,8 +90,6 @@ The consumer decides what an unknown run, version, or candidate should mean. Lex
 - A local SQLite artifact is the runtime boundary.
 - No service endpoint or daemon is required.
 
-
-
 ## Business Context
 
 <!-- archledger: no accepted records for this section yet -->
@@ -151,8 +149,6 @@ hits = lexicon.search_definitions("computer program", fields=("glosses",), match
 
 The consumer decides what an unknown run, version, or candidate should mean. Lexhint ends at evidence. Relation following is always explicit and does not alter `entries()` exact lookup.
 
-
-
 <!-- archledger: no accepted records for this section yet -->
 
 # Runtime View
@@ -182,8 +178,6 @@ Locale matching is based only on source pronunciation and presentation tags reta
 
 The public dictionary API distinguishes sense-scoped relations from unsense-disambiguated headword relations and exposes `sense_by_id()` and `incoming_relations()`.
 
-
-
 <!-- archledger: no accepted records for this section yet -->
 
 # Deployment View
@@ -197,8 +191,6 @@ Lexhint is deployed as a local Python package and a local SQLite evidence artifa
 - Generated artifacts contain source and hash provenance for dictionary and corpus inputs.
 - Build downloads and replacements use temporary files and atomic rename.
 - Generated external datasets are distributed separately from code according to `DATA_SOURCES.md`.
-
-
 
 <!-- archledger: no accepted records for this section yet -->
 
@@ -233,8 +225,6 @@ Capability, coverage, schema, language, and missing-artifact failures have contr
 Tests cover read-only behavior, no-network guards, segmentation, case attestation, virtual-boundary semantic target anchoring, schema and capability validation, frequency policy, semantic target exclusion, CLI contracts, source extraction, relation extraction/API/CLI/projection, and the managed four-variant resolver chain. External dictionary and corpus data remain subject to the obligations documented in `DATA_SOURCES.md`.
 
 Raw bulk Wiktextract input does not contain Kaikki postprocessed website `sense.id` values. Lexhint therefore ignores that field, retains sparse `senseid` and Wikidata provenance when available, and generates a versioned deterministic `lh1-<language>-<encoded>` sense ID. High-cardinality translations and derived graphs remain optional data rather than core tables.
-
-
 
 ## Explicit immutable managed dataset artifacts
 
@@ -275,8 +265,6 @@ The current architecture records these decisions.
 | Resilience        | Read-only runtime access, source hashes, temporary downloads, and atomic replacement                             | A failed build does not replace an existing artifact with partial output.                          |
 | Maintainability   | Focused runtime and build modules, capability-specific schema, and boundary tests                                | Schema, extraction, semantic projection, storage, and CLI behavior can be checked independently.   |
 | Compliance        | External resources remain separate from code and provenance is embedded in artifacts                             | A distributor can review data obligations before distributing generated artifacts.                 |
-
-
 
 ## Quality Requirements Overview
 
