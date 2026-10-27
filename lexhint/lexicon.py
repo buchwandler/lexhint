@@ -958,6 +958,14 @@ class Lexicon:
                 if groups:
                     yield PronunciationEntry(current_key, groups)
 
+    def iter_entries(self) -> Iterator[DictionaryEntry]:
+        """Stream every dictionary entry in stable normalized-word order."""
+        self._require("dictionary")
+        with closing(self._connect()) as connection:
+            rows = connection.execute("SELECT * FROM entries ORDER BY word, id")
+            for row in rows:
+                yield self._localized_entry(self._entry(connection, row))
+
     def entries(self, word: str, *, all_case_variants: bool = False) -> tuple[DictionaryEntry, ...]:
         self._require("dictionary")
         normalized = normalize_word(word)

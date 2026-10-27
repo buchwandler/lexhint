@@ -1,11 +1,12 @@
 from __future__ import annotations
 
 import json
+import sqlite3
 from pathlib import Path
 
 import pytest
 
-from lexhint import Lexicon, LexiconCapabilityError, PronunciationEntry
+from lexhint import DictionaryEntry, Lexicon, LexiconCapabilityError, PronunciationEntry
 from lexhint.builder import build_dictionary
 
 
@@ -195,3 +196,137 @@ def test_iterator_requires_dictionary_capability(tmp_path: Path) -> None:
 
     with pytest.raises(LexiconCapabilityError, match="dictionary"):
         tuple(Lexicon.from_path(artifact).iter_pronunciations())
+
+    with pytest.raises(LexiconCapabilityError, match="dictionary"):
+        tuple(Lexicon.from_path(artifact).iter_entries())
+
+
+@pytest.fixture
+def entry_stream_artifact(tmp_path: Path) -> Path:
+    records = [
+        {
+            "word": "bank",
+            "lang_code": "en",
+            "pos": "noun",
+            "etymology_number": 1,
+            "topics": ["finance"],
+            "sounds": [{"ipa": "[ˈlɪv]", "tags": ["General-American"]}],
+            "senses": [
+                {
+                    "glosses": ["a financial institution"],
+                    "topics": ["investment"],
+                    "tags": ["countable"],
+                    "examples": [
+                        {
+                            "text": "She went to the bank.",
+                            "translation": "Elle est allée à la banque.",
+                            "type": "quotation",
+                        }
+                    ],
+                    "synonyms": [{"word": "depository", "tags": ["rare"]}],
+                    "antonyms": ["riverbank"],
+                }
+            ],
+        },
+        {
+            "word": "bank",
+            "lang_code": "en",
+            "pos": "noun",
+            "etymology_number": 2,
+            "sounds": [{"ipa": "[ˈlaɪ̯v]", "tags": ["Received-Pronunciation"]}],
+            "senses": [{"glosses": ["the edge of a river"], "topics": ["geography"]}],
+        },
+        {
+            "word": "bank",
+            "lang_code": "en",
+            "pos": "noun",
+            "etymology_number": 3,
+            "senses": [{"glosses": ["a slope of land"]}],
+        },
+        {
+            "word": "alpha",
+            "lang_code": "en",
+            "pos": "noun",
+            "senses": [{"glosses": ["the first letter"]}],
+        },
+    ]
+    source = tmp_path / "entry-stream.jsonl"
+    source.write_text(
+        "\n".join(json.dumps(record) for record in records) + "\n",
+        encoding="utf-8",
+    )
+    artifact, _ = build_dictionary(
+        "en",
+        source,
+        output=tmp_path / "entry-stream.sqlite3",
+        capabilities="lexical,dictionary",
+        no_frequency=True,
+    )
+    return artifact
+
+
+def test_iter_entries_preserves_entries_and_sense_data(entry_stream_artifact: Path) -> None:
+    lexicon = Lexicon.from_path(entry_stream_artifact)
+    entries = tuple(lexicon.iter_entries())
+
+    assert entries == tuple(lexicon.iter_entries())
+    assert all(isinstance(entry, DictionaryEntry) for entry in entries)
+    assert tuple(entry.word for entry in entries) == ("alpha", "bank", "bank", "bank")
+
+    bank_entries = entries[1:]
+    assert tuple(entry.pos for entry in bank_entries) == ("noun", "noun", "noun")
+    assert tuple(entry.etymology_number for entry in bank_entries) == ("1", "2", "3")
+    assert tuple(entry.pronunciations[0].ipa for entry in bank_entries[:2]) == (
+        "[ˈlɪv]",
+        "[ˈlaɪ̯v]",
+    )
+    assert tuple(entry.pronunciations[0].tags for entry in bank_entries[:2]) == (
+        ("General-American",),
+        ("Received-Pronunciation",),
+    )
+    assert bank_entries[2].pronunciations == ()
+
+    senses = tuple(entry.senses[0] for entry in bank_entries)
+    assert all(sense.sense_id for sense in senses)
+    assert len({sense.sense_id for sense in senses}) == 3
+    assert senses[0].glosses == ("a financial institution",)
+    assert set(senses[0].topics) == {"finance", "investment"}
+    assert senses[0].tags == ("countable",)
+    assert (senses[0].examples[0].text, senses[0].examples[0].translation) == (
+        "She went to the bank.",
+        "Elle est allée à la banque.",
+    )
+    assert senses[0].examples[0].kind == "quotation"
+    assert senses[0].synonyms[0].word == "depository"
+    assert senses[0].synonyms[0].tags == ("rare",)
+    assert senses[0].antonyms == ("riverbank",)
+    assert senses[2].glosses == ("a slope of land",)
+
+
+def test_iter_entries_is_lazy_and_closes_connection(
+    entry_stream_artifact: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    lexicon = Lexicon.from_path(entry_stream_artifact)
+    connections: list[sqlite3.Connection] = []
+    connect = lexicon._connect
+
+    def tracked_connect() -> sqlite3.Connection:
+        connection = connect()
+        connections.append(connection)
+        return connection
+
+    monkeypatch.setattr(lexicon, "_connect", tracked_connect)
+
+    partial = lexicon.iter_entries()
+    assert connections == []
+    assert next(partial).word == "alpha"
+    assert len(connections) == 1
+    partial.close()
+    with pytest.raises(sqlite3.ProgrammingError):
+        connections[0].execute("SELECT 1")
+
+    complete = lexicon.iter_entries()
+    assert len(tuple(complete)) == 4
+    assert len(connections) == 2
+    with pytest.raises(sqlite3.ProgrammingError):
+        connections[1].execute("SELECT 1")
