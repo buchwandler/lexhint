@@ -58,7 +58,7 @@ def test_streaming_install_verifies_and_is_idempotent(
     installed = datasets.download_dataset("en", variant="lexical")
     assert installed.path.read_bytes() == database
     assert installed.source_variant == "english"
-    assert "/english/" in str(installed.path)
+    assert "english" in installed.path.parts
     assert installed.path.with_name("artifact.json").is_file()
     assert not list(installed.path.parent.glob("*.gz"))
     assert datasets.download_dataset("en", variant="lexical").already_installed
